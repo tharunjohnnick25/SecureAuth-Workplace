@@ -44,6 +44,9 @@ export function Login() {
   useEffect(() => {
     setFingerprint(getDeviceFingerprint());
     requestLocation();
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+      setDeviceVerified(true);
+    }
   }, []);
 
   // Cleanup camera stream on unmount

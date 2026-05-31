@@ -48,6 +48,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
+    // Mock auth for local dev — bypasses Supabase
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+      return NextResponse.json({
+        user: {
+          id: crypto.randomUUID(),
+          email,
+          role: 'ADMIN',
+          first_name: email.split('@')[0],
+          last_name: 'User'
+        },
+        session: { access_token: 'mock-token', refresh_token: 'mock-refresh' },
+        riskReport: { score: 0, level: 'LOW', action: 'ALLOW', factors: [], recommendations: [] }
+      });
+    }
+
     const supabase = await createServerSupabaseClient();
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({

@@ -33,6 +33,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (initRef.current) return;
     initRef.current = true;
 
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+      setIsLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     const init = async () => {

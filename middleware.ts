@@ -34,11 +34,6 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Mock auth mode — skip all auth checks for local development
-  if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
-    return NextResponse.next();
-  }
-
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {

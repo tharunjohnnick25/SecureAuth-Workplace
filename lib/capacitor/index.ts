@@ -1,6 +1,6 @@
 'use client';
 
-const DEPLOYED_API_URL = process.env.NEXT_PUBLIC_DEPLOYED_URL || 'https://secureauth-ai.vercel.app';
+const DEPLOYED_API_URL = process.env.NEXT_PUBLIC_DEPLOYED_URL || 'https://secureauth01.onrender.com';
 
 let isCapacitor: boolean | null = null;
 

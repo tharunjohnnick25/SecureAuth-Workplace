@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId, amount } = await req.json();
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_dummy_secret';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
     const supabase = await createServerSupabaseClient();
     
     // Get current user
@@ -15,18 +15,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let isAuthentic = false;
-
-    if (keySecret === 'rzp_test_dummy_secret' || razorpay_signature === 'mock_signature') {
-      isAuthentic = true;
-    } else {
-      const body = razorpay_order_id + "|" + razorpay_payment_id;
-      const expectedSignature = crypto
-        .createHmac('sha256', keySecret)
-        .update(body.toString())
-        .digest('hex');
-      isAuthentic = expectedSignature === razorpay_signature;
+    if (!keySecret) {
+      return NextResponse.json({ error: "Razorpay not configured" }, { status: 500 });
     }
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', keySecret)
+      .update(body.toString())
+      .digest('hex');
+    const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
       // 1. Create/Update Subscription

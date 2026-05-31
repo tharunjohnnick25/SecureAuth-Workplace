@@ -15,13 +15,13 @@ const config: CapacitorConfig = {
           cleartext: serverUrl.startsWith('http://'),
           allowNavigation: [
             '*.supabase.co',
-            '*.vercel.app',
-            'secureauth-ai.vercel.app',
+            '*.onrender.com',
+            'secureauth01.onrender.com',
             'localhost',
             '*.localhost',
             '10.0.2.2',
           ],
-          hostname: 'secureauth-ai.vercel.app',
+          hostname: 'secureauth01.onrender.com',
         },
       }
     : {}),

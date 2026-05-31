@@ -29,7 +29,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="secureauth-ai.vercel.app" />
+                <data android:scheme="https" android:host="secureauth01.onrender.com" />
                 <data android:scheme="secureauth" />
             </intent-filter>
         </activity>

@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: secureauth-ai
+    runtime: node
+    repo: https://github.com/your-username/your-repo
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_DEPLOYED_URL
+        value: https://secureauth01.onrender.com
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://secureauth01.onrender.com
+      - key: NEXT_PUBLIC_RP_ID
+        value: secureauth01.onrender.com
+      - key: NEXT_PUBLIC_ORIGIN
+        value: https://secureauth01.onrender.com
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains; preload

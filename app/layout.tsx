@@ -15,7 +15,7 @@ export const metadata = {
   openGraph: {
     title: 'SecureAuth AI | The Future of Identity Management',
     description: 'Enterprise-grade zero-trust IAM platform with behavioral AI.',
-    url: 'https://secureauth-ai.vercel.app',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://secureauth01.onrender.com',
     siteName: 'SecureAuth AI',
     locale: 'en_US',
     type: 'website',

@@ -110,7 +110,7 @@ export default function PricingPage() {
       }
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_dummy_key',
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         name: "SecureAuth SaaS",
@@ -147,19 +147,8 @@ export default function PricingPage() {
         },
       };
 
-      if (order.id.includes('mock')) {
-        toast.success('Demo mode: Mock payment detected. Simulating success...');
-        setTimeout(() => {
-          options.handler({
-            razorpay_order_id: order.id,
-            razorpay_payment_id: `pay_mock_${Math.floor(Math.random() * 1000000)}`,
-            razorpay_signature: 'mock_signature'
-          });
-        }, 1500);
-      } else {
-        const paymentObject = new (window as any).Razorpay(options);
-        paymentObject.open();
-      }
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
 
     } catch (error) {
       console.error(error);

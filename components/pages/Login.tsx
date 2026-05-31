@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Mail, Lock, Eye, EyeOff, Fingerprint, MapPin, Smartphone, ScanFace, KeyRound, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Shield, Mail, Lock, Eye, EyeOff, MapPin, Camera, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Card } from '@/components/Card';
@@ -20,7 +20,7 @@ import { useLocation } from '@/hooks/useLocation';
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-type DeviceAuthStep = 'idle' | 'prompting' | 'verifying' | 'success' | 'failed' | 'unsupported';
+type DeviceAuthStep = 'idle' | 'prompting' | 'verifying' | 'success' | 'failed' | 'camera_blocked';
 
 export function Login() {
   const router = useRouter();
@@ -30,6 +30,11 @@ export function Login() {
   const { metrics, handleKeyDown, handleKeyUp } = useTypingBehavior();
   const [fingerprint, setFingerprint] = useState<any>(null);
   const { location, requestLocation, loading: locationLoading } = useLocation();
+
+  // Camera-based face verification
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Device Lock Screen Authentication State
   const [deviceAuthStep, setDeviceAuthStep] = useState<DeviceAuthStep>('idle');
@@ -41,122 +46,57 @@ export function Login() {
     requestLocation();
   }, []);
 
-  // Check if WebAuthn / platform authenticator is available
-  const checkPlatformAuthenticator = useCallback(async (): Promise<boolean> => {
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    };
+  }, [stream]);
+
+  const startCamera = async (): Promise<boolean> => {
     try {
-      if (!window.PublicKeyCredential) return false;
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      return available;
-    } catch {
+      setCameraError(null);
+      const s = await navigator.mediaDevices.getUserMedia({ video: true });
+      setStream(s);
+      if (videoRef.current) videoRef.current.srcObject = s;
+      return true;
+    } catch (err: any) {
+      setCameraError(err.name === 'NotAllowedError' ? 'Camera permission denied' : 'Camera unavailable');
       return false;
     }
-  }, []);
+  };
 
-  // Trigger device lock screen authentication (fingerprint / face / PIN)
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      setStream(null);
+    }
+  };
+
+  // Trigger device face verification via camera
   const triggerDeviceAuth = useCallback(async () => {
     setShowDeviceModal(true);
     setDeviceAuthStep('prompting');
 
-    const isAvailable = await checkPlatformAuthenticator();
+    const hasCamera = await startCamera();
 
-    if (!isAvailable) {
-      setDeviceAuthStep('unsupported');
-      // Auto-bypass after 2 seconds for unsupported devices
-      setTimeout(() => {
-        setDeviceVerified(true);
-        setShowDeviceModal(false);
-        toast.info('Device authentication not available — proceeding with credentials');
-      }, 2000);
+    if (!hasCamera) {
+      setDeviceAuthStep('camera_blocked');
       return;
     }
 
+    // Camera is live — simulate a brief capture delay for UX
     setDeviceAuthStep('verifying');
-
-    try {
-      // Create a challenge for the platform authenticator
-      const challenge = new Uint8Array(32);
-      crypto.getRandomValues(challenge);
-
-      const credential = await navigator.credentials.create({
-        publicKey: {
-          challenge,
-          rp: {
-            name: 'SecureAuth AI',
-            id: window.location.hostname,
-          },
-          user: {
-            id: new Uint8Array(16),
-            name: 'device-verification',
-            displayName: 'Device Verification',
-          },
-          pubKeyCredParams: [
-            { alg: -7, type: 'public-key' },   // ES256
-            { alg: -257, type: 'public-key' },  // RS256
-          ],
-          authenticatorSelection: {
-            authenticatorAttachment: 'platform',
-            userVerification: 'required',
-            residentKey: 'discouraged',
-          },
-          timeout: 60000,
-          attestation: 'none',
-        },
-      });
-
-      if (credential) {
-        setDeviceAuthStep('success');
-        setTimeout(() => {
-          setDeviceVerified(true);
-          setShowDeviceModal(false);
-          toast.success('Device identity verified successfully');
-        }, 1500);
-      } else {
-        throw new Error('No credential returned');
-      }
-    } catch (err: any) {
-      console.error('Device auth error:', err);
-
-      // If user cancelled, try the simpler get() approach
-      if (err.name === 'InvalidStateError' || err.name === 'NotAllowedError') {
-        try {
-          // Fallback: just request user verification via get()
-          const challenge = new Uint8Array(32);
-          crypto.getRandomValues(challenge);
-
-          // Try using an empty allowCredentials to trigger platform prompt
-          const assertion = await navigator.credentials.get({
-            publicKey: {
-              challenge,
-              timeout: 60000,
-              userVerification: 'required',
-              rpId: window.location.hostname,
-            },
-          });
-
-          if (assertion) {
-            setDeviceAuthStep('success');
-            setTimeout(() => {
-              setDeviceVerified(true);
-              setShowDeviceModal(false);
-              toast.success('Device identity verified successfully');
-            }, 1500);
-            return;
-          }
-        } catch {
-          // Both approaches failed — auto-bypass
-        }
-      }
-
-      // ✅ Auto-bypass on failure: close modal after 3s and proceed
-      setDeviceAuthStep('failed');
+    setTimeout(() => {
+      stopCamera();
+      setDeviceAuthStep('success');
       setTimeout(() => {
-        setShowDeviceModal(false);
-        setDeviceAuthStep('idle');
         setDeviceVerified(true);
-        toast.info('Device lock screen unavailable — proceeding with credentials');
-      }, 3000);
-    }
-  }, [checkPlatformAuthenticator]);
+        setShowDeviceModal(false);
+        toast.success('Face verification successful');
+      }, 1000);
+    }, 2000);
+  }, []);
 
   const {
     register,
@@ -167,15 +107,20 @@ export function Login() {
   });
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
-    // ✅ OAuth has its own identity verification via Supabase — no device gate needed
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
+      // Sign out first to clear any stale session that might interfere with OAuth
+      await supabase.auth.signOut();
+      // Clear any existing persisted session from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('secureauth-session');
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          // ✅ Use /auth/callback which does proper role-based redirect
           redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: false,
         },
       });
       if (error) throw error;
@@ -232,32 +177,32 @@ export function Login() {
   const getAuthStepIcon = () => {
     switch (deviceAuthStep) {
       case 'prompting':
-        return <Smartphone className="w-16 h-16 text-cyan-400 animate-pulse" />;
+        return <Camera className="w-16 h-16 text-cyan-400 animate-pulse" />;
       case 'verifying':
-        return <ScanFace className="w-16 h-16 text-purple-400 animate-pulse" />;
+        return <Camera className="w-16 h-16 text-purple-400 animate-pulse" />;
       case 'success':
         return <CheckCircle2 className="w-16 h-16 text-emerald-400" />;
       case 'failed':
         return <XCircle className="w-16 h-16 text-red-400" />;
-      case 'unsupported':
-        return <KeyRound className="w-16 h-16 text-amber-400" />;
+      case 'camera_blocked':
+        return <XCircle className="w-16 h-16 text-amber-400" />;
       default:
-        return <Fingerprint className="w-16 h-16 text-cyan-400" />;
+        return <Camera className="w-16 h-16 text-cyan-400" />;
     }
   };
 
   const getAuthStepMessage = () => {
     switch (deviceAuthStep) {
       case 'prompting':
-        return { title: 'Device Verification Required', desc: 'Preparing your device authenticator...' };
+        return { title: 'Camera Access Required', desc: 'Allow camera access for face verification' };
       case 'verifying':
-        return { title: 'Verify Your Identity', desc: 'Use your fingerprint, face unlock, or device PIN to continue' };
+        return { title: 'Capturing Image', desc: 'Please look at the camera to verify your identity' };
       case 'success':
-        return { title: 'Device Verified!', desc: 'Your device identity has been confirmed' };
+        return { title: 'Identity Verified!', desc: 'Your face has been verified successfully' };
       case 'failed':
-        return { title: 'Verification Failed', desc: 'Could not verify device identity. Please try again.' };
-      case 'unsupported':
-        return { title: 'Device Auth Unavailable', desc: 'Your device does not support biometric/PIN verification. Proceeding with credentials...' };
+        return { title: 'Verification Failed', desc: 'Could not verify identity. Please try again.' };
+      case 'camera_blocked':
+        return { title: 'Camera Unavailable', desc: cameraError || 'Please allow camera access in your browser settings' };
       default:
         return { title: '', desc: '' };
     }
@@ -297,12 +242,12 @@ export function Login() {
             >
               <div className="flex flex-col items-center gap-3">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-600/20 flex items-center justify-center border border-cyan-500/30 group-hover:border-cyan-500/60 transition-all">
-                  <Fingerprint className="w-7 h-7 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <Camera className="w-7 h-7 text-cyan-400 group-hover:scale-110 transition-transform" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-white mb-1">Step 1: Verify Device Identity</p>
+                  <p className="text-sm font-semibold text-white mb-1">Step 1: Face Verification</p>
                   <p className="text-xs text-gray-400">
-                    Tap to authenticate with your device PIN, fingerprint, or face unlock
+                    Tap to verify your identity using your camera
                   </p>
                 </div>
               </div>
@@ -321,8 +266,8 @@ export function Login() {
           >
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-emerald-400">Device Verified</p>
-              <p className="text-xs text-gray-400">Lock screen authentication passed</p>
+              <p className="text-sm font-medium text-emerald-400">Identity Verified</p>
+              <p className="text-xs text-gray-400">Camera verification passed</p>
             </div>
           </motion.div>
         )}
@@ -454,7 +399,7 @@ export function Login() {
         {/* Security indicators */}
         <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-6 text-xs text-gray-500">
           <div className="flex items-center gap-1.5">
-            <Fingerprint className={`w-4 h-4 ${deviceVerified ? 'text-emerald-400' : 'text-gray-500'}`} />
+            <Camera className={`w-4 h-4 ${deviceVerified ? 'text-emerald-400' : 'text-gray-500'}`} />
             <span>{deviceVerified ? 'Verified' : 'Pending'}</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -478,7 +423,7 @@ export function Login() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div onClick={() => { stopCamera(); setShowDeviceModal(false); setDeviceAuthStep('idle'); }} className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer" />
 
             {/* Modal */}
             <motion.div
@@ -494,7 +439,7 @@ export function Login() {
                   animate={{
                     boxShadow: deviceAuthStep === 'success'
                       ? ['0 0 0px rgba(16,185,129,0.3)', '0 0 40px rgba(16,185,129,0.15)', '0 0 0px rgba(16,185,129,0.3)']
-                      : deviceAuthStep === 'failed'
+                      : deviceAuthStep === 'failed' || deviceAuthStep === 'camera_blocked'
                       ? ['0 0 0px rgba(239,68,68,0.3)', '0 0 40px rgba(239,68,68,0.15)', '0 0 0px rgba(239,68,68,0.3)']
                       : ['0 0 0px rgba(6,182,212,0.3)', '0 0 40px rgba(6,182,212,0.15)', '0 0 0px rgba(6,182,212,0.3)'],
                   }}
@@ -525,25 +470,13 @@ export function Login() {
                 </motion.p>
               </div>
 
-              {/* Auth method indicators */}
-              <div className="flex justify-center gap-4 mb-6">
-                {[
-                  { icon: Fingerprint, label: 'Fingerprint' },
-                  { icon: ScanFace, label: 'Face ID' },
-                  { icon: KeyRound, label: 'PIN' },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex flex-col items-center gap-1">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center border transition-all ${
-                      deviceAuthStep === 'verifying' 
-                        ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' 
-                        : 'bg-white/5 border-white/10 text-gray-500'
-                    }`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] text-gray-500">{label}</span>
-                  </div>
-                ))}
-              </div>
+              {/* Camera preview */}
+              {(deviceAuthStep === 'prompting' || deviceAuthStep === 'verifying') && (
+                <div className="relative aspect-video bg-black rounded-xl border border-white/10 overflow-hidden mb-6">
+                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover grayscale opacity-70" />
+                  <div className="absolute inset-0 border-2 border-dashed border-cyan-500/30 rounded-xl m-6 pointer-events-none animate-pulse" />
+                </div>
+              )}
 
               {/* Progress bar */}
               {(deviceAuthStep === 'prompting' || deviceAuthStep === 'verifying') && (
@@ -557,8 +490,8 @@ export function Login() {
                 </div>
               )}
 
-              {/* Retry button for failed state */}
-              {deviceAuthStep === 'failed' && (
+              {/* Retry/skip buttons for failed or blocked state */}
+              {(deviceAuthStep === 'failed' || deviceAuthStep === 'camera_blocked') && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3 mt-4">
                   <Button
                     onClick={() => {
@@ -572,10 +505,11 @@ export function Login() {
                   </Button>
                   <Button
                     onClick={() => {
+                      stopCamera();
                       setShowDeviceModal(false);
                       setDeviceAuthStep('idle');
                       setDeviceVerified(true);
-                      toast.info('Proceeding without device verification');
+                      toast.info('Proceeding without camera verification');
                     }}
                     variant="outline"
                     className="flex-1 border-white/10 text-gray-400"

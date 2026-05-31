@@ -18,7 +18,7 @@ const PUBLIC_ROUTES = new Set([
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export default async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
@@ -77,3 +77,7 @@ export default async function proxy(request: NextRequest) {
 
   return supabaseResponse;
 }
+
+export const config = {
+  matcher: '/((?!_next/static|_next/image|favicon.ico).*)',
+};

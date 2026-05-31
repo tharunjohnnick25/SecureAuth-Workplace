@@ -29,8 +29,29 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy on Render
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This app is configured for deployment on [Render](https://render.com).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push this repo to GitHub
+2. In Render dashboard, create a new **Web Service** and connect your repo
+3. Set the following environment variables in Render dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL` — your Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — your Supabase anon key
+   - `SUPABASE_SERVICE_ROLE_KEY` — your Supabase service role key
+   - `NEXT_PUBLIC_DEPLOYED_URL` — `https://secureauth01.onrender.com`
+   - `NEXT_PUBLIC_SITE_URL` — `https://secureauth01.onrender.com`
+   - `NEXT_PUBLIC_RP_ID` — `secureauth01.onrender.com`
+   - `NEXT_PUBLIC_ORIGIN` — `https://secureauth01.onrender.com`
+4. Build command: `npm install && npm run build`
+5. Start command: `npm start`
+
+## Build APK with Median.co
+
+To create an Android APK:
+1. Go to [Median.co](https://median.co)
+2. Enter your deployed Render URL: `https://secureauth01.onrender.com`
+3. Configure app name, icon, and permissions in their dashboard
+4. Build and download the APK
+
+The app's Capacitor config and Android manifest are already updated for the new domain.

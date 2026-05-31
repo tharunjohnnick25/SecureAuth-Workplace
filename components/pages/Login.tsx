@@ -44,10 +44,6 @@ export function Login() {
   useEffect(() => {
     setFingerprint(getDeviceFingerprint());
     requestLocation();
-    // Auto-verify device in mock auth mode
-    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
-      setDeviceVerified(true);
-    }
   }, []);
 
   // Cleanup camera stream on unmount

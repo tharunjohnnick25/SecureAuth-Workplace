@@ -1,7 +1,5 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// For production APK: set CAPACITOR_SERVER_URL to your Vercel deployment
-// For development: set CAPACITOR_SERVER_URL=http://localhost:3000
 const serverUrl = process.env.CAPACITOR_SERVER_URL;
 
 const config: CapacitorConfig = {
@@ -21,7 +19,9 @@ const config: CapacitorConfig = {
             'secureauth-ai.vercel.app',
             'localhost',
             '*.localhost',
+            '10.0.2.2',
           ],
+          hostname: 'secureauth-ai.vercel.app',
         },
       }
     : {}),

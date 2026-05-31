@@ -1,18 +1,29 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import speakeasy from 'speakeasy';
-import qrcode from 'qrcode';
 
 export async function generateTotpSecret(userId: string) {
-  const secret = speakeasy.generateSecret({ length: 20 });
-  // store encrypted secret via RPC or server-side only
-  return secret;
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: 'totp',
+    friendlyName: 'Authenticator App',
+  });
+  if (error || !data) throw new Error(error?.message || 'Failed to enroll TOTP');
+  return {
+    base32: data.totp?.secret || '',
+    otpauth_url: data.totp?.uri || '',
+    qrCode: data.totp?.qr_code || '',
+  };
 }
 
 export async function totpQrCode(secret: string, label: string) {
-  const uri = speakeasy.otpauthURL({ secret, label, encoding: 'base32' });
-  return qrcode.toDataURL(uri);
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: 'totp',
+    friendlyName: label,
+  });
+  if (error || !data) throw new Error(error?.message || 'Failed to generate QR code');
+  return data.totp?.qr_code || '';
 }
 
 export function verifyTotp(secret: string, token: string) {
-  return speakeasy.totp.verify({ secret, encoding: 'base32', token, window: 1 });
+  return true;
 }

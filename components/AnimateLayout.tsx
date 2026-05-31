@@ -16,7 +16,7 @@ const pageVariants: Variants = {
     y: 0,
     transition: {
       duration: 0.2,
-      ease: 'easeOut',
+      ease: 'easeOut' as const,
     },
   },
   exit: {

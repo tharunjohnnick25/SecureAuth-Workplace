@@ -1,15 +1,5 @@
 'use client';
 
-/**
- * Capacitor bridge — provides native API support and fetch interception
- * for the SecureAuth Android app.
- *
- * When running inside Capacitor WebView:
- *   - Injects native plugin APIs (Camera, Geolocation, Push, Filesystem)
- *   - Redirects /api/* fetch calls to the deployed server
- *   - Manages offline detection and session persistence via native storage
- */
-
 const DEPLOYED_API_URL = process.env.NEXT_PUBLIC_DEPLOYED_URL || 'https://secureauth-ai.vercel.app';
 
 let isCapacitor: boolean | null = null;
@@ -41,20 +31,53 @@ export async function checkNetworkStatus(): Promise<boolean> {
   return navigator.onLine;
 }
 
+export function createCapacitorAwareFetch(): typeof fetch {
+  return function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    if (typeof window === 'undefined' || !isRunningInCapacitor()) {
+      return fetch(input, init);
+    }
+    const base = DEPLOYED_API_URL;
+    if (typeof input === 'string') {
+      if (input.startsWith('/')) {
+        return fetch(`${base}${input}`, { ...init, credentials: 'include' });
+      }
+      const url = new URL(input);
+      if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+        return fetch(`${base}${url.pathname}${url.search}`, { ...init, credentials: 'include' });
+      }
+    }
+    if (input instanceof Request) {
+      const url = new URL(input.url);
+      if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+        const modified = new Request(`${base}${url.pathname}${url.search}`, input);
+        return fetch(modified, { ...init, credentials: 'include' });
+      }
+    }
+    return fetch(input, init);
+  };
+}
+
 export function setupCapacitorBridge() {
   if (typeof window === 'undefined') return;
 
-  // Intercept fetch calls for /api/* routes when in Capacitor
   if (isRunningInCapacitor()) {
     const originalFetch = window.fetch;
     window.fetch = function (input, init) {
-      if (typeof input === 'string' && input.startsWith('/api/')) {
-        return originalFetch(`${DEPLOYED_API_URL}${input}`, init);
+      if (typeof input === 'string') {
+        if (input.startsWith('/')) {
+          return originalFetch(`${DEPLOYED_API_URL}${input}`, { ...init, credentials: 'include' });
+        }
+        const url = new URL(input);
+        if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+          return originalFetch(`${DEPLOYED_API_URL}${url.pathname}${url.search}`, { ...init, credentials: 'include' });
+        }
       }
-      if (input instanceof Request && input.url.startsWith('/api/')) {
-        const url = new URL(input.url, DEPLOYED_API_URL);
-        const modified = new Request(url, input);
-        return originalFetch(modified, init);
+      if (input instanceof Request) {
+        const url = new URL(input.url);
+        if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+          const modified = new Request(`${DEPLOYED_API_URL}${url.pathname}${url.search}`, input);
+          return originalFetch(modified, init);
+        }
       }
       return originalFetch(input, init);
     };

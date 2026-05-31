@@ -8,6 +8,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().default('https://placeholder.supabase.co'),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).default('placeholder-key'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).default('placeholder-service-key'),
+  NEXT_PUBLIC_DEPLOYED_URL: z.string().url().default('https://secureauth-ai.vercel.app'),
+  NEXT_PUBLIC_RP_ID: z.string().default('localhost'),
+  NEXT_PUBLIC_ORIGIN: z.string().default('http://localhost:3000'),
 });
 
 function getEnv() {
@@ -19,6 +22,9 @@ function getEnv() {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_DEPLOYED_URL: process.env.NEXT_PUBLIC_DEPLOYED_URL,
+    NEXT_PUBLIC_RP_ID: process.env.NEXT_PUBLIC_RP_ID,
+    NEXT_PUBLIC_ORIGIN: process.env.NEXT_PUBLIC_ORIGIN,
   });
 
   if (!result.success) {
@@ -33,6 +39,9 @@ function getEnv() {
     NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-key',
     SUPABASE_SERVICE_ROLE_KEY: 'placeholder-service-key',
+    NEXT_PUBLIC_DEPLOYED_URL: 'https://secureauth-ai.vercel.app',
+    NEXT_PUBLIC_RP_ID: 'localhost',
+    NEXT_PUBLIC_ORIGIN: 'http://localhost:3000',
   };
 }
 

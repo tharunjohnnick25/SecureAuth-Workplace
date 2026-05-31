@@ -33,6 +33,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (initRef.current) return;
     initRef.current = true;
 
+    // Mock auth mode — skip Supabase session management entirely
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+      setIsLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     const init = async () => {

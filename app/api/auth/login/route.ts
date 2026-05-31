@@ -48,6 +48,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
+    // ── Mock Auth Mode ──────────────────────────────────────────────────────
+    // When MOCK_AUTH=true, bypass Supabase entirely for local development.
+    // Allows login with any email/password. Set MOCK_AUTH=true in .env.local
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+      const mockUserId = crypto.randomUUID();
+      return NextResponse.json({
+        user: {
+          id: mockUserId,
+          email: email,
+          role: 'ADMIN',
+          first_name: email.split('@')[0],
+          last_name: 'User'
+        },
+        session: { access_token: 'mock-token', refresh_token: 'mock-refresh' },
+        riskReport: {
+          score: 0, level: 'LOW', action: 'ALLOW',
+          factors: [], recommendations: []
+        }
+      });
+    }
+
     const supabase = await createServerSupabaseClient();
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -56,7 +77,16 @@ export async function POST(req: NextRequest) {
     });
 
     if (authError || !authData?.user) {
-      return NextResponse.json({ error: authError?.message || 'Invalid credentials' }, { status: 401 });
+      // If Supabase is unreachable (e.g. project paused/deleted) and MOCK_AUTH
+      // is not set, show a clear error so the user knows what to do.
+      const msg = authError?.message || 'Invalid credentials';
+      const isConnectionError = msg.toLowerCase().includes('fetch failed') || msg.toLowerCase().includes('network');
+      if (isConnectionError) {
+        return NextResponse.json({
+          error: 'Cannot connect to authentication server (Supabase). Your Supabase project may be paused or unreachable. Set NEXT_PUBLIC_MOCK_AUTH=true in .env.local for local development, or check your Supabase project status at https://supabase.com.'
+        }, { status: 503 });
+      }
+      return NextResponse.json({ error: msg }, { status: 401 });
     }
 
     const user = authData.user;

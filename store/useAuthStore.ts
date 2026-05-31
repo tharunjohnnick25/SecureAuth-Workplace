@@ -1,13 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   role: string;
   first_name?: string;
   last_name?: string;
+  full_name?: string;
+  avatar_url?: string;
   biometric_enabled?: boolean;
+  organization_id?: string;
 }
 
 interface AuthState {

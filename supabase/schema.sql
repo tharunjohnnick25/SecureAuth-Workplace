@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS public.sessions (
     is_active BOOLEAN DEFAULT TRUE,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 6. Geo Locations

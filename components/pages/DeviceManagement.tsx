@@ -2,16 +2,16 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Smartphone, 
-  Monitor, 
-  Tablet, 
-  ShieldCheck, 
-  ShieldAlert, 
-  Trash2, 
-  Clock, 
-  MapPin, 
-  Globe, 
+import {
+  Smartphone,
+  Monitor,
+  Tablet,
+  ShieldCheck,
+  ShieldAlert,
+  Trash2,
+  Clock,
+  MapPin,
+  Globe,
   MoreVertical,
   Fingerprint,
   Info,
@@ -20,15 +20,16 @@ import {
   Search,
   Settings,
   Lock,
-  Activity
+  Activity,
 } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
-// Mock data for devices
 const initialDevices = [
   {
     id: '1',
@@ -51,36 +52,61 @@ export function DeviceManagement() {
 
   const devices = useMemo(() => {
     if (!dbDevices || dbDevices.length === 0) return initialDevices;
+
     return dbDevices.map((d: any) => ({
       id: d.id,
-      deviceName: d.device_name,
-      deviceType: d.device_type,
-      browser: d.browser,
-      os: d.os,
-      isTrusted: d.is_trusted,
-      lastUsed: d.last_used,
-      ipAddress: '192.168.1.1', 
-      location: { city: 'Unknown', country: 'XX' },
-      trustScore: d.is_trusted ? 98 : 45,
-      riskLevel: d.is_trusted ? 'low' : 'high'
+      deviceName: d.device_name ?? d.deviceName,
+      deviceType: d.device_type ?? d.deviceType ?? 'desktop',
+      browser: d.browser ?? 'Unknown browser',
+      os: d.os ?? 'Unknown OS',
+      isTrusted: d.is_trusted ?? d.isTrusted,
+      lastUsed: d.last_active || d.last_used || new Date().toISOString(),
+      ipAddress: d.ip_address || d.ipAddress || 'Unknown IP',
+      location: d.location || { city: 'Unknown', country: 'XX' },
+      trustScore: typeof d.trust_score === 'number' ? d.trust_score : d.is_trusted ? 98 : 45,
+      riskLevel: d.risk_level || (d.is_trusted ? 'low' : 'high'),
     }));
   }, [dbDevices]);
 
   const filteredDevices = useMemo(() => {
-    return devices.filter(d => 
-      d.deviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.os.toLowerCase().includes(searchQuery.toLowerCase())
+    return devices.filter(
+      (d) =>
+        d.deviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.os.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [devices, searchQuery]);
 
-  const toggleTrust = (id: string) => {
-    // In a real app, this would be a Supabase update
-    console.log('Toggle trust', id);
+  const toggleTrust = async (id: string) => {
+    const device = devices.find((item) => item.id === id);
+    if (!device) return;
+
+    const supabase = createClient();
+    const updated = !device.isTrusted;
+
+    const { error } = await supabase
+      .from('devices')
+      .update({ is_trusted: updated, last_active: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Unable to update device trust status');
+      console.error(error);
+    } else {
+      toast.success(`Device trust status updated`);
+    }
   };
 
-  const removeDevice = (id: string) => {
-    // In a real app, this would be a Supabase delete
-    console.log('Remove device', id);
+  const removeDevice = async (id: string) => {
+    const supabase = createClient();
+
+    const { error } = await supabase.from('devices').delete().eq('id', id);
+
+    if (error) {
+      toast.error('Unable to remove device');
+      console.error(error);
+    } else {
+      toast.success('Device removed successfully');
+    }
   };
 
   const getDeviceIcon = (type: string) => {

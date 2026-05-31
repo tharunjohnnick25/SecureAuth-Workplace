@@ -5,14 +5,13 @@ import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export function useRealtimeData<T>(
-  table: string, 
+  table: string,
   queryBuilder?: (supabase: any) => any,
   dependencies: any[] = []
 ) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
-  // ✅ FIX: Use ref to avoid re-creating the client on every render
   const supabaseRef = useRef(createClient());
   const mountedRef = useRef(true);
 
@@ -26,7 +25,7 @@ export function useRealtimeData<T>(
       } else {
         query = supabase.from(table).select('*');
       }
-      
+
       const { data: result, error: fetchError } = await query;
       if (fetchError) throw fetchError;
       if (mountedRef.current) {
@@ -35,18 +34,14 @@ export function useRealtimeData<T>(
     } catch (err: any) {
       if (mountedRef.current) {
         setError(err);
-        // Suppress empty object errors which usually mean the table doesn't exist yet
         if (Object.keys(err).length > 0 || typeof err === 'string') {
           console.warn(`Could not fetch ${table}. Using empty fallback data.`);
         }
         setData([]);
       }
     } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
+      if (mountedRef.current) setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table]);
 
   useEffect(() => {
@@ -54,7 +49,6 @@ export function useRealtimeData<T>(
     fetchData();
 
     const supabase = supabaseRef.current;
-    // Use a unique channel name to avoid "already subscribed" errors
     const channelId = Math.random().toString(36).substring(7);
     const channel = supabase
       .channel(`public:${table}:${channelId}`)
@@ -63,15 +57,15 @@ export function useRealtimeData<T>(
         { event: '*', schema: 'public', table: table },
         (payload: any) => {
           if (!mountedRef.current) return;
-          
+
           if (payload.eventType === 'INSERT') {
             setData((prev) => [payload.new as T, ...prev]);
-            if (table === 'alerts') {
-               toast.warning('New security alert detected!');
+            if (table === 'notifications') {
+              toast.info(`New notification: ${(payload.new as any)?.title || ''}`);
             }
           } else if (payload.eventType === 'UPDATE') {
-            setData((prev) => 
-              prev.map((item: any) => 
+            setData((prev) =>
+              prev.map((item: any) =>
                 item.id === payload.new.id ? { ...item, ...payload.new } : item
               )
             );
@@ -86,7 +80,6 @@ export function useRealtimeData<T>(
       mountedRef.current = false;
       supabase.removeChannel(channel);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table, ...dependencies]);
 
   return { data, loading, error, refetch: fetchData };

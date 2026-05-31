@@ -4,6 +4,7 @@ import { OrganizationProvider } from '@/context/OrganizationContext';
 import AnimateLayout from '@/components/AnimateLayout';
 import { Toaster } from 'sonner';
 import { SessionTimeout } from '@/components/SessionTimeout';
+import CapacitorBridge from '@/components/CapacitorBridge';
 import './globals.css';
 
 export const metadata = {
@@ -59,6 +60,7 @@ export default function RootLayout({
              }}>
         </div>
         
+        <CapacitorBridge />
         <main className="flex-1">
           <AuthProvider>
             <OrganizationProvider>

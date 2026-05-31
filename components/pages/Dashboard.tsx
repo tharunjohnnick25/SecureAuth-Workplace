@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, Suspense } from 'react';
+import { useMemo, Suspense, useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
@@ -13,14 +13,15 @@ import {
   CheckCircle,
   Clock,
   Activity,
+  Loader2,
+  Users,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { formatDistanceToNow } from 'date-fns';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { supabase } from '@/lib/supabase/client';
 
-// ✅ FIX: Single dynamic import for the charts container instead of 10 separate ones.
-// This avoids 10 parallel chunk fetches and their associated waterfall delays.
 const DashboardCharts = dynamic(() => import('@/components/dashboard/DashboardCharts'), {
   ssr: false,
   loading: () => (
@@ -32,53 +33,58 @@ const DashboardCharts = dynamic(() => import('@/components/dashboard/DashboardCh
 });
 
 export function Dashboard() {
-  // ✅ FIX: Reduced from 4 separate queries to 2 — merged login queries
-  const { data: dbLogins, loading: loginsLoading } = useRealtimeData('login_logs', (q) => q.select('*').order('created_at', { ascending: false }).limit(50));
-  const { data: dbAlerts } = useRealtimeData('threat_logs', (q) => q.select('*').order('created_at', { ascending: false }).limit(10));
+  const [userCount, setUserCount] = useState<number>(0);
+  const [activeSessions, setActiveSessions] = useState<number>(0);
 
-  // Use mock data if DB is empty to ensure a good presentation
-  const mockLogins = useMemo(() => [
-    { id: '1', status: 'SUCCESS', user_id: 'usr_89f2a', city: 'San Francisco', country: 'US', ip_address: '192.168.1.1', risk_score: 12, created_at: new Date(Date.now() - 5000).toISOString() },
-    { id: '2', status: 'FAILURE', user_id: 'usr_unknown', city: 'Moscow', country: 'RU', ip_address: '45.22.11.9', risk_score: 95, created_at: new Date(Date.now() - 120000).toISOString() },
-    { id: '3', status: 'SUCCESS', user_id: 'usr_22b1c', city: 'London', country: 'UK', ip_address: '10.0.0.5', risk_score: 28, created_at: new Date(Date.now() - 360000).toISOString() },
-    { id: '4', status: 'SUCCESS', user_id: 'usr_99x4z', city: 'New York', country: 'US', ip_address: '172.16.0.2', risk_score: 15, created_at: new Date(Date.now() - 860000).toISOString() },
-    { id: '5', status: 'SUCCESS', user_id: 'usr_44m7b', city: 'Tokyo', country: 'JP', ip_address: '10.0.1.12', risk_score: 8, created_at: new Date(Date.now() - 1500000).toISOString() },
-  ], []);
+  const { data: dbLogins, loading: loginsLoading } = useRealtimeData('login_logs', (q) =>
+    q.select('*').order('created_at', { ascending: false }).limit(50)
+  );
+  const { data: dbAlerts, loading: alertsLoading } = useRealtimeData('threat_logs', (q) =>
+    q.select('*').order('created_at', { ascending: false }).limit(10)
+  );
 
-  // ✅ FIX: Use the same login data for both the table and charts (no separate query)
-  const allLogins = (!dbLogins || (Array.isArray(dbLogins) && dbLogins.length === 0)) ? mockLogins : dbLogins;
-  const logins = useMemo(() => (Array.isArray(allLogins) ? allLogins.slice(0, 20) : []), [allLogins]);
-  
-  const alerts = (!dbAlerts || (Array.isArray(dbAlerts) && dbAlerts.length === 0)) ? [
-    { id: '1', severity: 'CRITICAL', is_read: false, description: 'Multiple failed logins from RU', type: 'BRUTE_FORCE' },
-    { id: '2', severity: 'HIGH', is_read: false, description: 'Impossible travel detected', type: 'TRAVEL_ANOMALY' }
-  ] : dbAlerts;
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { count: uCount } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+      if (uCount !== null) setUserCount(uCount);
 
-  // Calculate Stats
-  const stats = useMemo(() => {
-    const safeLogins = Array.isArray(allLogins) ? allLogins : [];
-    const safeAlerts = Array.isArray(alerts) ? alerts : [];
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count: sCount } = await supabase
+        .from('login_logs')
+        .select('*', { count: 'exact', head: true })
+        .gt('created_at', oneDayAgo);
+      if (sCount !== null) setActiveSessions(sCount);
+    };
+    fetchStats();
+  }, []);
 
-    const successCount = safeLogins.filter((l: any) => l.status === 'success').length;
-    const totalCount = safeLogins.length;
-    const activeAlerts = safeAlerts.filter((a: any) => !a.is_read).length;
-    
-    // Risk Score based on recent alerts
-    const highRiskAlerts = safeAlerts.filter((a: any) => a.severity === 'critical' || a.severity === 'high').length;
-    let riskLevel = 'Low';
-    let riskColor = 'text-success';
-    if (highRiskAlerts > 5) {
-      riskLevel = 'Critical';
-      riskColor = 'text-destructive';
-    } else if (highRiskAlerts > 2) {
-      riskLevel = 'Medium';
-      riskColor = 'text-warning';
-    }
+  const logins = useMemo(() => {
+    if (!dbLogins || !Array.isArray(dbLogins) || dbLogins.length === 0) return [];
+    return dbLogins.slice(0, 20);
+  }, [dbLogins]);
 
-    return { successCount, totalCount, activeAlerts, riskLevel, riskColor };
-  }, [allLogins, alerts]);
+  const alerts = useMemo(() => {
+    if (!dbAlerts || !Array.isArray(dbAlerts) || dbAlerts.length === 0) return [];
+    return dbAlerts;
+  }, [dbAlerts]);
 
-  // Aggregate Chart Data
+  const activeAlerts = useMemo(
+    () => alerts.filter((a: any) => !a.is_read).length,
+    [alerts]
+  );
+  const highRiskAlerts = useMemo(
+    () => alerts.filter((a: any) => a.severity === 'CRITICAL' || a.severity === 'HIGH').length,
+    [alerts]
+  );
+
+  const riskLevel = useMemo(() => {
+    if (highRiskAlerts > 5) return { label: 'Critical', color: 'text-destructive' };
+    if (highRiskAlerts > 2) return { label: 'Medium', color: 'text-warning' };
+    return { label: 'Low', color: 'text-success' };
+  }, [highRiskAlerts]);
+
   const chartData = useMemo(() => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const last7Days = Array.from({ length: 7 }).map((_, i) => {
@@ -87,32 +93,34 @@ export function Dashboard() {
       return { day: days[d.getDay()], success: 0, failed: 0 };
     });
 
-    const safeLogins = Array.isArray(allLogins) ? allLogins : [];
-    safeLogins.forEach((log: any) => {
-      const logDate = new Date(log.created_at);
-      const dayName = days[logDate.getDay()];
-      const dayData = last7Days.find(d => d.day === dayName);
-      if (dayData) {
-        if (log.status === 'success') dayData.success++;
-        else dayData.failed++;
-      }
-    });
+    if (Array.isArray(dbLogins)) {
+      dbLogins.forEach((log: any) => {
+        const logDate = new Date(log.created_at);
+        const dayName = days[logDate.getDay()];
+        const dayData = last7Days.find(d => d.day === dayName);
+        if (dayData) {
+          if (log.status === 'SUCCESS' || log.status === 'success') dayData.success++;
+          else dayData.failed++;
+        }
+      });
+    }
 
     return last7Days;
-  }, [allLogins]);
+  }, [dbLogins]);
 
   const riskDistribution = useMemo(() => {
-    const safeLogins = Array.isArray(allLogins) ? allLogins : [];
-    const low = safeLogins.filter((l: any) => (l.risk_score || 0) < 30).length;
-    const medium = safeLogins.filter((l: any) => (l.risk_score || 0) >= 30 && (l.risk_score || 0) < 70).length;
-    const high = safeLogins.filter((l: any) => (l.risk_score || 0) >= 70).length;
+    const low = dbLogins?.filter((l: any) => (l.risk_score || 0) < 30).length || 1;
+    const medium = dbLogins?.filter((l: any) => (l.risk_score || 0) >= 30 && (l.risk_score || 0) < 70).length || 0;
+    const high = dbLogins?.filter((l: any) => (l.risk_score || 0) >= 70).length || 0;
 
     return [
       { name: 'Low Risk', value: low, color: '#10b981' },
       { name: 'Medium Risk', value: medium, color: '#f59e0b' },
       { name: 'High Risk', value: high, color: '#ef4444' },
     ];
-  }, [allLogins]);
+  }, [dbLogins]);
+
+  const isLoading = loginsLoading || alertsLoading;
 
   return (
     <div className="min-h-screen bg-[#020617]">
@@ -120,8 +128,8 @@ export function Dashboard() {
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
-          <DashboardHeader 
-            title="Security Dashboard" 
+          <DashboardHeader
+            title="Security Dashboard"
             description="Real-time enterprise-grade IAM monitoring"
           >
             <div className="flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-lg border border-primary/20">
@@ -134,14 +142,14 @@ export function Dashboard() {
             <Card>
               <CardContent className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-success/20 flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-success" />
+                  <Users className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Success Audits</p>
-                  <h3 className="text-2xl font-semibold">{stats.successCount.toLocaleString()}</h3>
+                  <p className="text-sm text-muted-foreground">Total Employees</p>
+                  <h3 className="text-2xl font-semibold">{userCount.toLocaleString()}</h3>
                   <p className="text-xs text-success flex items-center gap-1 mt-1">
                     <TrendingUp className="w-3 h-3" />
-                    Real-time
+                    Registered users
                   </p>
                 </div>
               </CardContent>
@@ -150,12 +158,12 @@ export function Dashboard() {
             <Card>
               <CardContent className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-                  <Smartphone className="w-6 h-6 text-primary" />
+                  <Activity className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Events</p>
-                  <h3 className="text-2xl font-semibold">{stats.totalCount}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Authentication events</p>
+                  <p className="text-sm text-muted-foreground">Active Sessions</p>
+                  <h3 className="text-2xl font-semibold">{activeSessions}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Last 24 hours</p>
                 </div>
               </CardContent>
             </Card>
@@ -167,7 +175,7 @@ export function Dashboard() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Security Alerts</p>
-                  <h3 className="text-2xl font-semibold">{stats.activeAlerts}</h3>
+                  <h3 className="text-2xl font-semibold">{activeAlerts}</h3>
                   <p className="text-xs text-muted-foreground mt-1">Requiring review</p>
                 </div>
               </CardContent>
@@ -180,14 +188,13 @@ export function Dashboard() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">System Risk</p>
-                  <h3 className={`text-2xl font-semibold ${stats.riskColor}`}>{stats.riskLevel}</h3>
+                  <h3 className={`text-2xl font-semibold ${riskLevel.color}`}>{riskLevel.label}</h3>
                   <p className="text-xs text-muted-foreground mt-1">Automated evaluation</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* ✅ FIX: Charts loaded as a single lazy chunk instead of 10 separate dynamic imports */}
           <DashboardCharts chartData={chartData} riskDistribution={riskDistribution} />
 
           <Card>
@@ -196,74 +203,73 @@ export function Dashboard() {
               <div className="text-xs text-muted-foreground">Showing last 20 events</div>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
-                      <th className="px-4 py-3">Event</th>
-                      <th className="px-4 py-3">User</th>
-                      <th className="px-4 py-3">Source</th>
-                      <th className="px-4 py-3">Risk Score</th>
-                      <th className="px-4 py-3 text-right">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {logins.map((log: any) => (
-                      <tr key={log.id} className="hover:bg-primary/5 transition-colors group">
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                              log.status === 'success' ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'
-                            }`}>
-                              {log.status === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : logins.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No authentication events yet. Events will appear here in real-time.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
+                        <th className="px-4 py-3">Event</th>
+                        <th className="px-4 py-3">User</th>
+                        <th className="px-4 py-3">Source</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3 text-right">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {logins.map((log: any) => (
+                        <tr key={log.id} className="hover:bg-primary/5 transition-colors group">
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                log.status === 'SUCCESS' || log.status === 'success' ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'
+                              }`}>
+                                {log.status === 'SUCCESS' || log.status === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                              </div>
+                              <span className="text-sm font-medium">
+                                {log.status === 'SUCCESS' || log.status === 'success' ? 'Authorized Session' : 'Blocked Attempt'}
+                              </span>
                             </div>
-                            <span className="text-sm font-medium">
-                              {log.status === 'success' ? 'Authorized Session' : 'Blocked Attempt'}
+                          </td>
+                          <td className="px-4 py-4 text-sm font-mono text-muted-foreground">
+                            {log.user_id?.substring(0, 8)}...
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-muted-foreground" />
+                                {log.city || log.location?.city || 'Unknown'}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{log.ip_address}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              log.status === 'SUCCESS' || log.status === 'success'
+                                ? 'bg-success/20 text-success'
+                                : 'bg-destructive/20 text-destructive'
+                            }`}>
+                              {log.status === 'SUCCESS' || log.status === 'success' ? 'Success' : 'Failed'}
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm font-mono text-muted-foreground">
-                          {log.user_id?.substring(0, 8)}...
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-muted-foreground" />
-                              {log.city || 'Unknown'}, {log.country || 'XX'}
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <span className="text-xs text-muted-foreground">
+                              {log.created_at ? formatDistanceToNow(new Date(log.created_at), { addSuffix: true }) : 'Unknown'}
                             </span>
-                            <span className="text-xs text-muted-foreground">{log.ip_address}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                             <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                               <div 
-                                 className={`h-full rounded-full ${
-                                   (log.risk_score || 0) > 70 ? 'bg-destructive' : (log.risk_score || 0) > 30 ? 'bg-warning' : 'bg-success'
-                                 }`}
-                                 style={{ width: `${log.risk_score || 0}%` }}
-                                />
-                             </div>
-                             <span className="text-xs font-bold">{Math.round(log.risk_score || 0)}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {logins.length === 0 && !loginsLoading && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
-                          No recent activity found. Waiting for incoming events...
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </main>

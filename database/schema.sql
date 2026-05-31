@@ -90,11 +90,14 @@ CREATE TABLE audit_logs (
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id),
-    token_hash TEXT NOT NULL,
+    session_token VARCHAR(500) UNIQUE NOT NULL,
     device_id UUID,
     ip_address TEXT,
+    user_agent TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    last_active TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    last_active TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Trusted Devices

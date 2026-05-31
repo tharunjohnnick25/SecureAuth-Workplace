@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Lock, ChevronRight, AlertTriangle } from 'lucide-react';
-import { Card, CardHeader, CardContent } from '@/components/Card';
+import { Shield, Lock, ChevronRight, AlertTriangle, Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/Card';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase/client';
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -20,31 +22,32 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      // Assuming you have an admin login API endpoint
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, isAdminLogin: true })
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await response.json();
+      if (authError) throw new Error(authError.message);
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
 
-      // Check if user is actually an admin
-      if (data.user && data.user.role !== 'admin') {
+      const role = ((profile as any)?.role || '').toUpperCase();
+      const adminRoles = ['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN'];
+
+      if (!adminRoles.includes(role)) {
+        await supabase.auth.signOut();
         throw new Error('Unauthorized: Admin access required');
       }
 
-      // Store token (in a real app, use secure httpOnly cookies or proper state management)
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      router.push('/dashboard');
+      toast.success('Welcome back, Admin');
+      router.push('/admin/dashboard');
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication');
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +117,7 @@ export default function AdminLogin() {
                 disabled={isLoading}
                 className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg shadow-blue-600/20"
               >
-                {isLoading ? 'Authenticating...' : 'Secure Login'}
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Secure Login'}
                 {!isLoading && <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
               </button>
             </form>

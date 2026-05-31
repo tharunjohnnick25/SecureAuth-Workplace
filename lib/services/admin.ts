@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from '@/lib/supabase';
 
 export const AdminService = {
@@ -20,17 +19,15 @@ export const AdminService = {
   },
 
   updateUserStatus: async (userId: string, status: string) => {
-    const { error } = await supabase
-      .from('users')
-      .update({ status } as any)
+    const { error } = await (supabase.from('users') as any)
+      .update({ status })
       .eq('id', userId);
     if (error) throw error;
   },
 
   updateUserRole: async (userId: string, role: string) => {
-    const { error } = await supabase
-      .from('users')
-      .update({ role } as any)
+    const { error } = await (supabase.from('users') as any)
+      .update({ role })
       .eq('id', userId);
     if (error) throw error;
   }

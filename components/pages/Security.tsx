@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
@@ -11,51 +12,66 @@ import {
   MapPin,
   Clock,
   XCircle,
+  Loader2,
 } from 'lucide-react';
-
-const securityAlerts = [
-  {
-    id: 1,
-    type: 'critical',
-    title: 'Unusual login location detected',
-    description: 'Login attempt from Mumbai, India - 8,487 miles from usual location',
-    time: '5 minutes ago',
-    status: 'active',
-  },
-  {
-    id: 2,
-    type: 'warning',
-    title: 'Multiple failed login attempts',
-    description: '5 failed attempts in the last 10 minutes from IP 192.168.1.1',
-    time: '1 hour ago',
-    status: 'active',
-  },
-  {
-    id: 3,
-    type: 'info',
-    title: 'New device authorized',
-    description: 'iPad Air added to trusted devices list',
-    time: '3 hours ago',
-    status: 'resolved',
-  },
-  {
-    id: 4,
-    type: 'warning',
-    title: 'Typing pattern anomaly',
-    description: 'User bob.wilson showing unusual typing speed variation',
-    time: '5 hours ago',
-    status: 'active',
-  },
-];
-
-const locationActivity = [
-  { country: 'India', city: 'Bangalore', logins: 245, risk: 'low' },
-  { country: 'United Kingdom', city: 'London', logins: 89, risk: 'low' },
-  { country: 'United States', city: 'New York', logins: 34, risk: 'medium' },
-  { country: 'India', city: 'Chennai', logins: 1, risk: 'high' },
-];
+import { useRealtimeData } from '@/hooks/useRealtimeData';
 
 export function Security() {
+  const { data: dbThreats, loading: threatsLoading } = useRealtimeData('threat_logs', (q) =>
+    q.select('*').order('created_at', { ascending: false }).limit(20)
+  );
+  const { data: dbLogins, loading: loginsLoading } = useRealtimeData('login_logs', (q) =>
+    q.select('*').order('created_at', { ascending: false }).limit(100)
+  );
+
+  const securityAlerts = useMemo(() => {
+    if (!dbThreats || dbThreats.length === 0) return [];
+    return dbThreats.map((t: any) => ({
+      id: t.id,
+      type: t.severity === 'CRITICAL' ? 'critical' : t.severity === 'HIGH' ? 'warning' : 'info',
+      title: t.type?.replace(/_/g, ' ') || 'Security Alert',
+      description: t.description || 'No details available',
+      time: t.created_at ? new Date(t.created_at).toLocaleString() : 'Unknown',
+      status: t.is_read ? 'resolved' : 'active',
+    }));
+  }, [dbThreats]);
+
+  const activeAlerts = useMemo(() => securityAlerts.filter((a) => a.status === 'active').length, [securityAlerts]);
+
+  const locationActivity = useMemo(() => {
+    if (!dbLogins || dbLogins.length === 0) return [];
+    const locationMap = new Map<string, { country: string; city: string; logins: number; risk: string }>();
+    dbLogins.forEach((l: any) => {
+      const city = l.city || l.location?.city || 'Unknown';
+      const country = l.country || l.location?.country || 'XX';
+      const key = `${city},${country}`;
+      const existing = locationMap.get(key);
+      const riskScore = l.risk_score || 0;
+      const risk = riskScore > 70 ? 'high' : riskScore > 30 ? 'medium' : 'low';
+      if (existing) {
+        existing.logins++;
+        if (risk === 'high' || (risk === 'medium' && existing.risk !== 'high')) {
+          existing.risk = risk;
+        }
+      } else {
+        locationMap.set(key, { country, city, logins: 1, risk });
+      }
+    });
+    return Array.from(locationMap.values())
+      .sort((a, b) => b.logins - a.logins)
+      .slice(0, 10);
+  }, [dbLogins]);
+
+  const maxLogins = useMemo(() => Math.max(...locationActivity.map(l => l.logins), 1), [locationActivity]);
+  const resolvedToday = useMemo(() => securityAlerts.filter(a => a.status === 'resolved').length, [securityAlerts]);
+  const securityScore = useMemo(() => {
+    const total = securityAlerts.length;
+    const active = activeAlerts;
+    if (total === 0) return 100;
+    return Math.max(0, 100 - Math.round((active / Math.max(total, 1)) * 50));
+  }, [securityAlerts, activeAlerts]);
+  const isLoading = threatsLoading || loginsLoading;
+
   return (
     <div className="min-h-screen bg-[#020617]">
       <Sidebar />
@@ -77,9 +93,7 @@ export function Security() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Active Alerts</p>
-                  <h3 className="text-2xl font-semibold">
-                    {securityAlerts.filter((a) => a.status === 'active').length}
-                  </h3>
+                  <h3 className="text-2xl font-semibold">{activeAlerts}</h3>
                 </div>
               </CardContent>
             </Card>
@@ -90,8 +104,8 @@ export function Security() {
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Resolved Today</p>
-                  <h3 className="text-2xl font-semibold">12</h3>
+                  <p className="text-sm text-muted-foreground">Addressed</p>
+                  <h3 className="text-2xl font-semibold">{resolvedToday}</h3>
                 </div>
               </CardContent>
             </Card>
@@ -103,7 +117,7 @@ export function Security() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Security Score</p>
-                  <h3 className="text-2xl font-semibold">94/100</h3>
+                  <h3 className="text-2xl font-semibold">{securityScore}/100</h3>
                 </div>
               </CardContent>
             </Card>
@@ -115,56 +129,66 @@ export function Security() {
                 <CardTitle>Security Alerts</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {securityAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            alert.type === 'critical'
-                              ? 'bg-destructive/20'
-                              : alert.type === 'warning'
-                              ? 'bg-warning/20'
-                              : 'bg-success/20'
-                          }`}
-                        >
-                          {alert.type === 'critical' ? (
-                            <XCircle className="w-5 h-5 text-destructive" />
-                          ) : alert.type === 'warning' ? (
-                            <AlertTriangle className="w-5 h-5 text-warning" />
-                          ) : (
-                            <CheckCircle className="w-5 h-5 text-success" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium mb-1">{alert.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {alert.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {alert.time}
-                            </span>
-                            {alert.status === 'active' && (
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline">
-                                  Investigate
-                                </Button>
-                                <Button size="sm" variant="ghost">
-                                  Dismiss
-                                </Button>
-                              </div>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : securityAlerts.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No security alerts. System is clear.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {securityAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              alert.type === 'critical'
+                                ? 'bg-destructive/20'
+                                : alert.type === 'warning'
+                                ? 'bg-warning/20'
+                                : 'bg-success/20'
+                            }`}
+                          >
+                            {alert.type === 'critical' ? (
+                              <XCircle className="w-5 h-5 text-destructive" />
+                            ) : alert.type === 'warning' ? (
+                              <AlertTriangle className="w-5 h-5 text-warning" />
+                            ) : (
+                              <CheckCircle className="w-5 h-5 text-success" />
                             )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium mb-1">{alert.title}</h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {alert.description}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {alert.time}
+                              </span>
+                              {alert.status === 'active' && (
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline">
+                                    Investigate
+                                  </Button>
+                                  <Button size="sm" variant="ghost">
+                                    Dismiss
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -173,51 +197,57 @@ export function Security() {
                 <CardTitle>Location Activity</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {locationActivity.map((location, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-primary" />
-                          <h4 className="font-medium">
-                            {location.city}, {location.country}
-                          </h4>
-                        </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            location.risk === 'high'
-                              ? 'bg-destructive/20 text-destructive'
-                              : location.risk === 'medium'
-                              ? 'bg-warning/20 text-warning'
-                              : 'bg-success/20 text-success'
-                          }`}
-                        >
-                          {location.risk}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {location.logins} logins
-                        </span>
-                        <div className="w-32 bg-muted rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full ${
+                {locationActivity.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No location data available yet.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {locationActivity.map((location, index) => (
+                      <div
+                        key={index}
+                        className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-primary" />
+                            <h4 className="font-medium">
+                              {location.city}, {location.country}
+                            </h4>
+                          </div>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
                               location.risk === 'high'
-                                ? 'bg-destructive'
+                                ? 'bg-destructive/20 text-destructive'
                                 : location.risk === 'medium'
-                                ? 'bg-warning'
-                                : 'bg-success'
+                                ? 'bg-warning/20 text-warning'
+                                : 'bg-success/20 text-success'
                             }`}
-                            style={{ width: `${Math.min((location.logins / 250) * 100, 100)}%` }}
-                          />
+                          >
+                            {location.risk}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {location.logins} logins
+                          </span>
+                          <div className="w-32 bg-muted rounded-full h-1.5">
+                            <div
+                              className={`h-1.5 rounded-full ${
+                                location.risk === 'high'
+                                  ? 'bg-destructive'
+                                  : location.risk === 'medium'
+                                  ? 'bg-warning'
+                                  : 'bg-success'
+                              }`}
+                              style={{ width: `${(location.logins / maxLogins) * 100}%` }}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

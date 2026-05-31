@@ -39,6 +39,9 @@
   "exclude": [
     "node_modules",
     "mobile",
-    "backend"
+    "backend",
+    "apps",
+    "packages",
+    "android"
   ]
 }

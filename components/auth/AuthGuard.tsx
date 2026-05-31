@@ -1,104 +1,120 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useAuth } from './AuthProvider';
 import { Shield } from 'lucide-react';
+import { restoreSession } from '@/lib/supabase/client';
 
 interface AuthGuardProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
 }
 
+const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
+const SECURITY_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'SECURITY_ANALYST']);
+const AUDIT_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'SECURITY_ANALYST', 'HR_MANAGER']);
+const BILLING_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER']);
+
 export default function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { session, isLoading } = useAuth();
+  const { session, isLoading: contextLoading, signOut } = useAuth();
   const { user, isAuthenticated, requiresBiometric } = useAuthStore();
 
+  const hasLocalSession = typeof window !== 'undefined' ? !!restoreSession() : false;
+  const [showLoader, setShowLoader] = useState(true);
+
   useEffect(() => {
-    if (isLoading) return;
+    if (!hasLocalSession && !contextLoading && !session && !isAuthenticated) {
+      const timer = setTimeout(() => {
+        if (!session && !isAuthenticated) {
+          router.replace(`/login?redirectTo=${encodeURIComponent(pathname)}`);
+        }
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [hasLocalSession, contextLoading, session, isAuthenticated, pathname, router]);
+
+  useEffect(() => {
+    if (!contextLoading || session || isAuthenticated) {
+      setShowLoader(false);
+    }
+  }, [contextLoading, session, isAuthenticated]);
+
+  useEffect(() => {
+    if (contextLoading && !session && !isAuthenticated) return;
 
     if (!session && !isAuthenticated) {
       router.replace(`/login?redirectTo=${encodeURIComponent(pathname)}`);
       return;
     }
 
-    // Role-based and permission-based route protection
-    if (session && user) {
+    if ((session || isAuthenticated) && user) {
       const userRole = (user.role || '').toUpperCase();
 
-      // `/admin` routes require administrative privileges
-      if (requireAdmin) {
-        const isAdminRole = ['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN'].includes(userRole);
-        if (!isAdminRole) {
-          router.replace('/unauthorized');
-          return;
-        }
+      if (requireAdmin && !ADMIN_ROLES.has(userRole)) {
+        router.replace('/unauthorized');
+        return;
       }
-      
-      // Protected modules security rules
-      const isSecurityRoute = 
-        pathname.startsWith('/security') || 
-        pathname.startsWith('/threat-intelligence') || 
-        pathname.startsWith('/incident-response') || 
-        pathname.startsWith('/vulnerability-scanner') || 
-        pathname.startsWith('/forensics') || 
+
+      const isSecurityRoute =
+        pathname.startsWith('/security') ||
+        pathname.startsWith('/threat-intelligence') ||
+        pathname.startsWith('/incident-response') ||
+        pathname.startsWith('/vulnerability-scanner') ||
+        pathname.startsWith('/forensics') ||
         pathname.startsWith('/alerts-configuration');
 
-      if (isSecurityRoute) {
-        // Must have manage_security permission or view_analytics permission (except employee/guest)
-        const isEmployeeOrGuest = ['EMPLOYEE', 'GUEST_USER', 'employee', 'guest'].includes(user.role || '');
-        const hasSecurityAccess = userRole === 'SECURITY_ANALYST' || userRole === 'SUPER_ADMIN' || userRole === 'ORGANIZATION_OWNER' || userRole === 'ORGANIZATION_ADMIN';
-        
-        if (isEmployeeOrGuest && !hasSecurityAccess) {
-          router.replace('/unauthorized');
-          return;
-        }
+      if (isSecurityRoute && !SECURITY_ROLES.has(userRole)) {
+        router.replace('/unauthorized');
+        return;
       }
 
-      // Audit logs require compliance/admin permissions
-      if (pathname.startsWith('/audit-logs') || pathname.startsWith('/admin/audit')) {
-        const hasAuditAccess = ['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'SECURITY_ANALYST', 'HR_MANAGER'].includes(userRole);
-        if (!hasAuditAccess) {
-          router.replace('/unauthorized');
-          return;
-        }
+      if ((pathname.startsWith('/audit-logs') || pathname.startsWith('/admin/audit')) && !AUDIT_ROLES.has(userRole)) {
+        router.replace('/unauthorized');
+        return;
       }
 
-      // Billing/subscriptions require owner or super admin privileges
-      if (pathname.startsWith('/billing') || pathname.startsWith('/subscription-plans')) {
-        const hasBillingAccess = ['SUPER_ADMIN', 'ORGANIZATION_OWNER'].includes(userRole);
-        if (!hasBillingAccess) {
-          router.replace('/unauthorized');
-          return;
-        }
+      if ((pathname.startsWith('/billing') || pathname.startsWith('/subscription-plans')) && !BILLING_ROLES.has(userRole)) {
+        router.replace('/unauthorized');
+        return;
       }
     }
-  }, [session, isAuthenticated, isLoading, pathname, requireAdmin, user, router]);
+  }, [session, isAuthenticated, contextLoading, pathname, requireAdmin, user, router]);
 
-  // Handle biometric requirement
   useEffect(() => {
-    if (requiresBiometric && pathname !== '/verify-biometric') {
+    if (requiresBiometric && pathname !== '/verify-biometric' && pathname !== '/mfa-verify') {
       router.replace('/verify-biometric');
     }
   }, [requiresBiometric, pathname, router]);
 
-  if (isLoading) {
+  if (showLoader && !session && !isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-cyber-dark)]">
         <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
           <Shield className="w-6 h-6 text-primary animate-spin" style={{ animationDuration: '1.5s' }} />
         </div>
-        <p className="mt-4 text-primary/70 text-sm animate-pulse tracking-widest uppercase font-bold">Securing Session...</p>
+        <p className="mt-4 text-primary/70 text-sm animate-pulse tracking-widest uppercase font-bold">
+          Securing Session...
+        </p>
       </div>
     );
   }
 
-  if (isAuthenticated) {
-    return <>{children}</>;
+  if (!session && !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-cyber-dark)]">
+        <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
+          <Shield className="w-6 h-6 text-primary animate-spin" style={{ animationDuration: '1.5s' }} />
+        </div>
+        <p className="mt-4 text-primary/70 text-sm animate-pulse tracking-widest uppercase font-bold">
+          Securing Session...
+        </p>
+      </div>
+    );
   }
 
-  return null;
+  return <>{children}</>;
 }

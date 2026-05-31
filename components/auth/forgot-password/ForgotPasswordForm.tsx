@@ -1,38 +1,46 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Icons } from "@/components/ui/icons"
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Icons } from "@/components/ui/icons";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
-})
+});
 
 export function ForgotPasswordForm() {
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-    },
-  })
+    defaultValues: { email: "" },
+  });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-    // Placeholder for API call
-    console.log(values)
-    setTimeout(() => {
-      setIsLoading(false)
-      setIsSubmitted(true)
-    }, 2000)
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: values.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send reset link");
+      setIsSubmitted(true);
+      toast.success("Password reset link sent to your email");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   if (isSubmitted) {
@@ -45,12 +53,12 @@ export function ForgotPasswordForm() {
           </CardDescription>
         </CardHeader>
         <CardFooter>
-          <Button variant="ghost" className="w-full text-zinc-400 hover:text-white" onClick={() => setIsSubmitted(false)}>
+          <Button variant="ghost" className="w-full text-zinc-400 hover:text-white" onClick={() => (window.location.href = "/login")}>
             Back to login
           </Button>
         </CardFooter>
       </Card>
-    )
+    );
   }
 
   return (
@@ -71,9 +79,9 @@ export function ForgotPasswordForm() {
                 <FormItem>
                   <FormLabel className="text-zinc-300">Email</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="name@company.com" 
-                      {...field} 
+                    <Input
+                      placeholder="name@company.com"
+                      {...field}
                       className="bg-white/5 border-white/10 text-white placeholder:text-zinc-500 focus:ring-primary/50"
                     />
                   </FormControl>
@@ -89,10 +97,10 @@ export function ForgotPasswordForm() {
         </Form>
       </CardContent>
       <CardFooter>
-        <Button variant="link" className="w-full text-zinc-400 hover:text-white" onClick={() => window.location.href = '/auth/login'}>
+        <Button variant="link" className="w-full text-zinc-400 hover:text-white" onClick={() => (window.location.href = "/login")}>
           Back to login
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }

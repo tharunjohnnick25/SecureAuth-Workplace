@@ -1,28 +1,42 @@
-import { createClient as createClientJS } from '@supabase/supabase-js';
+import { createClient as createClientJS, type Session } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-// ✅ Singleton pattern — prevents creating a new client on every render/call
+const SESSION_STORAGE_KEY = 'secureauth-session';
+
 let _client: ReturnType<typeof createClientJS<Database>> | null = null;
 
-export const createClient = () => {
+function getClient(): ReturnType<typeof createClientJS<Database>> {
   if (!_client) {
+    const existingSession = typeof window !== 'undefined' ? restoreSession() : null;
     _client = createClientJS<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
-        // Persist session in localStorage for fast restore
         persistSession: true,
-        // Auto-refresh token before expiry — no manual refresh needed
         autoRefreshToken: true,
-        // Detect session in URL fragments (for OAuth flows)
         detectSessionInUrl: true,
-        // Store session using localStorage key
-        storageKey: 'secureauth-session',
+        storageKey: SESSION_STORAGE_KEY,
+        ...(existingSession ? { initialSession: existingSession } : {}),
       },
     });
   }
   return _client;
-};
+}
 
-export const supabase = createClient();
+export function restoreSession(): Session | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as Session;
+  } catch {}
+  return null;
+}
+
+export const createClient = () => getClient();
+
+export const supabase = new Proxy({} as ReturnType<typeof createClientJS<Database>>, {
+  get(_, prop) {
+    return getClient()[prop as keyof ReturnType<typeof createClientJS<Database>>];
+  },
+});

@@ -5,10 +5,23 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:capacitor": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cap:sync": "npx cap sync",
+    "cap:copy": "npx cap copy",
+    "cap:open": "npx cap open android",
+    "cap:build": "npm run build && npx cap copy && npx cap sync",
+    "cap:dev": "set CAPACITOR_SERVER_URL=http://10.0.2.2:3000&& npx cap copy && npx cap sync && npx cap open android"
   },
   "dependencies": {
+    "@capacitor/camera": "^6.1.3",
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/filesystem": "^6.0.4",
+    "@capacitor/geolocation": "^6.1.1",
+    "@capacitor/push-notifications": "^6.0.5",
+    "@capacitor/splash-screen": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@hookform/resolvers": "^5.2.2",
@@ -88,6 +101,8 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/cli": "^6.2.1",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/vite": "4.1.12",
     "@types/jsonwebtoken": "^9.0.10",

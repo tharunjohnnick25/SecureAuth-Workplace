@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
 export function SessionManagement() {
-  const { data: sessions, loading, refetch } = useRealtimeData('sessions', (q) => q.select('*').order('last_seen', { ascending: false }));
+  const { data: sessions, loading, refetch } = useRealtimeData('sessions', (q) => q.select('*').order('last_active', { ascending: false }));
   const [revoking, setRevoking] = useState<string | null>(null);
 
   const handleRevoke = async (sessionId: string) => {
@@ -137,7 +137,7 @@ export function SessionManagement() {
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="w-4 h-4" />
-                            {formatDistanceToNow(new Date(session.last_seen), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(session.last_active), { addSuffix: true })}
                           </div>
                         </td>
                         <td className="px-4 py-4">

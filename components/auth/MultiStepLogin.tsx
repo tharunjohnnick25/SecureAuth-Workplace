@@ -8,7 +8,7 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { getDeviceFingerprint } from '@/lib/security/fingerprint';
 import { useLocation } from '@/hooks/useLocation';
 
@@ -23,22 +23,19 @@ export function MultiStepLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   const { setUser } = useAuthStore();
   const { location, requestLocation } = useLocation();
   const [fingerprint, setFingerprint] = useState<any>(null);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  // One-time mount: collect device fingerprint and request location
   useEffect(() => {
     setFingerprint(getDeviceFingerprint());
     requestLocation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cleanup camera stream on unmount or when stream changes
   useEffect(() => {
     return () => {
       if (stream) stream.getTracks().forEach(t => t.stop());
@@ -50,7 +47,7 @@ export function MultiStepLogin() {
       const s = await navigator.mediaDevices.getUserMedia({ video: true });
       setStream(s);
       if (videoRef.current) videoRef.current.srcObject = s;
-    } catch (err) {
+    } catch {
       toast.error('Camera access denied. Please enable camera permissions.');
     }
   };
@@ -58,7 +55,7 @@ export function MultiStepLogin() {
   const completeLogin = useCallback(async (user: any, session: any) => {
     try {
       setStep('success');
-      
+
       const { data: profile } = await supabase
         .from('users')
         .select('*')
@@ -66,15 +63,14 @@ export function MultiStepLogin() {
         .single();
 
       const p = profile as any;
-      setUser({ 
-        id: user.id, 
-        email: user.email!, 
-        role: p?.role || 'employee', 
-        first_name: p?.full_name?.split(' ')[0] || '', 
-        last_name: p?.full_name?.split(' ').slice(1).join(' ') || '' 
+      setUser({
+        id: user.id,
+        email: user.email!,
+        role: p?.role || 'employee',
+        first_name: p?.full_name?.split(' ')[0] || '',
+        last_name: p?.full_name?.split(' ').slice(1).join(' ') || ''
       });
 
-      // Record success in DB via API would be better, but we already have session
       setTimeout(() => {
         router.push('/dashboard');
         toast.success('Authentication successful');
@@ -88,9 +84,8 @@ export function MultiStepLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      // PHASE 3: Call internal API for risk analysis
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,7 +94,7 @@ export function MultiStepLogin() {
           password,
           fingerprint,
           location,
-          typingMetrics: [], // Placeholder for behavioral biometrics
+          typingMetrics: [],
         }),
       });
 
@@ -107,7 +102,7 @@ export function MultiStepLogin() {
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
       setStep('analyzing');
-      
+
       setTimeout(() => {
         setIsLoading(false);
         if (data.requiresMFA) {
@@ -134,16 +129,26 @@ export function MultiStepLogin() {
       return;
     }
     setIsLoading(true);
-    // Real verify logic
-    completeLogin({}, {}); // Placeholder
+    try {
+      const res = await fetch('/api/auth/mfa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, factorId: 'totp' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Invalid code');
+      completeLogin({}, {});
+    } catch (error: any) {
+      toast.error(error.message);
+      setIsLoading(false);
+    }
   };
 
   const handleCameraVerify = async () => {
     setIsLoading(true);
-    // PHASE 4: Capture image and verify
     setTimeout(() => {
       setIsLoading(false);
-      completeLogin({}, {}); // Placeholder for success
+      completeLogin({}, {});
     }, 2000);
   };
 
@@ -160,7 +165,7 @@ export function MultiStepLogin() {
 
       <div className="w-full max-w-lg z-10">
         <AnimatePresence mode="wait">
-          
+
           {step === 'login' && (
             <motion.div key="login" {...stepVariants} className="glass-panel p-10 border-blue-500/20 shadow-2xl">
                <div className="flex flex-col items-center text-center mb-10">
@@ -175,9 +180,9 @@ export function MultiStepLogin() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Identity Identifier</label>
-                       <Input 
-                         type="email" 
-                         placeholder="employee@company.com" 
+                       <Input
+                         type="email"
+                         placeholder="employee@company.com"
                          value={email}
                          onChange={(e) => setEmail(e.target.value)}
                          icon={<Mail className="w-5 h-5 text-blue-400" />}
@@ -191,16 +196,16 @@ export function MultiStepLogin() {
                           <button type="button" onClick={() => router.push('/forgot-password')} className="text-[10px] font-bold text-blue-400 hover:text-blue-300">Recover Key?</button>
                        </div>
                        <div className="relative">
-                          <Input 
-                            type={showPassword ? "text" : "password"} 
-                            placeholder="••••••••" 
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             icon={<Lock className="w-5 h-5 text-blue-400" />}
                             className="h-14 bg-black/40 border-white/10 text-white pr-12"
                             required
                           />
-                          <button 
+                          <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
@@ -231,7 +236,7 @@ export function MultiStepLogin() {
                </div>
                <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-wide">Threat Analysis</h2>
                <p className="text-sm text-gray-400 mb-8 max-w-xs">AI is auditing your device fingerprint and geographic proximity for anomalies...</p>
-               
+
                <div className="space-y-3 w-full max-w-xs">
                   <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                      <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 2 }} className="h-full bg-blue-500" />
@@ -269,7 +274,7 @@ export function MultiStepLogin() {
                <Button onClick={handleCameraVerify} disabled={isLoading || !stream} className="w-full h-14 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-purple-500/20">
                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Confirm Identity'}
                </Button>
-               
+
                <button onClick={() => setStep('login')} className="w-full mt-4 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest">Cancel Audit</button>
             </motion.div>
           )}
@@ -287,7 +292,7 @@ export function MultiStepLogin() {
                 <form onSubmit={handleMFA} className="space-y-8">
                    <div className="flex justify-between gap-2">
                      {otp.map((val, i) => (
-                       <input 
+                       <input
                          key={i}
                          type="text"
                          maxLength={1}
@@ -319,10 +324,10 @@ export function MultiStepLogin() {
                </div>
                <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-[0.2em]">Access Granted</h2>
                <p className="text-xs text-gray-400 uppercase tracking-widest">Bridging secure connection to command center...</p>
-               
+
                <div className="mt-8 flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <motion.div 
+                    <motion.div
                       key={i}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}

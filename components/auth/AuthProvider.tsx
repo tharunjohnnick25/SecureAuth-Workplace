@@ -1,10 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient, supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useRouter, usePathname } from 'next/navigation';
-import type { Session } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { log } from '@/lib/logger';
 
 interface AuthContextType {
@@ -19,45 +19,36 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-const SESSION_STORAGE_KEY = 'secureauth.supabase.session';
+const SESSION_STORAGE_KEY = 'secureauth-session';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(() => {
-    // Fast restore from localStorage to avoid "securing session" flicker
-    try {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem(SESSION_STORAGE_KEY) : null;
-      if (raw) return JSON.parse(raw) as Session;
-    } catch (e) {
-      // ignore parse errors
-    }
-    return null;
-  });
-
-  const [isLoading, setIsLoading] = useState<boolean>(!session);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setUser, logout } = useAuthStore();
   const router = useRouter();
-  const pathname = usePathname();
   const syncingRef = useRef<string | null>(null);
+  const initRef = useRef(false);
 
   useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+
     let mounted = true;
 
     const init = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const client = createClient();
+        const { data: { session: initialSession } } = await client.auth.getSession();
 
         if (!mounted) return;
 
         if (initialSession) {
           setSession(initialSession);
-          try {
-            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(initialSession));
-          } catch {}
+          try { localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(initialSession)); } catch {}
 
-          // sync profile only once per user
           if (initialSession.user && syncingRef.current !== initialSession.user.id) {
             syncingRef.current = initialSession.user.id;
-            await syncUserWithProfile(initialSession.user.id, initialSession.user.email ?? '');
+            await syncUserWithProfile(initialSession.user);
           }
         } else {
           setSession(null);
@@ -72,24 +63,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     init();
 
-    const { data } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const { data } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       try {
         setSession(newSession);
+
         if (newSession) {
           try { localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newSession)); } catch {}
 
           if (newSession.user && syncingRef.current !== newSession.user.id) {
             syncingRef.current = newSession.user.id;
-            await syncUserWithProfile(newSession.user.id, newSession.user.email ?? '');
+            await syncUserWithProfile(newSession.user);
           }
         } else {
           try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
+          syncingRef.current = null;
           logout();
         }
       } catch (err) {
         log('error', 'AuthProvider.onAuthStateChange', String(err));
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     });
 
@@ -97,28 +90,67 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       data.subscription.unsubscribe();
     };
-  }, [setUser, logout]);
+  }, []);
 
-  const syncUserWithProfile = async (userId: string, email: string) => {
+  const syncUserWithProfile = async (authUser: SupabaseUser) => {
+    const { id: userId, email = '', user_metadata } = authUser;
+
     try {
-      const { data: profile } = await supabase
+      const { data: existing } = await supabase
         .from('users')
-        .select('id, role, full_name')
+        .select('id, role, full_name, avatar_url')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (profile) {
-        const p = profile as { id: string; role?: string; full_name?: string };
+      if (existing) {
+        const p = existing as { id: string; role?: string; full_name?: string; avatar_url?: string };
         setUser({
           id: userId,
-          email: email,
+          email,
           role: p.role || 'employee',
           first_name: p.full_name?.split(' ')[0] || '',
           last_name: p.full_name?.split(' ').slice(1).join(' ') || '',
         });
+        return;
       }
+
+      const fullName =
+        user_metadata?.full_name ??
+        user_metadata?.name ??
+        email.split('@')[0] ??
+        'User';
+      const avatarUrl =
+        user_metadata?.avatar_url ??
+        user_metadata?.picture ??
+        null;
+
+      const { data: created } = await (supabase.from('users') as any)
+        .upsert(
+          {
+            id: userId,
+            email,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            role: 'employee',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id', ignoreDuplicates: false }
+        )
+        .select('id, role, full_name')
+        .single();
+
+      const c = (created as any) || {};
+      setUser({
+        id: userId,
+        email,
+        role: c.role || 'employee',
+        first_name: (c.full_name as string | undefined)?.split(' ')[0] || fullName.split(' ')[0],
+        last_name: (c.full_name as string | undefined)?.split(' ').slice(1).join(' ') || '',
+      });
     } catch (error) {
       log('error', 'syncUserWithProfile', String(error));
+      setUser({ id: userId, email, role: 'employee' });
     }
   };
 
@@ -128,6 +160,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (err) {
       log('error', 'signOut', String(err));
     }
+    syncingRef.current = null;
     logout();
     try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
     router.push('/login');

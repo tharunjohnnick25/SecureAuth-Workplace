@@ -6,16 +6,22 @@ export async function POST(req: NextRequest) {
     const { sessionId } = await req.json();
     const supabase = await createServerSupabaseClient();
 
-    // In a real Supabase setup, you might revoke the JWT or delete the session from public.sessions
-    // and also potentially call supabase.auth.admin.signOut(userId) if you have the userId.
-    
-    // For our custom tracking:
-    const { error } = await supabase
-      .from('sessions')
-      .update({ is_active: false })
-      .eq('id', sessionId);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    if (error) throw error;
+    if (sessionId) {
+      const { error } = await supabase
+        .from('sessions')
+        .update({ is_active: false })
+        .eq('id', sessionId)
+        .eq('user_id', session.user.id);
+
+      if (error) throw error;
+    } else {
+      await supabase.auth.signOut();
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

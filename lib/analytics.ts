@@ -4,11 +4,11 @@ export async function getDashboardStats() {
   const supabase = await createServerSupabaseClient();
 
   const { count: totalLogins } = await supabase
-    .from('login_history')
+    .from('login_logs')
     .select('*', { count: 'exact', head: true });
 
-  const { data: recentAlerts } = await supabase
-    .from('alerts')
+  const { data: recentNotifications } = await supabase
+    .from('notifications')
     .select('*')
     .eq('is_read', false)
     .order('created_at', { ascending: false })
@@ -22,20 +22,18 @@ export async function getDashboardStats() {
   return {
     totalLogins: totalLogins || 0,
     activeDevices: activeDevices || 0,
-    recentAlerts: recentAlerts || [],
+    recentNotifications: recentNotifications || [],
   };
 }
 
 export async function getLoginTrends() {
   const supabase = await createServerSupabaseClient();
-  
+
   const { data, error } = await supabase
-    .from('login_history')
+    .from('login_logs')
     .select('created_at, status')
     .order('created_at', { ascending: true });
 
   if (error) return [];
-
-  // Group by day/hour logic would go here
-  return data;
+  return data || [];
 }

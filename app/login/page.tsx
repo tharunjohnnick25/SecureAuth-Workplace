@@ -1,4 +1,4 @@
-import { MultiStepLogin } from '@/components/auth/MultiStepLogin';
+import { Login } from '@/components/pages/Login';
 
 export const metadata = {
   title: 'Login | SecureAuth AI',
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function LoginPage() {
-  return <MultiStepLogin />;
+  return <Login />;
 }

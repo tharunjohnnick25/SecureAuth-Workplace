@@ -1,26 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Users, CheckCircle, XCircle, Search, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const mockEmployees = [
-  { id: 1, name: 'Alice Smith', email: 'alice.smith@company.com', department: 'Engineering', role: 'Developer', status: 'Active', lastLogin: '10 mins ago' },
-  { id: 2, name: 'Bob Johnson', email: 'bob.j@company.com', department: 'Marketing', role: 'Manager', status: 'Active', lastLogin: '2 hours ago' },
-  { id: 3, name: 'Charlie Davis', email: 'charlie.d@company.com', department: 'Finance', role: 'Analyst', status: 'Inactive', lastLogin: '3 days ago' },
-  { id: 4, name: 'Diana Prince', email: 'diana.p@company.com', department: 'HR', role: 'Director', status: 'Active', lastLogin: '1 hour ago' },
-  { id: 5, name: 'Evan Wright', email: 'evan.w@company.com', department: 'Engineering', role: 'Senior Dev', status: 'Suspended', lastLogin: '1 week ago' },
-];
+type Employee = {
+  id: string;
+  full_name: string;
+  email: string;
+  department?: string;
+  role?: string;
+  status?: string;
+  last_login?: string;
+};
 
 export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredEmployees = mockEmployees.filter(emp => 
-    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    emp.email.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function loadEmployees() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, full_name, email, department, role, status, last_login')
+        .order('full_name', { ascending: true });
+
+      if (error) {
+        setError(error.message);
+        setEmployees([]);
+      } else {
+        setEmployees(data || []);
+      }
+      setLoading(false);
+    }
+
+    loadEmployees();
+  }, []);
+
+  const filteredEmployees = useMemo(
+    () =>
+      employees.filter((emp) =>
+        emp.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [employees, searchTerm]
   );
 
   return (
@@ -73,10 +105,10 @@ export default function EmployeesPage() {
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                              {emp.name.charAt(0)}
+                              {emp.full_name?.charAt(0) || 'U'}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-white">{emp.name}</div>
+                              <div className="text-sm font-medium text-white">{emp.full_name}</div>
                               <div className="text-xs text-gray-500">{emp.email}</div>
                             </div>
                           </div>

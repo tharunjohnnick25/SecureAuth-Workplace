@@ -16,8 +16,8 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.endsWith('@gmail.com')) {
-      toast.error('Only @gmail.com accounts are allowed');
+    if (!email.includes('@')) {
+      toast.error('Please enter a valid email address');
       return;
     }
     setLoading(true);

@@ -1,49 +1,32 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { ThreatIntelEngine } from '@/ai-engine/security-analysis/threat-intel';
 
 export async function GET() {
   try {
     const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
 
-    // 1. Fetch recent risk assessments
-    const { data: recentRisks } = await supabase
-      .from('ai_risk_scores')
-      .select('*, users(email)')
-      .order('created_at', { ascending: false })
-      .limit(20);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // 2. Fetch unresolved anomalies
-    const { data: anomalies } = await supabase
-      .from('anomaly_logs')
-      .select('*, users(email)')
-      .eq('is_resolved', false)
-      .order('created_at', { ascending: false });
-
-    // 3. Fetch security events for Threat Intel engine
-    const { data: events } = await supabase
-      .from('login_logs')
-      .select('*')
-      .limit(100);
-
-    const threatProfile = ThreatIntelEngine.analyzeThreats((events || []).map(e => ({
-      id: e.id,
-      type: 'LOGIN',
-      severity: e.risk_level as any,
-      ip_address: e.ip_address
-    })));
+    const [riskScores, threatLogs, securityEvents] = await Promise.all([
+      supabase.from('ai_risk_scores').select('*').order('calculated_at', { ascending: false }).limit(100),
+      supabase.from('threat_logs').select('*').order('created_at', { ascending: false }).limit(50),
+      supabase.from('security_events').select('*').order('created_at', { ascending: false }).limit(50),
+    ]);
 
     return NextResponse.json({
-      recentRisks,
-      activeAnomalies: anomalies,
-      threatProfile,
-      stats: {
-          totalCritical: (recentRisks || []).filter(r => r.risk_level === 'CRITICAL').length,
-          avgRiskScore: (recentRisks || []).reduce((acc, r) => acc + r.score, 0) / (recentRisks?.length || 1),
+      riskScores: riskScores.data || [],
+      threats: threatLogs.data || [],
+      events: securityEvents.data || [],
+      summary: {
+        totalRiskScores: (riskScores.data || []).length,
+        totalThreats: (threatLogs.data || []).length,
+        totalEvents: (securityEvents.data || []).length,
       }
     });
-  } catch (error) {
-    console.error('AI Monitoring error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

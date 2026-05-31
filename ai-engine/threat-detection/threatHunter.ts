@@ -5,6 +5,8 @@
  * credential stuffing, session hijacking, account takeovers (ATO), and insider threat indicators.
  */
 
+import { LocationCoordinates } from '../geolocation-analysis/travelModel';
+
 export interface EventLog {
   timestamp: string;
   user_id: string;
@@ -12,6 +14,7 @@ export interface EventLog {
   action: string; // "login_attempt", "resource_access", "role_change"
   success: boolean;
   userAgent: string;
+  location?: LocationCoordinates;
 }
 
 export type ThreatSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';

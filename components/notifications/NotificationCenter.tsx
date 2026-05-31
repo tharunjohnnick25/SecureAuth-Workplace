@@ -1,21 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { createClient } from '@/lib/supabase/client';
 
-// Mock notifications - replace with real data fetching as needed
-const mockNotifications = [
-  { id: 1, title: 'Suspicious Login Detected', description: 'A new login from an unrecognized device.', time: '2m ago' },
-  { id: 2, title: 'Security Policy Updated', description: 'The global security policy was updated by an admin.', time: '1h ago' },
-  { id: 3, title: 'New Document Shared', description: 'You have been granted access to a new confidential document.', time: '3h ago' },
-];
+type NotificationItem = {
+  id: string | number;
+  title: string;
+  description: string;
+  created_at?: string;
+  is_read?: boolean;
+  user_id?: string;
+};
 
 export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // In a real app, you would fetch notifications from an API
   useEffect(() => {
-    // Example: fetch('/api/notifications').then(...)
+    const client = createClient();
+    client.auth.getSession().then(({ data }) => {
+      if (data?.session?.user?.id) {
+        setUserId(data.session.user.id);
+      }
+    });
   }, []);
+
+  const { data: notifications, loading } = useRealtimeData<NotificationItem>(
+    'notifications',
+    (query) =>
+      userId
+        ? query.select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20)
+        : query.select('*').limit(0),
+    [userId]
+  );
 
   return (
     <AnimatePresence>
@@ -33,17 +50,21 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
             </button>
           </div>
           <div className="max-h-60 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {loading ? (
+              <p className="p-4 text-sm text-gray-400">Loading notifications...</p>
+            ) : notifications.length === 0 ? (
               <p className="p-4 text-sm text-gray-400">No new notifications.</p>
             ) : (
               notifications.map((n) => (
                 <div key={n.id} className="px-4 py-3 border-b border-white/5 hover:bg-white/5">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-medium text-white">{n.title}</p>
                       <p className="text-xs text-gray-400">{n.description}</p>
                     </div>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">{n.time}</span>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      {n.created_at ? new Date(n.created_at).toLocaleString() : 'Just now'}
+                    </span>
                   </div>
                 </div>
               ))

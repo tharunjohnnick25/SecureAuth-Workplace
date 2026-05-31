@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
@@ -13,65 +14,80 @@ import {
   CheckCircle,
   AlertTriangle,
   Trash2,
+  Loader2,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store/useAuthStore';
+import { toast } from 'sonner';
+import { useRealtimeData } from '@/hooks/useRealtimeData';
 
-const devices = [
-  {
-    id: 1,
-    name: 'MacBook Pro',
-    type: 'desktop',
-    os: 'macOS 14.2',
-    browser: 'Chrome 121',
-    location: 'New York, US',
-    lastActive: '2 minutes ago',
-    status: 'active',
-    trusted: true,
-  },
-  {
-    id: 2,
-    name: 'iPhone 15 Pro',
-    type: 'mobile',
-    os: 'iOS 17.3',
-    browser: 'Safari',
-    location: 'New York, US',
-    lastActive: '1 hour ago',
-    status: 'active',
-    trusted: true,
-  },
-  {
-    id: 3,
-    name: 'iPad Air',
-    type: 'tablet',
-    os: 'iPadOS 17.3',
-    browser: 'Safari',
-    location: 'Boston, US',
-    lastActive: '3 hours ago',
-    status: 'idle',
-    trusted: true,
-  },
-  {
-    id: 4,
-    name: 'Windows PC',
-    type: 'desktop',
-    os: 'Windows 11',
-    browser: 'Edge 121',
-    location: 'Unknown Location',
-    lastActive: '2 days ago',
-    status: 'suspicious',
-    trusted: false,
-  },
-];
+interface Device {
+  id: string;
+  device_name: string;
+  device_type: string;
+  os: string;
+  browser: string;
+  is_trusted: boolean;
+  last_active: string;
+  created_at: string;
+  location?: string;
+  risk_score?: number;
+}
 
 export function Devices() {
-  const DeviceIcon = ({ type }: { type: string }) => {
-    switch (type) {
-      case 'mobile':
-        return <Smartphone className="w-6 h-6" />;
-      case 'tablet':
-        return <Tablet className="w-6 h-6" />;
-      default:
-        return <Monitor className="w-6 h-6" />;
+  const { user } = useAuthStore();
+  const { data: dbDevices, loading, refetch } = useRealtimeData<any>('devices', (q) =>
+    q.select('*').eq('user_id', user?.id).order('last_active', { ascending: false })
+  );
+
+  const devices: Device[] = (dbDevices || []).map((d: any) => ({
+    id: d.id,
+    device_name: d.device_name || d.browser || 'Unknown Device',
+    device_type: d.device_type || (d.os?.includes('Android') || d.os?.includes('iOS') ? 'mobile' : 'desktop'),
+    os: d.os || 'Unknown OS',
+    browser: d.browser || 'Unknown Browser',
+    is_trusted: d.is_trusted || false,
+    last_active: d.last_active || d.created_at,
+    created_at: d.created_at,
+    location: d.location || 'Unknown Location',
+    risk_score: d.risk_score,
+  }));
+
+  const trustedCount = devices.filter(d => d.is_trusted).length;
+  const suspiciousCount = devices.filter(d => !d.is_trusted).length;
+
+  const toggleTrust = async (deviceId: string, currentTrust: boolean) => {
+    try {
+      const { error } = await (supabase.from('devices') as any)
+        .update({ is_trusted: !currentTrust })
+        .eq('id', deviceId);
+      if (error) throw error;
+      toast.success(`Device ${currentTrust ? 'untrusted' : 'trusted'}`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message);
     }
+  };
+
+  const removeDevice = async (deviceId: string) => {
+    try {
+      const { error } = await supabase
+        .from('devices')
+        .delete()
+        .eq('id', deviceId);
+      if (error) throw error;
+      toast.success('Device removed');
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const DeviceIcon = ({ type }: { type: string }) => {
+    const t = (type || '').toLowerCase();
+    if (t === 'mobile' || t === 'phone') return <Smartphone className="w-6 h-6" />;
+    if (t === 'tablet') return <Tablet className="w-6 h-6" />;
+    return <Monitor className="w-6 h-6" />;
   };
 
   return (
@@ -107,9 +123,7 @@ export function Devices() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Trusted Devices</p>
-                  <h3 className="text-2xl font-semibold">
-                    {devices.filter((d) => d.trusted).length}
-                  </h3>
+                  <h3 className="text-2xl font-semibold">{trustedCount}</h3>
                 </div>
               </CardContent>
             </Card>
@@ -121,9 +135,7 @@ export function Devices() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Suspicious</p>
-                  <h3 className="text-2xl font-semibold">
-                    {devices.filter((d) => d.status === 'suspicious').length}
-                  </h3>
+                  <h3 className="text-2xl font-semibold">{suspiciousCount}</h3>
                 </div>
               </CardContent>
             </Card>
@@ -132,67 +144,81 @@ export function Devices() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>All Devices</CardTitle>
-              <Button size="sm">Add Device</Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {devices.map((device) => (
-                  <div
-                    key={device.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          device.status === 'suspicious'
-                            ? 'bg-destructive/20 text-destructive'
-                            : 'bg-primary/20 text-primary'
-                        }`}
-                      >
-                        <DeviceIcon type={device.type} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{device.name}</h4>
-                          {device.trusted && (
-                            <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs">
-                              Trusted
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : devices.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No devices found. Devices will appear here when you log in.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {devices.map((device) => (
+                    <div
+                      key={device.id}
+                      className="flex items-center justify-between p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                            device.is_trusted
+                              ? 'bg-primary/20 text-primary'
+                              : 'bg-destructive/20 text-destructive'
+                          }`}
+                        >
+                          <DeviceIcon type={device.device_type} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{device.device_name}</h4>
+                            {device.is_trusted && (
+                              <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs">
+                                Trusted
+                              </span>
+                            )}
+                            {!device.is_trusted && (
+                              <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs">
+                                Unknown
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {device.os} • {device.browser}
+                          </div>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {device.location}
                             </span>
-                          )}
-                          {device.status === 'suspicious' && (
-                            <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs">
-                              Suspicious
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {device.last_active ? new Date(device.last_active).toLocaleDateString() : 'Unknown'}
                             </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {device.os} • {device.browser}
-                        </div>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {device.location}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {device.lastActive}
-                          </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!device.trusted && (
-                        <Button variant="outline" size="sm">
-                          Trust Device
+                      <div className="flex items-center gap-2">
+                        {!device.is_trusted && (
+                          <Button variant="outline" size="sm" onClick={() => toggleTrust(device.id, device.is_trusted)}>
+                            Trust Device
+                          </Button>
+                        )}
+                        {device.is_trusted && (
+                          <Button variant="outline" size="sm" onClick={() => toggleTrust(device.id, device.is_trusted)}>
+                            Untrust
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => removeDevice(device.id)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
-                      )}
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </main>

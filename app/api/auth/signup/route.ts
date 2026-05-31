@@ -5,20 +5,18 @@ export async function POST(req: NextRequest) {
   try {
     const { email, password, name } = await req.json();
 
-    // 1. Domain Restriction
-    if (!email.endsWith('@gmail.com')) {
-      return NextResponse.json({ error: 'Only @gmail.com accounts are allowed' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     const supabase = await createServerSupabaseClient();
 
-    // 2. Sign up with Supabase
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: name,
+          full_name: name || email.split('@')[0],
         }
       }
     });
@@ -27,12 +25,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Profile creation is handled by Supabase trigger `handle_new_user`
-    // but we can add additional metadata here if needed.
+    if (data.user) {
+      const fullName = name || email.split('@')[0];
+      await supabase.from('users').upsert({
+        id: data.user.id,
+        email,
+        full_name: fullName,
+        role: 'employee',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id', ignoreDuplicates: true });
+    }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Registration successful! Please check your email for verification.',
-      user: data.user 
+      user: data.user
     });
   } catch (error) {
     console.error('Signup error:', error);

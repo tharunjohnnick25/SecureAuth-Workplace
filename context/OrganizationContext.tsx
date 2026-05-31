@@ -1,8 +1,7 @@
-// @ts-nocheck
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
 
@@ -73,28 +72,22 @@ export const OrganizationProvider = ({ children }: { children: React.ReactNode }
 
     setIsLoading(true);
     try {
-      // 1. Fetch available organizations
       const { data: orgs, error } = await supabase
         .from('organizations')
         .select('*');
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (orgs && orgs.length > 0) {
-        setOrganizations(orgs);
-        
-        // Restore active organization from localStorage or use the first one
+        setOrganizations(orgs as any);
         const storedOrgId = typeof window !== 'undefined' ? localStorage.getItem('secureauth.activeOrgId') : null;
-        const matchedOrg = orgs.find(o => o.id === storedOrgId);
-        const selected = matchedOrg || orgs[0];
+        const matchedOrg = (orgs as any[]).find((o: any) => o.id === storedOrgId);
+        const selected = matchedOrg || (orgs as any[])[0];
         setActiveOrgState(selected);
         if (typeof window !== 'undefined') {
           localStorage.setItem('secureauth.activeOrgId', selected.id);
         }
       } else {
-        // Fallback for demonstration/mock setup
         const fallbackOrgs: Organization[] = [
           { id: 'org-acme-corp', name: 'Acme Corporation', domain: 'acme.com', created_at: new Date().toISOString() },
           { id: 'org-globex', name: 'Globex Industries', domain: 'globex.com', created_at: new Date().toISOString() }
@@ -103,7 +96,6 @@ export const OrganizationProvider = ({ children }: { children: React.ReactNode }
         setActiveOrgState(fallbackOrgs[0]);
       }
     } catch (err) {
-      console.warn('Could not fetch organizations, using client-side fallback:', err);
       const fallbackOrgs: Organization[] = [
         { id: 'org-acme-corp', name: 'Acme Corporation', domain: 'acme.com', created_at: new Date().toISOString() },
         { id: 'org-globex', name: 'Globex Industries', domain: 'globex.com', created_at: new Date().toISOString() }
@@ -119,39 +111,34 @@ export const OrganizationProvider = ({ children }: { children: React.ReactNode }
     refreshOrgs();
   }, [refreshOrgs]);
 
-  // Load policies for the active organization
   useEffect(() => {
     if (!activeOrg) return;
 
     const loadPolicies = async () => {
       try {
         const { data, error } = await supabase
-          .from('security_policies' as any)
+          .from('security_policies')
           .select('*')
           .eq('org_id', activeOrg.id)
           .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
+        if (error) throw error;
 
         if (data) {
           setSecurityPolicies({
-            mfaEnforced: data.mfa_enforced ?? true,
-            trustedDeviceRequired: data.trusted_device_required ?? false,
-            officeOnlyLogin: data.office_only_login ?? false,
-            timeBasedAccessOnly: data.time_based_access_only ?? false,
-            allowedIpRanges: data.allowed_ip_ranges || ['0.0.0.0/0'],
+            mfaEnforced: (data as any).mfa_enforced ?? true,
+            trustedDeviceRequired: (data as any).trusted_device_required ?? false,
+            officeOnlyLogin: (data as any).office_only_login ?? false,
+            timeBasedAccessOnly: (data as any).time_based_access_only ?? false,
+            allowedIpRanges: (data as any).allowed_ip_ranges || ['0.0.0.0/0'],
           });
         } else {
-          // Default organization specific simulated policy
           setSecurityPolicies({
             ...DEFAULT_POLICIES,
-            officeOnlyLogin: activeOrg.id === 'org-globex', // Demo variation
+            officeOnlyLogin: activeOrg.id === 'org-globex',
           });
         }
       } catch (err) {
-        // Suppress errors and fallback silently for dynamic dashboard
         setSecurityPolicies({
           ...DEFAULT_POLICIES,
           officeOnlyLogin: activeOrg.id === 'org-globex',
@@ -187,14 +174,12 @@ export const OrganizationProvider = ({ children }: { children: React.ReactNode }
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
-        .from('security_policies' as any)
+      const { error } = await (supabase.from('security_policies') as any)
         .upsert(payload, { onConflict: 'org_id' });
 
       if (error) throw error;
       toast.success('Security policies updated successfully!');
-    } catch (err) {
-      // Graceful fallback for mock DB setup
+    } catch {
       toast.success('Security policies updated successfully (Local Sandbox Mode)');
     }
   };

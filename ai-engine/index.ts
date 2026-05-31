@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SecureAuth Proprietary AI Engine
  * 
@@ -16,7 +15,6 @@ import { TelemetryFeatureVector, OutlierDetectionAI, OutlierProfileCentroid } fr
 import { RiskScoringAI, SecuritySignals, EvaluationReport } from './risk-scoring/riskScorer';
 import { EventLog, ThreatDetectionAI, ThreatAlert } from './threat-detection/threatHunter';
 import { UserRiskPredictorAI, PredictionResult, HistoricalRiskRecord } from './prediction/predictor';
-import { supabase } from '@/lib/supabase';
 
 export interface FullInferenceContext {
   userId: string;
@@ -72,10 +70,10 @@ export class AIEngine {
     // 2. Execute Great-Circle Haversine Travel Model
     const locationHistory: LocationLoginRecord[] = context.history.recentLogins.map(log => ({
       timestamp: log.timestamp,
-      coordinates: {
+      coordinates: log.location || {
         latitude: context.history.lastLatitude || 0,
         longitude: context.history.lastLongitude || 0,
-        city: 'Baseline City',
+        city: 'Baseline Location',
         country: 'Baseline Country'
       },
       ip: log.ip
@@ -129,7 +127,7 @@ export class AIEngine {
     const signals: SecuritySignals = {
       user_id: context.userId,
       isNewDevice: !deviceMatchFound,
-      isNewCountry: context.history.lastIp !== null && context.location.country !== 'Baseline Country', // Simple country transition
+      isNewCountry: context.history.lastIp !== null && context.location.country !== 'Baseline Country',
       isAbnormalTyping: biometricsMatchScore < 70,
       failedAttempts: context.history.failedAttemptsCount,
       isVpnDetected: vpnDetected,
@@ -159,50 +157,6 @@ export class AIEngine {
       context.history.passwordAgeDays
     );
 
-    // ==================================================
-    // DATABASE PERSISTENCE FOR AUDITS & DASHBOARD FEED
-    // ==================================================
-    try {
-      // Direct insertion of generated risk scores, anomalies, and predictions
-      await Promise.all([
-        supabase.from('ai_risk_scores').insert({
-          user_id: context.userId,
-          score: riskReport.score,
-          risk_level: riskReport.level,
-          factors: riskReport.factors,
-          ip_address: context.ip,
-          device_id: deviceTrustScore.toString(),
-          location: context.location
-        }),
-        supabase.from('threat_predictions').insert({
-          user_id: context.userId,
-          compromise_probability: compromisePrediction.compromiseProbability,
-          factors: compromisePrediction.contributingFactors,
-          recommendations: compromisePrediction.remediations
-        })
-      ]);
-
-      if (isContextAnomaly) {
-        await supabase.from('anomaly_logs').insert({
-          user_id: context.userId,
-          type: 'HOUR_OUTLIER',
-          severity: riskReport.level,
-          details: { factors: anomalyFactors }
-        });
-      }
-
-      if (impossibleTravel) {
-        await supabase.from('anomaly_logs').insert({
-          user_id: context.userId,
-          type: 'IMPOSSIBLE_TRAVEL',
-          severity: 'CRITICAL',
-          details: { factors: geoReasons }
-        });
-      }
-    } catch (dbErr: any) {
-      console.warn('AI Engine database logging omitted: ', dbErr.message);
-    }
-
     return {
       riskReport,
       threatAlert,
@@ -213,3 +167,5 @@ export class AIEngine {
     };
   }
 }
+
+export type { KeystrokeEvent, DeviceFingerprintDetails, LocationCoordinates, OutlierProfileCentroid };

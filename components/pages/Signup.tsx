@@ -22,8 +22,8 @@ export function Signup() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.email.endsWith('@gmail.com') && !formData.email.endsWith('@company.com')) {
-      toast.error('Please use your company email address');
+    if (!formData.email.includes('@')) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -72,9 +72,9 @@ export function Signup() {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
-          {formData.email && !formData.email.endsWith('@gmail.com') && !formData.email.endsWith('@company.com') && (
+          {formData.email && !formData.email.includes('@') && (
             <div className="p-2 bg-destructive/10 border border-destructive/20 rounded text-xs text-destructive text-center">
-              Please use a valid company email domain.
+              Please enter a valid email address.
             </div>
           )}
           

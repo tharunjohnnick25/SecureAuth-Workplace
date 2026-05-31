@@ -1,203 +1,212 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, Smartphone, Key, ArrowRight, CheckCircle2, Copy, Download, Loader2 } from 'lucide-react';
+import { Shield, Smartphone, KeyRound, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
-import { Input } from '@/components/Input';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+
+type SetupStep = 'choose' | 'totp' | 'recovery' | 'complete';
 
 export default function MfaSetupPage() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<SetupStep>('choose');
   const [loading, setLoading] = useState(false);
+  const [factorId, setFactorId] = useState('');
+  const [qrCode, setQrCode] = useState('');
+  const [secret, setSecret] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [recoveryCodes] = useState([
-    'A8B2-9X2Z-P9K1', 'L0M4-Q7W6-R3T9', 'C5N1-Y8U2-I4O6', 'S9D3-F2G7-H5J1'
-  ]);
-  const [factorId, setFactorId] = useState<string | null>(null);
-  const [qrCode, setQrCode] = useState<string | null>(null);
-  const [secret, setSecret] = useState<string | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
 
-  const startEnrollment = async () => {
+  const enableTotp = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.mfa.enroll({
-        factorType: 'totp'
-      });
-      if (error) throw error;
-      
+      const res = await fetch('/api/auth/mfa/setup', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
       setFactorId(data.id);
-      setQrCode(data.totp.qr_code);
-      setSecret(data.totp.secret);
-      setStep(2);
-    } catch (err: any) {
-      toast.error(err.message);
+      setQrCode(data.totp?.qr_code || '');
+      setSecret(data.totp?.secret || '');
+      setStep('totp');
+      toast.success('Authenticator app configured');
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerify = async () => {
+  const verifyTotp = async () => {
     if (verificationCode.length !== 6) {
-      toast.error('Please enter a valid 6-digit code');
+      toast.error('Please enter a 6-digit code');
       return;
     }
     setLoading(true);
     try {
-      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
-        factorId: factorId!
+      const res = await fetch('/api/auth/mfa/verify-setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ factorId, code: verificationCode }),
       });
-      if (challengeError) throw challengeError;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
 
-      const { data, error } = await supabase.auth.mfa.verify({
-        factorId: factorId!,
-        challengeId: challenge.id,
-        code: verificationCode
-      });
-      
-      if (error) throw error;
-
-      setStep(3);
-      toast.success('MFA successfully enabled!');
-    } catch (err: any) {
-      toast.error(err.message);
+      setRecoveryCodes(data.recoveryCodes || []);
+      setStep('recovery');
+      toast.success('MFA enabled successfully');
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+  const copyCodes = () => {
+    navigator.clipboard.writeText(recoveryCodes.join('\n'));
+    toast.success('Recovery codes copied to clipboard');
+  };
+
+  const finishSetup = () => {
+    setStep('complete');
+    setTimeout(() => {
+      window.location.href = '/settings';
+    }, 2000);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#020617]">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl opacity-50" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl opacity-50" />
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-xl relative bg-black/40 backdrop-blur-xl border-white/10 p-8">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
-            <Shield className="w-6 h-6 text-white" />
+      <Card className="w-full max-w-md relative">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/30">
+            <Shield className="w-8 h-8 text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">Secure Your Account</h1>
-            <p className="text-sm text-gray-400">Step {step} of 3: {step === 1 ? 'Select Method' : step === 2 ? 'Pair Device' : 'Verification Complete'}</p>
-          </div>
+          <h1 className="text-3xl font-semibold mb-2">Set Up MFA</h1>
+          <p className="text-gray-400 text-center text-sm">
+            Enhance your account security
+          </p>
         </div>
 
-        {step === 1 && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-            <p className="text-gray-300">Choose how you want to receive your second-factor authentication codes.</p>
-            <div className="grid gap-4">
-              <button 
-                onClick={startEnrollment}
-                disabled={loading}
-                className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-left group"
-              >
-                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold">Authenticator App</h3>
-                  <p className="text-sm text-gray-400">Use Google Authenticator, Authy, or Microsoft Authenticator.</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-left group opacity-50 cursor-not-allowed">
-                <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400">
-                  <Key className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold">Security Key (WebAuthn)</h3>
-                  <p className="text-sm text-gray-400">Use a physical YubiKey or biometric TouchID/FaceID.</p>
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest bg-white/10 px-2 py-1 rounded">Coming Soon</span>
-              </button>
-            </div>
-          </motion.div>
+        {step === 'choose' && (
+          <div className="space-y-4">
+            <button
+              onClick={enableTotp}
+              disabled={loading}
+              className="w-full p-4 rounded-xl border border-white/10 hover:border-cyan-500/50 bg-white/5 hover:bg-cyan-500/5 transition-all flex items-center gap-4"
+            >
+              <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-cyan-400" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-white">Authenticator App</p>
+                <p className="text-xs text-gray-400">Use Google Authenticator or similar</p>
+              </div>
+            </button>
+
+            <button
+              disabled
+              className="w-full p-4 rounded-xl border border-white/5 bg-white/5 opacity-50 cursor-not-allowed flex items-center gap-4"
+            >
+              <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                <KeyRound className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-white">Security Key</p>
+                <p className="text-xs text-gray-400">USB/NFC hardware key (coming soon)</p>
+              </div>
+            </button>
+          </div>
         )}
 
-        {step === 2 && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="bg-white p-4 rounded-2xl w-48 h-48 flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                {qrCode ? (
-                  <img src={qrCode} alt="MFA QR Code" className="w-full h-full" />
-                ) : (
-                  <div className="w-36 h-36 bg-black relative flex items-center justify-center overflow-hidden rounded-lg">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20" />
-                    <Loader2 className="animate-spin text-blue-500" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 space-y-4">
-                <h3 className="font-bold text-lg text-white">Scan this QR Code</h3>
-                <p className="text-sm text-gray-400">Open your authenticator app (Google Authenticator, Authy, etc.) and scan the code. If you can't scan it, enter the secret manually:</p>
-                <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10 font-mono text-xs">
-                  <span className="flex-1 text-blue-400 break-all">{secret || 'Generating...'}</span>
-                  {secret && <button onClick={() => copyToClipboard(secret)} className="hover:text-white transition-colors"><Copy className="w-4 h-4" /></button>}
-                </div>
-              </div>
+        {step === 'totp' && (
+          <div className="space-y-6">
+            <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+              <p className="text-sm text-cyan-400 font-medium mb-2">Scan QR Code</p>
+              <p className="text-xs text-gray-400">
+                Open your authenticator app and scan the QR code, or manually enter the secret key.
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <label className="text-sm font-bold uppercase tracking-widest text-gray-500">6-Digit Verification Code</label>
-              <Input 
-                type="text" 
-                placeholder="000 000" 
+            {qrCode && (
+              <div className="flex justify-center">
+                <img src={qrCode} alt="QR Code" className="w-48 h-48 rounded-xl border border-white/10" />
+              </div>
+            )}
+
+            {secret && (
+              <div className="p-3 bg-white/5 rounded-xl">
+                <p className="text-xs text-gray-400 mb-1">Secret Key:</p>
+                <p className="text-sm font-mono text-cyan-400 break-all">{secret}</p>
+              </div>
+            )}
+
+            <div>
+              <label className="block mb-2 text-sm text-gray-300">Verification Code</label>
+              <input
+                type="text"
                 maxLength={6}
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                className="text-center text-2xl font-bold tracking-[0.5em] h-14"
+                className="w-full text-center text-2xl tracking-widest py-3 bg-black/40 border border-white/10 rounded-xl text-white focus:border-cyan-500/50 outline-none font-mono"
+                placeholder="000000"
               />
-              <Button onClick={handleVerify} className="w-full bg-blue-600 hover:bg-blue-500 h-12" disabled={loading}>
-                {loading ? 'Verifying...' : 'Verify and Enable'}
-              </Button>
             </div>
-          </motion.div>
+
+            <Button
+              onClick={verifyTotp}
+              disabled={loading || verificationCode.length !== 6}
+              className="w-full"
+              size="lg"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify & Enable'}
+            </Button>
+          </div>
         )}
 
-        {step === 3 && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-8">
-            <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto border border-green-500/20">
-              <CheckCircle2 className="w-10 h-10 text-green-400" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold mb-2">MFA is Active!</h2>
-              <p className="text-gray-400 text-sm">Your account is now protected with double-layer encryption.</p>
+        {step === 'recovery' && (
+          <div className="space-y-6">
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+              <p className="text-sm text-yellow-400 font-medium mb-2">Save Recovery Codes</p>
+              <p className="text-xs text-gray-400">
+                Store these codes in a safe place. Each code can only be used once.
+              </p>
             </div>
 
-            <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-2xl text-left space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-red-400">Recovery Backup Codes</h4>
-                <div className="flex gap-2">
-                  <button onClick={() => toast.success('Codes downloaded')} className="p-1 hover:text-white"><Download className="w-4 h-4" /></button>
-                  <button onClick={() => copyToClipboard(recoveryCodes.join('\n'))} className="p-1 hover:text-white"><Copy className="w-4 h-4" /></button>
+            <div className="grid grid-cols-2 gap-2">
+              {recoveryCodes.map((code, i) => (
+                <div key={i} className="p-2 bg-white/5 rounded-lg font-mono text-xs text-gray-300 text-center">
+                  {code}
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {recoveryCodes.map(code => (
-                  <div key={code} className="p-2 bg-black/40 rounded border border-white/5 text-center font-mono text-sm text-gray-300">
-                    {code}
-                  </div>
-                ))}
-              </div>
-              <p className="text-[10px] text-gray-500 italic text-center">Store these safely. They are the only way to recover access if you lose your device.</p>
+              ))}
             </div>
 
-            <Button className="w-full h-12" onClick={() => window.location.href = '/dashboard'}>
-              Continue to Dashboard
-            </Button>
-          </motion.div>
+            <div className="flex gap-3">
+              <Button onClick={copyCodes} variant="outline" className="flex-1">
+                Copy Codes
+              </Button>
+              <Button onClick={finishSetup} className="flex-1">
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 'complete' && (
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              </div>
+            </div>
+            <p className="text-emerald-400 font-semibold">MFA Enabled Successfully!</p>
+            <p className="text-xs text-gray-400">Redirecting to settings...</p>
+          </div>
         )}
       </Card>
     </div>
   );
 }
-

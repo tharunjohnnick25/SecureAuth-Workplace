@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
@@ -14,39 +15,65 @@ import {
   Users,
   TrendingUp,
   QrCode,
+  Loader2,
 } from 'lucide-react';
-
-const mfaMethods = [
-  { name: 'Authenticator App', icon: Smartphone, enabled: true, users: 187, description: 'TOTP-based authentication using apps like Google Authenticator', recommended: true },
-  { name: 'SMS Verification', icon: Mail, enabled: true, users: 89, description: 'One-time codes sent via SMS', recommended: false },
-  { name: 'Email Verification', icon: Mail, enabled: true, users: 45, description: 'Verification codes sent to email', recommended: false },
-  { name: 'Hardware Token', icon: Key, enabled: true, users: 23, description: 'Physical security keys (YubiKey, etc.)', recommended: true },
-  { name: 'Biometric', icon: Shield, enabled: false, users: 0, description: 'Fingerprint or facial recognition', recommended: true },
-];
-
-const mfaStats = [
-  { label: 'Total Enrolled', value: '87%', icon: Shield, color: 'success', trend: '+12%' },
-  { label: 'Authenticator App', value: '187', icon: Smartphone, color: 'primary', trend: '+23' },
-  { label: 'Hardware Tokens', value: '23', icon: Key, color: 'warning', trend: '+5' },
-  { label: 'Not Enrolled', value: '30', icon: XCircle, color: 'destructive', trend: '-15' },
-];
-
-const enrollmentStatus = [
-  { user: 'sarah.chen@company.com', method: 'Authenticator App', status: 'Active', enrolled: '2026-01-15', lastUsed: '2 hours ago' },
-  { user: 'michael.r@company.com', method: 'Hardware Token', status: 'Active', enrolled: '2026-02-20', lastUsed: '1 day ago' },
-  { user: 'emily.t@company.com', method: 'Authenticator App', status: 'Active', enrolled: '2026-03-10', lastUsed: '5 hours ago' },
-  { user: 'david.kim@company.com', method: 'SMS', status: 'Active', enrolled: '2026-04-01', lastUsed: '30 min ago' },
-  { user: 'lisa.a@company.com', method: 'Not Enrolled', status: 'Inactive', enrolled: 'N/A', lastUsed: 'N/A' },
-];
-
-const policySettings = [
-  { name: 'Require MFA for All Users', enabled: true, description: 'Enforce MFA enrollment for all user accounts' },
-  { name: 'Remember Device', enabled: true, description: 'Allow trusted devices to skip MFA for 30 days' },
-  { name: 'Backup Codes', enabled: true, description: 'Generate backup codes for account recovery' },
-  { name: 'Admin Override', enabled: false, description: 'Allow admins to bypass MFA in emergencies' },
-];
+import { supabase } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store/useAuthStore';
+import { toast } from 'sonner';
 
 export function MfaSettings() {
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const [mfaFactors, setMfaFactors] = useState<any[]>([]);
+  const [mfaEnabledCount, setMfaEnabledCount] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      setMfaFactors(factors?.all || []);
+
+      const { count: enabled } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_mfa_enabled', true);
+      setMfaEnabledCount(enabled || 0);
+
+      const { count: total } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+      setTotalUsers(total || 1);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unenrollMfa = async (factorId: string) => {
+    try {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId });
+      if (error) throw error;
+      toast.success('MFA factor removed');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const enrolledPercent = totalUsers > 0 ? Math.round((mfaEnabledCount / totalUsers) * 100) : 0;
+
+  const mfaMethods = [
+    { name: 'Authenticator App', icon: Smartphone, enabled: mfaFactors.length > 0, users: mfaEnabledCount, description: 'TOTP-based authentication using apps like Google Authenticator', recommended: true },
+    { name: 'SMS Verification', icon: Mail, enabled: false, users: 0, description: 'One-time codes sent via SMS', recommended: false },
+    { name: 'Email Verification', icon: Mail, enabled: false, users: 0, description: 'Verification codes sent to email', recommended: false },
+    { name: 'Hardware Token', icon: Key, enabled: false, users: 0, description: 'Physical security keys (YubiKey, etc.)', recommended: true },
+  ];
+
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -60,30 +87,67 @@ export function MfaSettings() {
                 Configure and manage MFA methods for enhanced security
               </p>
             </div>
-            <Button>
+            <Button onClick={() => window.location.href = '/mfa-setup'}>
               <Shield className="w-4 h-4 mr-2" />
-              Save Settings
+              {mfaFactors.length > 0 ? 'Manage MFA' : 'Enable MFA'}
             </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {mfaStats.map((stat, index) => (
-              <Card key={index}>
-                <CardContent className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-lg bg-${stat.color}/20 flex items-center justify-center`}>
-                    <stat.icon className={`w-6 h-6 text-${stat.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <h3 className="text-2xl font-semibold">{stat.value}</h3>
-                    <p className="text-xs text-success flex items-center gap-1 mt-1">
-                      <TrendingUp className="w-3 h-3" />
-                      {stat.trend}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <Card>
+              <CardContent className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-success/20 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-success" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Enrolled</p>
+                  <h3 className="text-2xl font-semibold">{enrolledPercent}%</h3>
+                  <p className="text-xs text-success flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3" />
+                    of users
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Smartphone className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Authenticator</p>
+                  <h3 className="text-2xl font-semibold">{mfaEnabledCount}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">with TOTP</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Users</p>
+                  <h3 className="text-2xl font-semibold">{totalUsers}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">registered</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-destructive/20 flex items-center justify-center">
+                  <XCircle className="w-6 h-6 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Not Enrolled</p>
+                  <h3 className="text-2xl font-semibold">{totalUsers - mfaEnabledCount}</h3>
+                  <p className="text-xs text-destructive mt-1">need setup</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -127,6 +191,7 @@ export function MfaSettings() {
                             type="checkbox"
                             className="sr-only peer"
                             defaultChecked={method.enabled}
+                            disabled
                           />
                           <div className="w-11 h-6 bg-input-background rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                         </label>
@@ -139,119 +204,56 @@ export function MfaSettings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>MFA Policy Settings</CardTitle>
+                <CardTitle>Your MFA Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {policySettings.map((policy, index) => (
-                    <div
-                      key={index}
-                      className="p-3 rounded-lg bg-input-background/30"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-sm flex-1">{policy.name}</h4>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            defaultChecked={policy.enabled}
-                          />
-                          <div className="w-9 h-5 bg-input-background rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
-                        </label>
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {mfaFactors.length === 0 ? (
+                      <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
+                        <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <Shield className="w-4 h-4" />
+                          MFA Not Enabled
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          You haven't set up multi-factor authentication yet. Enable it now to enhance your account security.
+                        </p>
+                        <Button size="sm" className="mt-3" onClick={() => window.location.href = '/mfa-setup'}>
+                          Enable MFA
+                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">{policy.description}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 p-4 rounded-lg bg-warning/10 border border-warning/20">
-                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Shield className="w-4 h-4" />
-                    Security Notice
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    MFA significantly reduces the risk of unauthorized access. We recommend requiring MFA for all users.
-                  </p>
-                </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {mfaFactors.map((factor: any) => (
+                          <div key={factor.id} className="p-3 rounded-lg bg-input-background/30">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Smartphone className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-medium">{factor.friendly_name || factor.factor_type}</span>
+                              </div>
+                              <span className="text-xs text-success">Active</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => unenrollMfa(factor.id)}
+                              className="w-full text-destructive border-destructive/20 hover:bg-destructive/10"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
-
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>User Enrollment Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left p-3 font-medium">User</th>
-                      <th className="text-left p-3 font-medium">Method</th>
-                      <th className="text-left p-3 font-medium">Status</th>
-                      <th className="text-left p-3 font-medium">Enrolled</th>
-                      <th className="text-left p-3 font-medium">Last Used</th>
-                      <th className="text-right p-3 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {enrollmentStatus.map((enrollment, index) => (
-                      <tr key={index} className="border-b border-border hover:bg-input-background/30">
-                        <td className="p-3 text-sm">{enrollment.user}</td>
-                        <td className="p-3 text-sm">{enrollment.method}</td>
-                        <td className="p-3">
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            enrollment.status === 'Active' ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'
-                          }`}>
-                            {enrollment.status}
-                          </span>
-                        </td>
-                        <td className="p-3 text-sm text-muted-foreground">{enrollment.enrolled}</td>
-                        <td className="p-3 text-sm text-muted-foreground">{enrollment.lastUsed}</td>
-                        <td className="p-3 text-right">
-                          <Button variant="outline" size="sm">
-                            {enrollment.status === 'Active' ? 'Reset' : 'Enroll'}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <QrCode className="w-5 h-5" />
-                Enrollment Guide
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium mb-3">Authenticator App Setup</h4>
-                  <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                    <li>Download an authenticator app (Google Authenticator, Authy, etc.)</li>
-                    <li>Click "Enable MFA" in your account settings</li>
-                    <li>Scan the QR code with your authenticator app</li>
-                    <li>Enter the 6-digit code to verify setup</li>
-                    <li>Save your backup codes in a secure location</li>
-                  </ol>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-3">Hardware Token Setup</h4>
-                  <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                    <li>Request a hardware security key from IT</li>
-                    <li>Navigate to MFA settings in your account</li>
-                    <li>Select "Add Hardware Token"</li>
-                    <li>Insert your security key when prompted</li>
-                    <li>Complete the registration process</li>
-                  </ol>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </main>
       </div>
     </div>

@@ -11,6 +11,7 @@ import { Settings, Shield, Bell, Lock, Key, CreditCard, Command, Check, Trash2, 
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
+import { BillingSection } from '@/components/settings/BillingSection';
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
@@ -298,13 +299,7 @@ export default function SettingsPage() {
                       {activeCategory === 'billing' && (
                         <Card className="p-6 md:p-8 bg-black/40 backdrop-blur-xl border-white/10 space-y-6">
                           <h3 className="text-xl font-bold border-b border-white/10 pb-4">Billing Settings</h3>
-                          <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex justify-between items-center">
-                            <div>
-                              <p className="text-sm font-semibold text-white">Current Plan</p>
-                              <p className="text-xs text-gray-400 mt-1">Enterprise Pro Suite</p>
-                            </div>
-                            <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs">Active</span>
-                          </div>
+                          <BillingSection />
                         </Card>
                       )}
 

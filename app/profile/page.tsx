@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Shield, CreditCard, Activity, Laptop, Eye, Check, AlertTriangle, ShieldCheck, Trash2, Camera, Loader2 } from 'lucide-react';
+import { BillingSection } from '@/components/settings/BillingSection';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
@@ -135,6 +136,7 @@ export default function ProfilePage() {
   const menuItems = [
     { id: 'personal', label: 'Personal Information', icon: User },
     { id: 'security', label: 'Security Settings', icon: Shield },
+    { id: 'subscription', label: 'Subscription', icon: CreditCard },
     { id: 'activity', label: 'Activity Dashboard', icon: Activity },
     { id: 'devices', label: 'Connected Devices', icon: Laptop },
     { id: 'privacy', label: 'Privacy & Permissions', icon: Eye }
@@ -329,6 +331,13 @@ export default function ProfilePage() {
                               </div>
                             )}
                           </div>
+                        </Card>
+                      )}
+
+                      {activeTab === 'subscription' && (
+                        <Card className="p-6 md:p-8 bg-black/40 backdrop-blur-xl border-white/10">
+                          <h3 className="text-xl font-bold mb-6 border-b border-white/10 pb-4">Subscription</h3>
+                          <BillingSection />
                         </Card>
                       )}
 

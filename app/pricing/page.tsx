@@ -118,11 +118,11 @@ export default function PricingPage() {
         order_id: order.id,
         handler: async function (response: any) {
           toast.success('Payment verified! Processing subscription...');
-          
+
           const verifyRes = await fetch('/api/razorpay/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(response),
+            body: JSON.stringify({ ...response, planId, amount }),
           });
 
           if (!verifyRes.ok) {

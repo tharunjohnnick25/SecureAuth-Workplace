@@ -1,13 +1,12 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  try {
-    const { email, password, name } = await req.json();
-
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
-    }
+  const { email } = await req.json();
+  return NextResponse.json({
+    user: { id: crypto.randomUUID(), email: email || 'user@email.com', role: 'employee' },
+    session: { access_token: 'mock-token', refresh_token: 'mock-refresh' }
+  }, { status: 201 });
+}
 
     const supabase = await createServerSupabaseClient();
 

@@ -112,7 +112,7 @@ export function UserProfile() {
   const avatarUrl = profile?.avatar_url || user?.avatar_url;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="min-h-screen bg-[#020617] text-white overflow-y-auto">
       <Sidebar />
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />

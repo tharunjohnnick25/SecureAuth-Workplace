@@ -4,13 +4,14 @@ import { AIEngine, type FullInferenceContext, type AIRecordResult } from './inde
 
 export async function evaluateAccessRequestWithPersistence(
   context: FullInferenceContext,
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<any>
 ): Promise<AIRecordResult> {
   const result = await AIEngine.evaluateAccessRequest(context);
 
   try {
-    const insertOps = [
-      supabase.from('ai_risk_scores').insert({
+    const sb = supabase as any;
+    const insertOps: any[] = [
+      sb.from('ai_risk_scores').insert({
         user_id: context.userId,
         score: result.riskReport.score,
         risk_level: result.riskReport.level,
@@ -20,7 +21,7 @@ export async function evaluateAccessRequestWithPersistence(
         location: context.location,
         calculated_at: new Date().toISOString()
       }),
-      supabase.from('threat_predictions').insert({
+      sb.from('threat_predictions').insert({
         user_id: context.userId,
         compromise_probability: result.compromisePrediction.compromiseProbability,
         vulnerability_class: result.compromisePrediction.vulnerabilityClass,
@@ -32,7 +33,7 @@ export async function evaluateAccessRequestWithPersistence(
 
     if (result.threatAlert.detected || result.riskReport.level === 'CRITICAL') {
       insertOps.push(
-        supabase.from('anomaly_logs').insert({
+        sb.from('anomaly_logs').insert({
           user_id: context.userId,
           type: result.threatAlert.type || 'SECURITY_ALERT',
           severity: result.threatAlert.severity,
@@ -48,7 +49,7 @@ export async function evaluateAccessRequestWithPersistence(
 
     if (result.riskReport.score >= 60) {
       insertOps.push(
-        supabase.from('anomaly_logs').insert({
+        sb.from('anomaly_logs').insert({
           user_id: context.userId,
           type: 'HIGH_RISK_SESSION',
           severity: result.riskReport.level,

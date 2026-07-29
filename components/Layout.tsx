@@ -132,7 +132,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
         {/* Desktop Header */}
         <header className="hidden lg:flex h-16 bg-white border-b border-gray-200 sticky top-0 z-40 items-center justify-between px-8">
            <div className="text-sm font-medium text-gray-500">Security Management Console</div>

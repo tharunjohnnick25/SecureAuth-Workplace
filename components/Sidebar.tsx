@@ -41,51 +41,53 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const navigationSections = [
+const navigationSectionsConfig = [
   {
     title: 'Overview',
     items: [
-      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'Attendance & Login', href: '/attendance', icon: Clock },
-      { name: 'Notifications', href: '/notifications', icon: Bell },
+      { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { id: 'attendance', name: 'Attendance & Login', href: '/attendance', icon: Clock },
+      { id: 'notifications', name: 'Notifications', href: '/notifications', icon: Bell },
     ],
   },
   {
     title: 'Employee Access',
     items: [
-      { name: 'Employee Directory', href: '/employees', icon: Users },
-      { name: 'Access Requests', href: '/access-requests', icon: FileCheck },
-      { name: 'Departments', href: '/departments', icon: Building2 },
-      { name: 'Roles & Permissions', href: '/roles-permissions', icon: UserCog },
+      { id: 'employees', name: 'Employee Directory', href: '/employees', icon: Users },
+      { id: 'accessRequests', name: 'Access Requests', href: '/access-requests', icon: FileCheck },
+      { id: 'departments', name: 'Departments', href: '/departments', icon: Building2 },
+      { id: 'rolesPermissions', name: 'Roles & Permissions', href: '/roles-permissions', icon: UserCog },
     ],
   },
   {
     title: 'Office Security',
     items: [
-      { name: 'Office Logins', href: '/office-logins', icon: MapPin },
-      { name: 'AI Risk Monitoring', href: '/dashboard/risk', icon: ShieldAlert },
-      { name: 'Device Fingerprinting', href: '/devices', icon: Smartphone },
-      { name: 'Security Center', href: '/security', icon: Shield },
-      { name: 'Threat Intelligence', href: '/threat-intelligence', icon: Target },
+      { id: 'officeLogins', name: 'Office Logins', href: '/office-logins', icon: MapPin },
+      { id: 'aiRisk', name: 'AI Risk Monitoring', href: '/dashboard/risk', icon: ShieldAlert },
+      { id: 'deviceFingerprinting', name: 'Device Fingerprinting', href: '/devices', icon: Smartphone },
+      { id: 'security', name: 'Security Center', href: '/security', icon: Shield },
+      { id: 'threatIntel', name: 'Threat Intelligence', href: '/threat-intelligence', icon: Target },
     ],
   },
   {
     title: 'System Management',
     items: [
-      { name: 'Audit Logs', href: '/audit-logs', icon: FileText },
-      { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-      { name: 'Subscription Plans', href: '/pricing', icon: CreditCard },
-      { name: 'API Integrations', href: '/integrations', icon: Plug },
-      { name: 'Settings', href: '/settings', icon: Settings },
+      { id: 'auditLogs', name: 'Audit Logs', href: '/audit-logs', icon: FileText },
+      { id: 'analytics', name: 'Analytics', href: '/analytics', icon: BarChart3 },
+      { id: 'pricing', name: 'Subscription Plans', href: '/pricing', icon: CreditCard },
+      { id: 'integrations', name: 'API Integrations', href: '/integrations', icon: Plug },
+      { id: 'settings', name: 'Settings', href: '/settings', icon: Settings },
     ],
   },
 ];
 
 
 import { motion } from 'framer-motion';
+import { useLanguage } from '../context/LanguageContext';
 
 export function SidebarContent() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <div className="flex flex-col h-full p-4">
@@ -103,17 +105,17 @@ export function SidebarContent() {
 
       <nav className="flex-1 space-y-1 overflow-y-auto no-scrollbar">
         <div className="space-y-4">
-          {navigationSections.map((section) => (
+          {navigationSectionsConfig.map((section) => (
             <div key={section.title}>
               <h3 className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                {section.title}
+                {t(section.title.toLowerCase().replace(/\s/g, '')) || section.title}
               </h3>
               <div className="space-y-1">
                 {section.items.map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
-                      key={item.name}
+                      key={item.id}
                       href={item.href}
                       className={cn(
                         'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm',
@@ -123,7 +125,7 @@ export function SidebarContent() {
                       )}
                     >
                       <item.icon className="w-4 h-4" />
-                      <span>{item.name}</span>
+                      <span>{t(item.id) !== item.id ? t(item.id) : item.name}</span>
                     </Link>
                   );
                 })}

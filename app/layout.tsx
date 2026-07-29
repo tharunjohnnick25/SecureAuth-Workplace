@@ -1,6 +1,7 @@
 import { AuthGuardWrapper } from '@/components/auth/AuthGuardWrapper';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { OrganizationProvider } from '@/context/OrganizationContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import AnimateLayout from '@/components/AnimateLayout';
 import { Toaster } from 'sonner';
 import { SessionTimeout } from '@/components/SessionTimeout';
@@ -48,7 +49,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen relative bg-[var(--color-cyber-dark)] text-foreground">
+      <body suppressHydrationWarning className="antialiased min-h-screen relative bg-[var(--color-cyber-dark)] text-foreground">
         {/* Cyber Progress Bar */}
         <div className="fixed top-0 left-0 right-0 h-[2px] z-[100] bg-gradient-to-r from-transparent via-[var(--color-cyber-blue)] to-transparent opacity-50 shadow-[0_0_10px_var(--color-cyber-blue)]"></div>
 
@@ -64,12 +65,14 @@ export default function RootLayout({
         <main className="flex-1">
           <AuthProvider>
             <OrganizationProvider>
-              <SessionTimeout />
-              <AuthGuardWrapper>
-                <AnimateLayout>
-                  {children}
-                </AnimateLayout>
-              </AuthGuardWrapper>
+              <LanguageProvider>
+                <SessionTimeout />
+                <AuthGuardWrapper>
+                  <AnimateLayout>
+                    {children}
+                  </AnimateLayout>
+                </AuthGuardWrapper>
+              </LanguageProvider>
             </OrganizationProvider>
           </AuthProvider>
         </main>

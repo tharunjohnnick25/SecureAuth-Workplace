@@ -7,6 +7,7 @@ import { GlobalSearch } from './SearchCommand';
 import { NotificationCenter } from './notifications/NotificationCenter';
 import { SidebarContent } from './Sidebar';
 import { MobileNav } from './MobileNav';
+import { LanguageSelector } from './LanguageSelector';
 
 export function Navbar() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -33,6 +34,9 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Language Selector */}
+            <LanguageSelector />
+
             {/* Identity Badge (Desktop) */}
             <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl">
                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white">SA</div>

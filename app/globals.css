@@ -12,9 +12,18 @@
 }
 
 @layer base {
+  html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    touch-action: pan-y;
+  }
+
   body {
     font-family: var(--font-family-cyber);
-    @apply bg-[var(--color-cyber-dark)] text-white antialiased min-h-screen overflow-x-hidden;
+    @apply bg-[var(--color-cyber-dark)] text-white antialiased min-h-screen;
     background-image: 
       radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.03), transparent 25%),
       radial-gradient(circle at 85% 30%, rgba(138, 43, 226, 0.03), transparent 25%);

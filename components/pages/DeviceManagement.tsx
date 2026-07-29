@@ -83,8 +83,7 @@ export function DeviceManagement() {
     const supabase = createClient();
     const updated = !device.isTrusted;
 
-    const { error } = await supabase
-      .from('devices')
+    const { error } = await (supabase.from('devices') as any)
       .update({ is_trusted: updated, last_active: new Date().toISOString() })
       .eq('id', id);
 
@@ -118,7 +117,7 @@ export function DeviceManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="min-h-screen bg-[#020617] text-white overflow-y-auto">
       <Sidebar />
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />

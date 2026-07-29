@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   LayoutDashboard,
   Shield,
@@ -21,12 +22,14 @@ const mobileNavItems = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#020617]/90 backdrop-blur-xl border-t border-white/10 safe-bottom">
       <div className="flex items-center justify-around h-16 px-2">
         {mobileNavItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const tKey = item.name.toLowerCase();
           return (
             <Link
               key={item.href}
@@ -44,7 +47,7 @@ export function MobileNav() {
               )}>
                 <item.icon className={cn('w-5 h-5', isActive ? 'text-blue-400' : '')} />
               </div>
-              <span className="text-[10px] font-medium leading-none">{item.name}</span>
+              <span className="text-[10px] font-medium leading-none">{t(tKey) !== tKey ? t(tKey) : item.name}</span>
             </Link>
           );
         })}

@@ -4,16 +4,15 @@ import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card } from '@/components/Card';
-import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
-import { Search, Filter, Download, MoreVertical } from 'lucide-react';
+import { Search, Filter, Download, MoreVertical, FileSpreadsheet, Presentation } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DashboardHeader } from '@/components/DashboardHeader';
 
 interface Column {
   key: string;
   label: string;
-  render?: (val: any, row: any) => React.ReactNode;
+  render?: (val: any, row: any, index?: number) => React.ReactNode;
 }
 
 interface DataGridPageProps {
@@ -21,10 +20,12 @@ interface DataGridPageProps {
   description: string;
   columns: Column[];
   data: any[];
-  primaryAction?: { label: string; onClick: () => void };
+  onExportExcel?: () => void;
+  onExportPPT?: () => void;
+  primaryAction?: { label: string; icon?: any; onClick: () => void };
 }
 
-export function DataGridPage({ title, description, columns, data, primaryAction }: DataGridPageProps) {
+export function DataGridPage({ title, description, columns, data, onExportExcel, onExportPPT, primaryAction }: DataGridPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredData = data.filter(row => 
@@ -33,7 +34,7 @@ export function DataGridPage({ title, description, columns, data, primaryAction 
     )
   );
 
-  const handleExport = () => {
+  const handleExportCSV = () => {
     if (!data || data.length === 0) return;
     
     const headers = columns.map(col => col.label).join(',');
@@ -48,27 +49,51 @@ export function DataGridPage({ title, description, columns, data, primaryAction 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `SecureAuth-${title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Attendance_Report_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 overflow-y-auto">
       <Sidebar />
       <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1 p-6 lg:p-8 pt-24 overflow-x-hidden">
           <DashboardHeader title={title} description={description}>
-            <Button variant="outline" className="border-white/10 hover:bg-white/5" onClick={handleExport}>
-              <Download className="w-4 h-4 mr-2" /> Export
-            </Button>
-            {primaryAction && (
-              <Button className="bg-blue-600 hover:bg-blue-500" onClick={primaryAction.onClick}>
-                {primaryAction.label}
-              </Button>
-            )}
+            <div className="flex flex-wrap items-center gap-3">
+              {onExportExcel && (
+                <Button 
+                  onClick={onExportExcel}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-600/20 flex items-center gap-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4" /> Export to Excel
+                </Button>
+              )}
+
+              {onExportPPT && (
+                <Button 
+                  onClick={onExportPPT}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-semibold shadow-lg shadow-purple-600/20 flex items-center gap-2"
+                >
+                  <Presentation className="w-4 h-4" /> Export to PPT
+                </Button>
+              )}
+
+              {!onExportExcel && !onExportPPT && (
+                <Button variant="outline" className="border-white/10 hover:bg-white/5" onClick={handleExportCSV}>
+                  <Download className="w-4 h-4 mr-2" /> Export CSV
+                </Button>
+              )}
+
+              {primaryAction && !onExportExcel && !onExportPPT && (
+                <Button className="bg-blue-600 hover:bg-blue-500 flex items-center gap-2" onClick={primaryAction.onClick}>
+                  {primaryAction.icon && <primaryAction.icon className="w-4 h-4 mr-1" />}
+                  {primaryAction.label}
+                </Button>
+              )}
+            </div>
           </DashboardHeader>
 
           <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
@@ -80,12 +105,32 @@ export function DataGridPage({ title, description, columns, data, primaryAction 
                   placeholder="Search records..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors text-white placeholder-gray-500"
                 />
               </div>
-              <Button variant="outline" className="w-full sm:w-auto border-white/10">
-                <Filter className="w-4 h-4 mr-2" /> Filters
-              </Button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto border-white/10">
+                  <Filter className="w-4 h-4 mr-2" /> Filters
+                </Button>
+                {onExportExcel && (
+                  <Button 
+                    variant="outline" 
+                    className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-1.5"
+                    onClick={onExportExcel}
+                  >
+                    <FileSpreadsheet className="w-4 h-4" /> Excel (.xlsx)
+                  </Button>
+                )}
+                {onExportPPT && (
+                  <Button 
+                    variant="outline" 
+                    className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 flex items-center gap-1.5"
+                    onClick={onExportPPT}
+                  >
+                    <Presentation className="w-4 h-4" /> PPT (.pptx)
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -111,7 +156,7 @@ export function DataGridPage({ title, description, columns, data, primaryAction 
                     >
                       {columns.map(col => (
                         <td key={col.key} className="px-6 py-4 text-gray-300">
-                          {col.render ? col.render(row[col.key], row) : row[col.key]}
+                          {col.render ? col.render(row[col.key], row, i) : row[col.key]}
                         </td>
                       ))}
                       <td className="px-6 py-4 text-right">

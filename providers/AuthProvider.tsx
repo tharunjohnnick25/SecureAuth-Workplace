@@ -19,12 +19,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }).catch(() => setLoading(false));
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user || null);
     });
 
-    return () => listener?.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, []);
 
   return (

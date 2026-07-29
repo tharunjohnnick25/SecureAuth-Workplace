@@ -1,34 +1,26 @@
-import { supabase } from '@/lib/supabase';
+import { apiClient } from '@/lib/api-client';
+import { User, AuditLog, ApiResponse } from '@/types/api';
 
 export const AdminService = {
-  getUsers: async () => {
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false });
-    return data || [];
+  getUsers: async (): Promise<User[]> => {
+    const res = await apiClient.get<ApiResponse<User[]> | { users: User[] }>('/api/users');
+    // Handle both the standard ApiResponse format and the format returned by /api/users
+    if ('users' in res) {
+      return res.users || [];
+    }
+    return (res as ApiResponse<User[]>).data || [];
   },
 
-  getAuditLogs: async () => {
-    const { data } = await supabase
-      .from('audit_logs')
-      .select('*, users(email)')
-      .order('created_at', { ascending: false })
-      .limit(50);
-    return data || [];
+  getAuditLogs: async (): Promise<AuditLog[]> => {
+    const res = await apiClient.get<ApiResponse<AuditLog[]>>('/api/admin/audit-logs');
+    return res.data || [];
   },
 
-  updateUserStatus: async (userId: string, status: string) => {
-    const { error } = await (supabase.from('users') as any)
-      .update({ status })
-      .eq('id', userId);
-    if (error) throw error;
+  updateUserStatus: async (userId: string, status: string): Promise<void> => {
+    await apiClient.put<ApiResponse<any>>(`/api/users/${userId}/status`, { status });
   },
 
-  updateUserRole: async (userId: string, role: string) => {
-    const { error } = await (supabase.from('users') as any)
-      .update({ role })
-      .eq('id', userId);
-    if (error) throw error;
+  updateUserRole: async (userId: string, role: string): Promise<void> => {
+    await apiClient.put<ApiResponse<any>>(`/api/users/${userId}/role`, { role });
   }
 };

@@ -1,97 +1,38 @@
-import { supabase } from '@/lib/supabase';
-
-export interface DashboardStats {
-  totalUsers: number;
-  activeSessions: number;
-  failedAttempts: number;
-  mfaEnabledPercent: number;
-}
+import { apiClient } from '@/lib/api-client';
+import { DashboardStats, RecentActivity, SecurityAlert, Department, ApiResponse } from '@/types/api';
 
 export const DashboardService = {
   getStats: async (): Promise<DashboardStats> => {
-    const { count: userCount } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
-
-    const { count: sessionCount } = await supabase
-      .from('sessions')
-      .select('*', { count: 'exact', head: true })
-      .gt('last_active', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-    const { count: failedCount } = await supabase
-      .from('login_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'FAILURE')
-      .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-    const { count: mfaCount } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true })
-      .eq('mfa_enabled', true);
-
-    const total = userCount || 1;
-    const mfaEnabledPercent = Math.round(((mfaCount || 0) / total) * 100);
-
-    return {
-      totalUsers: userCount || 0,
-      activeSessions: sessionCount || 0,
-      failedAttempts: failedCount || 0,
-      mfaEnabledPercent,
-    };
+    const res = await apiClient.get<ApiResponse<DashboardStats>>('/api/analytics/stats');
+    if (!res.data) throw new Error('Failed to load stats');
+    return res.data;
   },
 
-  getRecentActivities: async () => {
-    const { data } = await supabase
-      .from('login_logs')
-      .select('*, users(email)')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    return (data || []).map((log: any) => ({
-      id: log.id,
-      user: log.users?.email || 'Unknown',
-      action: log.status === 'SUCCESS' ? 'Login successful' : 'Login failed',
-      timestamp: log.created_at,
-      status: log.status === 'SUCCESS' ? 'success' : 'danger',
-      ip: log.ip_address,
-    }));
+  getRecentActivities: async (): Promise<RecentActivity[]> => {
+    const res = await apiClient.get<ApiResponse<RecentActivity[]>>('/api/analytics/activities');
+    return res.data || [];
   },
 
-  getSecurityAlerts: async () => {
-    const { data } = await supabase
-      .from('security_events')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    return (data || []).map((alert: any) => ({
-      id: alert.id,
-      type: alert.event_type?.replace(/_/g, '') || 'Alert',
-      message: alert.details?.message || `Security event detected`,
-      severity: alert.severity?.toLowerCase() || 'medium',
-      time: alert.created_at
-    }));
+  getSecurityAlerts: async (): Promise<SecurityAlert[]> => {
+    const res = await apiClient.get<ApiResponse<SecurityAlert[]>>('/api/analytics/alerts');
+    return res.data || [];
   },
 
   getAttendance: async () => {
-    const { data } = await supabase
-      .from('login_logs')
-      .select('*, users(full_name, email)')
-      .order('created_at', { ascending: false })
-      .limit(100);
-    return data || [];
+    // We can fetch attendance from activities if required, or keep it generic
+    // Currently, it just mapped login logs
+    const res = await apiClient.get<ApiResponse<any[]>>('/api/analytics/activities');
+    return res.data || [];
   },
 
-  getDepartments: async () => {
-    const { data } = await supabase
-      .from('departments')
-      .select('*');
-    return (data || []).map((dept: any) => ({
-      id: dept.id,
-      name: dept.name || 'Unknown',
-      head: dept.head || 'Unassigned',
-      employees: dept.employee_count || 0,
-      risk: (dept.avg_risk_score || 0) > 60 ? 'High' : (dept.avg_risk_score || 0) > 30 ? 'Medium' : 'Low'
-    }));
+  getDepartments: async (): Promise<Department[]> => {
+    const res = await apiClient.get<ApiResponse<Department[]>>('/api/departments');
+    return res.data || [];
+  },
+
+  addDepartment: async (name: string, head?: string): Promise<Department> => {
+    const res = await apiClient.post<ApiResponse<Department>>('/api/departments', { name, head });
+    if (!res.data) throw new Error('Failed to create department');
+    return res.data;
   }
 };

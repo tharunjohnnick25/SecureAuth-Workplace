@@ -1,0 +1,80 @@
+{
+  "summary": {
+    "testName": "Enterprise HRMS - Baseline Load Test",
+    "baseUrl": "http://localhost:3000",
+    "totalDuration": "81.9s",
+    "virtualUsers": 100,
+    "totalRequests": 32316,
+    "rps": "394.8",
+    "avgResponseTime": "0.00",
+    "minResponseTime": "0.00",
+    "maxResponseTime": "0.00",
+    "p95ResponseTime": "0.00",
+    "p99ResponseTime": "0.00",
+    "errorRate": "100.00%",
+    "failedRequests": 0,
+    "throughput": "394.8 req/s"
+  },
+  "thresholds": {
+    "http_req_duration_p(95)<2000": "PASS",
+    "http_req_duration_p(99)<5000": "PASS"
+  },
+  "metrics": {
+    "employee_list_duration": {
+      "avg": "192.42",
+      "min": "0.00",
+      "max": "688.00",
+      "p95": "316.00",
+      "count": 0
+    },
+    "employee_get_duration": {
+      "avg": "0.00",
+      "min": "0.00",
+      "max": "0.00",
+      "p95": "0.00",
+      "count": 0
+    },
+    "employee_create_duration": {
+      "avg": "196.42",
+      "min": "0.00",
+      "max": "645.00",
+      "p95": "303.00",
+      "count": 0
+    },
+    "department_list_duration": {
+      "avg": "200.40",
+      "min": "0.00",
+      "max": "478.00",
+      "p95": "314.00",
+      "count": 0
+    },
+    "department_create_duration": {
+      "avg": "204.31",
+      "min": "0.00",
+      "max": "522.00",
+      "p95": "318.00",
+      "count": 0
+    },
+    "department_analytics_duration": {
+      "avg": "196.77",
+      "min": "0.00",
+      "max": "526.00",
+      "p95": "302.55",
+      "count": 0
+    },
+    "search_duration": {
+      "avg": "197.64",
+      "min": "0.00",
+      "max": "522.00",
+      "p95": "310.00",
+      "count": 0
+    },
+    "bulk_export_duration": {
+      "avg": "191.47",
+      "min": "0.00",
+      "max": "455.00",
+      "p95": "300.25",
+      "count": 0
+    }
+  }
+}

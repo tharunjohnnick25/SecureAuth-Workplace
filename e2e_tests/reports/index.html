@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selenium Automated Test Execution Report & Screenshots</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --accent-blue: #38bdf8;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .badge {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-blue);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+        .stat-value.pass { color: var(--accent-green); }
+        .stat-value.fail { color: var(--accent-red); }
+        .stat-value.rate { color: var(--accent-blue); }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1.5rem;
+        }
+        .test-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .test-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+        }
+        .screenshot-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background: #000;
+            overflow: hidden;
+        }
+        .screenshot-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top;
+            cursor: pointer;
+        }
+        .status-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .status-tag.PASS { background: var(--accent-green); color: #000; }
+        .status-tag.FAIL { background: var(--accent-red); color: #fff; }
+        .test-info {
+            padding: 1.2rem;
+        }
+        .test-id {
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+        .test-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0.3rem 0;
+            color: var(--text-main);
+        }
+        .test-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.8rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 0.6rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>SecureAuth AI - Selenium E2E Test Execution & Screenshots</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Generated on 2026-07-30 09:21:28 UTC</p>
+        </div>
+        <div class="badge">Selenium Web UI Suite</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Test Cases</div>
+            <div class="stat-value">20</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Passed Tests</div>
+            <div class="stat-value pass">20</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Failed Tests</div>
+            <div class="stat-value fail">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Pass Rate</div>
+            <div class="stat-value rate">100.0%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Duration</div>
+            <div class="stat-value">149.55s</div>
+        </div>
+    </div>
+
+    <div class="section-title">
+        📷 Automated Test Screenshots & UI Verification Gallery
+    </div>
+
+    <div class="gallery-grid">
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/01_landing_page_hero.png' target='_blank'><img src='screenshots/01_landing_page_hero.png' alt='Verify Landing Page Hero Section'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-AUTH-001 | Landing Page</div>
+                <div class="test-name">Verify Landing Page Hero Section</div>
+                <div class="test-meta">
+                    <span>⏱ 9.3s</span>
+                    <span>🔗 /</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/02_landing_page_features.png' target='_blank'><img src='screenshots/02_landing_page_features.png' alt='Verify Features Section Showcase'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-AUTH-002 | Landing Page</div>
+                <div class="test-name">Verify Features Section Showcase</div>
+                <div class="test-meta">
+                    <span>⏱ 5.01s</span>
+                    <span>🔗 /</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/03_landing_page_pricing.png' target='_blank'><img src='screenshots/03_landing_page_pricing.png' alt='Verify Landing Pricing Breakdown'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-AUTH-003 | Landing Page</div>
+                <div class="test-name">Verify Landing Pricing Breakdown</div>
+                <div class="test-meta">
+                    <span>⏱ 6.4s</span>
+                    <span>🔗 /</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/04_login_page_mfa.png' target='_blank'><img src='screenshots/04_login_page_mfa.png' alt='Verify Multi-Factor Login Portal'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-AUTH-004 | Authentication</div>
+                <div class="test-name">Verify Multi-Factor Login Portal</div>
+                <div class="test-meta">
+                    <span>⏱ 3.98s</span>
+                    <span>🔗 /login</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/05_signup_request_access.png' target='_blank'><img src='screenshots/05_signup_request_access.png' alt='Verify Request Access Signup Form'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-AUTH-005 | Authentication</div>
+                <div class="test-name">Verify Request Access Signup Form</div>
+                <div class="test-meta">
+                    <span>⏱ 3.38s</span>
+                    <span>🔗 /signup</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/06_forgot_password_reset.png' target='_blank'><img src='screenshots/06_forgot_password_reset.png' alt='Verify Forgot Password Reset Request'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-AUTH-006 | Authentication</div>
+                <div class="test-name">Verify Forgot Password Reset Request</div>
+                <div class="test-meta">
+                    <span>⏱ 2.95s</span>
+                    <span>🔗 /forgot-password</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/07_pricing_plans_breakdown.png' target='_blank'><img src='screenshots/07_pricing_plans_breakdown.png' alt='Verify Pricing & Subscription Tiers'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-AUTH-007 | Subscription</div>
+                <div class="test-name">Verify Pricing & Subscription Tiers</div>
+                <div class="test-meta">
+                    <span>⏱ 3.57s</span>
+                    <span>🔗 /pricing</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/08_user_security_dashboard.png' target='_blank'><img src='screenshots/08_user_security_dashboard.png' alt='Verify Security Operations Dashboard'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-DASH-001 | Dashboard</div>
+                <div class="test-name">Verify Security Operations Dashboard</div>
+                <div class="test-meta">
+                    <span>⏱ 3.63s</span>
+                    <span>🔗 /dashboard</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/09_admin_audit_logs_dashboard.png' target='_blank'><img src='screenshots/09_admin_audit_logs_dashboard.png' alt='Verify Admin Management Console'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-ADM-001 | Admin Portal</div>
+                <div class="test-name">Verify Admin Management Console</div>
+                <div class="test-meta">
+                    <span>⏱ 2.71s</span>
+                    <span>🔗 /admin</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/10_audit_logs_compliance.png' target='_blank'><img src='screenshots/10_audit_logs_compliance.png' alt='Verify IAM Compliance Audit Trail'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-SEC-001 | Security Audit</div>
+                <div class="test-name">Verify IAM Compliance Audit Trail</div>
+                <div class="test-meta">
+                    <span>⏱ 3.55s</span>
+                    <span>🔗 /audit-logs</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/11_ai_threat_monitoring_panel.png' target='_blank'><img src='screenshots/11_ai_threat_monitoring_panel.png' alt='Verify Real-Time AI Threat Center'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-SEC-002 | Security Audit</div>
+                <div class="test-name">Verify Real-Time AI Threat Center</div>
+                <div class="test-meta">
+                    <span>⏱ 4.34s</span>
+                    <span>🔗 /security</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/12_employee_directory_management.png' target='_blank'><img src='screenshots/12_employee_directory_management.png' alt='Verify Employee Identity Directory'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-EMP-001 | Directory</div>
+                <div class="test-name">Verify Employee Identity Directory</div>
+                <div class="test-meta">
+                    <span>⏱ 2.92s</span>
+                    <span>🔗 /employees</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/13_department_access_policies.png' target='_blank'><img src='screenshots/13_department_access_policies.png' alt='Verify Department Access Policies'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-DEPT-001 | Governance</div>
+                <div class="test-name">Verify Department Access Policies</div>
+                <div class="test-meta">
+                    <span>⏱ 2.88s</span>
+                    <span>🔗 /departments</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/14_mfa_biometrics_step.png' target='_blank'><img src='screenshots/14_mfa_biometrics_step.png' alt='Verify MFA & Biometrics Verification'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-MFA-001 | Biometrics</div>
+                <div class="test-name">Verify MFA & Biometrics Verification</div>
+                <div class="test-meta">
+                    <span>⏱ 3.43s</span>
+                    <span>🔗 /mfa-verify</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/15_vulnerability_scanner_matrix.png' target='_blank'><img src='screenshots/15_vulnerability_scanner_matrix.png' alt='Verify Automated Vulnerability Matrix'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-VULN-001 | Security</div>
+                <div class="test-name">Verify Automated Vulnerability Matrix</div>
+                <div class="test-meta">
+                    <span>⏱ 3.2s</span>
+                    <span>🔗 /vulnerability-scanner</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/16_load_performance_metrics.png' target='_blank'><img src='screenshots/16_load_performance_metrics.png' alt='Verify Load & System Metrics Dashboard'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-LOAD-001 | Performance</div>
+                <div class="test-name">Verify Load & System Metrics Dashboard</div>
+                <div class="test-meta">
+                    <span>⏱ 3.14s</span>
+                    <span>🔗 /performance-metrics</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/17_mobile_appium_capacitor_sync.png' target='_blank'><img src='screenshots/17_mobile_appium_capacitor_sync.png' alt='Verify Mobile Device Intelligence Sync'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-APP-001 | Mobile Appium</div>
+                <div class="test-name">Verify Mobile Device Intelligence Sync</div>
+                <div class="test-meta">
+                    <span>⏱ 3.1s</span>
+                    <span>🔗 /devices</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/18_compliance_reports_view.png' target='_blank'><img src='screenshots/18_compliance_reports_view.png' alt='Verify SOC2 & ISO Security Compliance'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-SETT-001 | Compliance</div>
+                <div class="test-name">Verify SOC2 & ISO Security Compliance</div>
+                <div class="test-meta">
+                    <span>⏱ 2.79s</span>
+                    <span>🔗 /compliance-reports</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/19_active_sessions_control.png' target='_blank'><img src='screenshots/19_active_sessions_control.png' alt='Verify Active Session Management'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-SESS-001 | Sessions</div>
+                <div class="test-name">Verify Active Session Management</div>
+                <div class="test-meta">
+                    <span>⏱ 3.1s</span>
+                    <span>🔗 /session-management</span>
+                </div>
+            </div>
+        </div>
+        <div class="test-card">
+            <div class="screenshot-container">
+                <span class="status-tag PASS">PASS</span>
+                <a href='screenshots/20_api_keys_management.png' target='_blank'><img src='screenshots/20_api_keys_management.png' alt='Verify API Keys & Webhook Controls'></a>
+            </div>
+            <div class="test-info">
+                <div class="test-id">WEB-API-001 | Developer</div>
+                <div class="test-name">Verify API Keys & Webhook Controls</div>
+                <div class="test-meta">
+                    <span>⏱ 3.27s</span>
+                    <span>🔗 /api-keys</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

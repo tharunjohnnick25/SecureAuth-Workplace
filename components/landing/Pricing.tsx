@@ -130,7 +130,7 @@ const Pricing = () => {
                     {priceDisplay !== 'Custom' && <span className="text-gray-500 font-medium">{t('perMonth')}</span>}
                   </div>
                   {billingCycle === 'yearly' && priceDisplay !== 'Custom' && priceDisplay !== '₹0' && (
-                    <span className="text-xs font-semibold text-green-400">Save 20% with annual plan</span>
+                    <span className="text-xs font-semibold text-green-400">{'Save 20% with annual billing'}</span>
                   )}
                   <p className="text-gray-400 text-sm mt-2">{tier.description}</p>
                 </div>
@@ -167,7 +167,7 @@ const Pricing = () => {
         <div className="mt-16 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 rounded-full border border-blue-500/20 text-blue-300 text-sm font-medium">
              <Shield className="w-4 h-4" />
-             Need a custom solution for your enterprise? <Link href="#contact" className="underline font-bold ml-1">Contact our team</Link>
+             {'Need a custom solution?'}<Link href="#contact" className="underline font-bold ml-1">{'Contact our team'}</Link>
           </div>
         </div>
       </div>

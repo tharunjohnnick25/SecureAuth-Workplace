@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { FileText, Code, Download } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const endpoints = [
   { method: 'GET', path: '/api/v1/users', description: 'List all users', auth: 'Bearer Token' },
@@ -14,6 +15,7 @@ const endpoints = [
 ];
 
 export function ApiDocumentation() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -22,21 +24,19 @@ export function ApiDocumentation() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">API Documentation</h1>
-              <p className="text-muted-foreground">RESTful API reference and examples</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Apidocumentatio'}</h1>
+              <p className="text-muted-foreground">{'Restful apirefer'}</p>
             </div>
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
-              Download OpenAPI Spec
-            </Button>
+              {'Download open api'}</Button>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Code className="w-5 h-5" />
-                API Endpoints
-              </CardTitle>
+                {'Apiendpoints'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -53,7 +53,7 @@ export function ApiDocumentation() {
                       <code className="text-sm font-mono">{endpoint.path}</code>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{endpoint.description}</p>
-                    <span className="text-xs text-muted-foreground">Auth: {endpoint.auth}</span>
+                    <span className="text-xs text-muted-foreground">{'Auth'}{endpoint.auth}</span>
                   </div>
                 ))}
               </div>

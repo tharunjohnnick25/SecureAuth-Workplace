@@ -1,8 +1,21 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { isMockMode } from '@/lib/mock-employees';
 
 export async function POST(req: NextRequest) {
   try {
+    if (isMockMode()) {
+      return NextResponse.json({
+        id: 'mock-totp-factor',
+        type: 'totp',
+        totp: {
+          qr_code: 'https://api.qrserver.com/v1/create-qr-code/?data=otpauth%3A%2F%2Ftotp%2FSecureAuth%3Amock%3Fsecret%3DMOCKTOTPSECRET&size=200x200',
+          secret: 'MOCKTOTPSECRET',
+          uri: 'otpauth://totp/SecureAuth:mock?secret=MOCKTOTPSECRET',
+        },
+      });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {

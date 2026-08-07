@@ -7,9 +7,10 @@ import { Card } from '@/components/Card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { motion } from 'framer-motion';
 
-import { DashboardHeader } from '@/components/DashboardHeader';
+import { PageHeader } from '@/components/PageHeader';
 
 import Link from 'next/link';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface MetricCard {
   title: string;
@@ -30,13 +31,14 @@ interface MetricsDashboardProps {
 }
 
 export function MetricsDashboard({ title, description, metrics, chartData, barData, recentActivity }: MetricsDashboardProps) {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
       <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1 p-6 lg:p-8 pt-24 overflow-x-hidden">
-          <DashboardHeader title={title} description={description} />
+          <PageHeader title={title} description={description} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {metrics.map((m, i) => (
@@ -68,7 +70,7 @@ export function MetricsDashboard({ title, description, metrics, chartData, barDa
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <Card className="lg:col-span-2 p-6 bg-black/40 backdrop-blur-xl border-white/10">
-              <h3 className="text-lg font-bold mb-6">Activity Trends</h3>
+              <h3 className="text-lg font-bold mb-6">{'Activity trends'}</h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
@@ -92,21 +94,41 @@ export function MetricsDashboard({ title, description, metrics, chartData, barDa
             </Card>
 
             <Card className="p-6 bg-black/40 backdrop-blur-xl border-white/10">
-              <h3 className="text-lg font-bold mb-6">Distribution</h3>
+              <h3 className="text-lg font-bold mb-6">{'Distribution'}</h3>
               {barData ? (
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={barData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                      <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                      />
-                      <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={barData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                        <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                          cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                        />
+                        <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {recentActivity && recentActivity.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recent Activity</h4>
+                      <div className="flex flex-col gap-2">
+                        {recentActivity.slice(0, 3).map((act, i) => (
+                          <div key={i} className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg border border-white/5">
+                            <div className={`w-2 h-2 rounded-full ${
+                              act.status === 'success' ? 'bg-green-500' : act.status === 'danger' ? 'bg-red-500' : 'bg-yellow-500'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-200 truncate">{act.title}</p>
+                              <p className="text-xs text-gray-500">{act.time}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col gap-4">
                   {recentActivity?.map((act, i) => (
@@ -129,3 +151,4 @@ export function MetricsDashboard({ title, description, metrics, chartData, barDa
     </div>
   );
 }
+

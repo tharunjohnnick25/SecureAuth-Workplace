@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
+import { isMockMode } from '@/lib/mock-employees';
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,6 +8,17 @@ export async function POST(req: NextRequest) {
 
     const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (isMockMode()) {
+      const mockId = `order_mock_${Date.now()}`;
+      return NextResponse.json({
+        id: mockId,
+        amount: Math.round((amount || 1) * 100),
+        currency: currency || 'INR',
+        key: keyId || 'rzp_test_mock',
+        isMock: true,
+      });
+    }
 
     if (keyId && keySecret && !keyId.includes('dummy') && !keyId.includes('placeholder')) {
       try {

@@ -1,9 +1,18 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { isMockMode } from '@/lib/mock-employees';
 
 export async function POST(req: NextRequest) {
   try {
     const { factorId, code } = await req.json();
+
+    if (isMockMode()) {
+      if (!code || String(code).replace(/\D/g, '').length !== 6) {
+        return NextResponse.json({ error: 'Invalid MFA code' }, { status: 400 });
+      }
+      return NextResponse.json({ success: true, verifyData: { verified: true, factorId } });
+    }
+
     const supabase = await createServerSupabaseClient();
 
     const { data: verifyData, error: verifyError } = await supabase.auth.mfa.challengeAndVerify({

@@ -9,10 +9,12 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { Loader2, ShieldCheck, Mail, Lock } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
+    const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { setUser, setRequiresBiometric } = useAuthStore();
@@ -63,8 +65,8 @@ export default function LoginForm() {
         <div className="w-16 h-16 rounded-full bg-[var(--color-cyber-blue)]/20 flex items-center justify-center mb-4">
           <ShieldCheck className="w-8 h-8 text-[var(--color-cyber-blue)]" />
         </div>
-        <h2 className="text-3xl font-bold text-white text-glow">Secure Login</h2>
-        <p className="text-gray-400 mt-2 text-sm">Adaptive Risk-Based Authentication</p>
+        <h2 className="text-3xl font-bold text-white text-glow">{'Secure login'}</h2>
+        <p className="text-gray-400 mt-2 text-sm">{'Adaptive risk bas'}</p>
       </div>
 
       {error && (
@@ -79,7 +81,7 @@ export default function LoginForm() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-300 mb-1">{'Email'}</label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -93,7 +95,7 @@ export default function LoginForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-300 mb-1">{'Password'}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input

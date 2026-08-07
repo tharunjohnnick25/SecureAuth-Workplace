@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Maximize2,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const networkNodes = [
   { id: '1', name: 'Core Router', type: 'router', status: 'healthy', connections: 8, traffic: '2.4 Gbps' },
@@ -48,6 +49,7 @@ const recentEvents = [
 ];
 
 export function NetworkMap() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -56,20 +58,17 @@ export function NetworkMap() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Network Topology</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Network topology'}</h1>
               <p className="text-muted-foreground">
-                Visualize and monitor your network infrastructure
-              </p>
+                {'Visualize and monitor your network infrastructure'}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
+                {'Refresh'}</Button>
               <Button variant="outline">
                 <Maximize2 className="w-4 h-4 mr-2" />
-                Full Screen
-              </Button>
+                {'Full screen'}</Button>
             </div>
           </div>
 
@@ -93,19 +92,16 @@ export function NetworkMap() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Network className="w-5 h-5" />
-                Network Topology Map
-              </CardTitle>
+                {'Network topology'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-input-background/30 rounded-lg p-8 min-h-[400px] flex items-center justify-center">
                 <div className="text-center">
                   <Network className="w-16 h-16 mx-auto mb-4 text-primary" />
                   <p className="text-muted-foreground">
-                    Interactive network topology visualization would be displayed here
-                  </p>
+                    {'Interactive network map'}</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Showing {networkNodes.length} network nodes with real-time status
-                  </p>
+                    {'Showing'}{networkNodes.length} {'network nodes with status'}</p>
                 </div>
               </div>
             </CardContent>
@@ -114,7 +110,7 @@ export function NetworkMap() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Network Devices</CardTitle>
+                <CardTitle>{'Network devices'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -141,7 +137,7 @@ export function NetworkMap() {
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
                               <span>{node.type}</span>
                               <span>•</span>
-                              <span>{node.connections} connections</span>
+                              <span>{node.connections} {'Connections'}</span>
                               <span>•</span>
                               <span>{node.traffic}</span>
                             </div>
@@ -163,7 +159,7 @@ export function NetworkMap() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Network Segments</CardTitle>
+                <CardTitle>{'Network segments'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -180,12 +176,12 @@ export function NetworkMap() {
                       </div>
                       <div className="space-y-2 text-xs text-muted-foreground">
                         <div className="flex items-center justify-between">
-                          <span>Devices</span>
+                          <span>{'Devices'}</span>
                           <span className="text-foreground font-medium">{segment.devices}</span>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span>Utilization</span>
+                            <span>{'Utilization'}</span>
                             <span className="text-foreground font-medium">{segment.utilization}%</span>
                           </div>
                           <div className="w-full bg-input-background rounded-full h-1.5">
@@ -209,7 +205,7 @@ export function NetworkMap() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent Network Events</CardTitle>
+              <CardTitle>{'Recent network events'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

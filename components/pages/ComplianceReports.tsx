@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Shield,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const complianceFrameworks = [
   { name: 'SOC 2 Type II', status: 'Compliant', score: 98, lastAudit: '2026-03-15', nextAudit: '2026-09-15' },
@@ -39,6 +40,7 @@ const controlCategories = [
 ];
 
 export function ComplianceReports() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -47,20 +49,17 @@ export function ComplianceReports() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Compliance Reports</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Compliance repor'}</h1>
               <p className="text-muted-foreground">
-                Monitor compliance status across multiple frameworks
-              </p>
+                {'Monitorcomplian'}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline">
                 <Calendar className="w-4 h-4 mr-2" />
-                Schedule Report
-              </Button>
+                {'Schedule report'}</Button>
               <Button>
                 <Download className="w-4 h-4 mr-2" />
-                Export All
-              </Button>
+                {'Export all'}</Button>
             </div>
           </div>
 
@@ -71,12 +70,11 @@ export function ComplianceReports() {
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Compliant</p>
+                  <p className="text-sm text-muted-foreground">{'Compliant'}</p>
                   <h3 className="text-2xl font-semibold">3</h3>
                   <p className="text-xs text-success flex items-center gap-1 mt-1">
                     <TrendingUp className="w-3 h-3" />
-                    +1 this month
-                  </p>
+                    {t('1thismonth_750')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -87,9 +85,9 @@ export function ComplianceReports() {
                   <AlertTriangle className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Partial</p>
+                  <p className="text-sm text-muted-foreground">{'Partial'}</p>
                   <h3 className="text-2xl font-semibold">1</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Needs attention</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'Needsattention'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -100,9 +98,9 @@ export function ComplianceReports() {
                   <XCircle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Non-Compliant</p>
+                  <p className="text-sm text-muted-foreground">{'Non compliant'}</p>
                   <h3 className="text-2xl font-semibold">1</h3>
-                  <p className="text-xs text-destructive mt-1">Critical</p>
+                  <p className="text-xs text-destructive mt-1">{'Critical'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -113,12 +111,11 @@ export function ComplianceReports() {
                   <Shield className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Avg. Score</p>
+                  <p className="text-sm text-muted-foreground">{'Avg score'}</p>
                   <h3 className="text-2xl font-semibold">89%</h3>
                   <p className="text-xs text-success flex items-center gap-1 mt-1">
                     <TrendingUp className="w-3 h-3" />
-                    +3% improvement
-                  </p>
+                    {t('3improvement_756')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -129,8 +126,7 @@ export function ComplianceReports() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-5 h-5" />
-                  Compliance Frameworks
-                </CardTitle>
+                  {'Compliance frame'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -172,8 +168,8 @@ export function ComplianceReports() {
                         />
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Last Audit: {framework.lastAudit}</span>
-                        <span>Next: {framework.nextAudit}</span>
+                        <span>{'Last audit'}{framework.lastAudit}</span>
+                        <span>{'Next'}{framework.nextAudit}</span>
                       </div>
                     </div>
                   ))}
@@ -185,8 +181,7 @@ export function ComplianceReports() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Recent Reports
-                </CardTitle>
+                  {'Recent reports'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -212,7 +207,7 @@ export function ComplianceReports() {
                           }`}>
                             {report.status}
                           </span>
-                          <span className="text-muted-foreground">{report.findings} findings</span>
+                          <span className="text-muted-foreground">{report.findings} {'Findings'}</span>
                         </div>
                       </div>
                     </div>
@@ -226,8 +221,7 @@ export function ComplianceReports() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5" />
-                Control Categories
-              </CardTitle>
+                {'Control categori'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -236,8 +230,8 @@ export function ComplianceReports() {
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium">{category.category}</h4>
                       <div className="flex items-center gap-4 text-sm">
-                        <span className="text-success">{category.passed} passed</span>
-                        <span className="text-destructive">{category.failed} failed</span>
+                        <span className="text-success">{category.passed} {'Passed'}</span>
+                        <span className="text-destructive">{category.failed} {'Failed'}</span>
                         <span className="font-semibold">{category.percentage}%</span>
                       </div>
                     </div>

@@ -1,0 +1,222 @@
+name: CI + Test Reports
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+        env:
+          NEXT_PUBLIC_MOCK_AUTH: "true"
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_MOCK_AUTH: "true"
+          NEXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-anon-key"
+          SUPABASE_SERVICE_ROLE_KEY: "mock-service-role-key"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+          retention-days: 3
+
+  load-test:
+    name: Load Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+
+      - name: Start Next.js & run load test
+        run: |
+          npx next start &
+          sleep 10
+          npx autocannon http://localhost:3000/api/health --connections 50 --duration 30 --json > load-test-results.json || true
+          kill %1 || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: load-test-report
+          path: load-test-results.json
+          retention-days: 7
+
+  selenium-tests:
+    name: Selenium E2E Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: |
+          pip install selenium webdriver-manager openpyxl
+
+      - name: Start Next.js server
+        run: |
+          npx next start &
+          sleep 10
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health
+
+      - name: Run Selenium test suite
+        run: |
+          python selenium-tests/run_selenium_tests.py
+        env:
+          TEST_BASE_URL: "http://localhost:3000"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: selenium-report
+          path: |
+            selenium-tests/reports/
+            e2e_tests/reports/
+            Selenium_Testing_Report.xlsx
+          retention-days: 14
+
+  e2e-comprehensive:
+    name: Comprehensive E2E (150+ Tests)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: |
+          pip install selenium webdriver-manager openpyxl
+
+      - name: Start Next.js server
+        run: |
+          npx next start &
+          sleep 10
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health
+
+      - name: Run comprehensive E2E suite
+        run: |
+          python e2e_tests/secureauth_e2e_tests.py
+        env:
+          TEST_BASE_URL: "http://localhost:3000"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2e-comprehensive-report
+          path: |
+            e2e_tests/reports/
+            xlsx_reports/
+          retention-days: 14
+
+  generate-reports:
+    name: Generate Testing Reports
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install openpyxl
+
+      - name: Generate all test reports
+        run: |
+          node scripts/generate-all-300-test-reports.js 2>/dev/null || true
+        env:
+          TEST_BASE_URL: "http://localhost:3000"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-xlsx-reports
+          path: |
+            *.xlsx
+            scripts/*.xlsx
+          retention-days: 30

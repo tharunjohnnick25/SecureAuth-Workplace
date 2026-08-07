@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-const rpName = 'SecureAuth IAM';
+const rpName = 'SecureAuth Workplace';
 const rpID = process.env.NEXT_PUBLIC_RP_ID || 'localhost';
 const origin = process.env.NEXT_PUBLIC_ORIGIN || `http://${rpID}:3000`;
 

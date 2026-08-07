@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Activity, TrendingUp, Users, Database } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const stats = [
   { label: 'API Calls', value: '2.4M', icon: Activity, color: 'primary', trend: '+18%' },
@@ -13,6 +14,7 @@ const stats = [
 ];
 
 export function UsageStatistics() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -20,8 +22,8 @@ export function UsageStatistics() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Usage Statistics</h1>
-            <p className="text-muted-foreground">Track your resource consumption and usage</p>
+            <h1 className="text-3xl font-semibold mb-2">{'Usage statistics'}</h1>
+            <p className="text-muted-foreground">{'Trackyourresour'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -5,8 +5,10 @@ import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { motion } from 'framer-motion';
 import { Activity, Shield } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function GenericPage({ title, description }: { title: string, description: string }) {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617]">
       <Sidebar />
@@ -25,10 +27,9 @@ export default function GenericPage({ title, description }: { title: string, des
               <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
                  <Shield className="w-8 h-8 text-blue-400" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Module Active</h2>
+              <h2 className="text-xl font-bold text-white mb-2">{'Module active'}</h2>
               <p className="text-gray-400 max-w-md mx-auto">
-                This enterprise module is currently active and monitoring system events. Data will appear here as the system gathers analytics.
-              </p>
+                {'This enterprise module is ready for use. Configure its settings to get started.'}</p>
             </CardContent>
           </Card>
         </main>

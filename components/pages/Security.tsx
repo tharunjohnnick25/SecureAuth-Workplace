@@ -15,8 +15,10 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Security() {
+    const { t } = useLanguage();
   const { data: dbThreats, loading: threatsLoading } = useRealtimeData('threat_logs', (q) =>
     q.select('*').order('created_at', { ascending: false }).limit(20)
   );
@@ -79,10 +81,9 @@ export function Security() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Security Center</h1>
+            <h1 className="text-3xl font-semibold mb-2">{'Security center'}</h1>
             <p className="text-muted-foreground">
-              Monitor and respond to security events in real-time
-            </p>
+              {'Monitorandrespo'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -92,7 +93,7 @@ export function Security() {
                   <AlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Alerts</p>
+                  <p className="text-sm text-muted-foreground">{'Active alerts'}</p>
                   <h3 className="text-2xl font-semibold">{activeAlerts}</h3>
                 </div>
               </CardContent>
@@ -104,7 +105,7 @@ export function Security() {
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Addressed</p>
+                  <p className="text-sm text-muted-foreground">{'Addressed'}</p>
                   <h3 className="text-2xl font-semibold">{resolvedToday}</h3>
                 </div>
               </CardContent>
@@ -116,7 +117,7 @@ export function Security() {
                   <Shield className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Security Score</p>
+                  <p className="text-sm text-muted-foreground">{'Security score'}</p>
                   <h3 className="text-2xl font-semibold">{securityScore}/100</h3>
                 </div>
               </CardContent>
@@ -126,7 +127,7 @@ export function Security() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader>
-                <CardTitle>Security Alerts</CardTitle>
+                <CardTitle>{'Security alerts'}</CardTitle>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -135,8 +136,7 @@ export function Security() {
                   </div>
                 ) : securityAlerts.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No security alerts. System is clear.
-                  </div>
+                    {'Nosecurityalert'}</div>
                 ) : (
                   <div className="space-y-4">
                     {securityAlerts.map((alert) => (
@@ -175,11 +175,9 @@ export function Security() {
                               {alert.status === 'active' && (
                                 <div className="flex gap-2">
                                   <Button size="sm" variant="outline">
-                                    Investigate
-                                  </Button>
+                                    {'Investigate'}</Button>
                                   <Button size="sm" variant="ghost">
-                                    Dismiss
-                                  </Button>
+                                    {'Dismiss'}</Button>
                                 </div>
                               )}
                             </div>
@@ -194,13 +192,12 @@ export function Security() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Location Activity</CardTitle>
+                <CardTitle>{'Location activit'}</CardTitle>
               </CardHeader>
               <CardContent>
                 {locationActivity.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No location data available yet.
-                  </div>
+                    {'Nolocationdataa'}</div>
                 ) : (
                   <div className="space-y-4">
                     {locationActivity.map((location, index) => (
@@ -229,8 +226,7 @@ export function Security() {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">
-                            {location.logins} logins
-                          </span>
+                            {location.logins} {'Logins'}</span>
                           <div className="w-32 bg-muted rounded-full h-1.5">
                             <div
                               className={`h-1.5 rounded-full ${

@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { Mail, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const templates = [
   { id: '1', name: 'Security Alert', subject: 'Security Alert: {{threat_type}}', category: 'Alerts', lastModified: '2026-04-28', usage: 245 },
@@ -14,6 +15,7 @@ const templates = [
 ];
 
 export function EmailTemplates() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -22,21 +24,19 @@ export function EmailTemplates() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Email Templates</h1>
-              <p className="text-muted-foreground">Manage email notification templates</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Email templates'}</h1>
+              <p className="text-muted-foreground">{'Manage email notifications and automated messages'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              New Template
-            </Button>
+              {'New template'}</Button>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="w-5 h-5" />
-                Email Templates
-              </CardTitle>
+                {'Email templates'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -47,9 +47,9 @@ export function EmailTemplates() {
                         <h4 className="font-medium mb-1">{template.name}</h4>
                         <p className="text-sm text-muted-foreground mb-2">{template.subject}</p>
                         <div className="flex gap-4 text-xs text-muted-foreground">
-                          <span>Category: {template.category}</span>
-                          <span>Last Modified: {template.lastModified}</span>
-                          <span>Used {template.usage} times</span>
+                          <span>{'Category: '}{template.category}</span>
+                          <span>{'Last modified: '}{template.lastModified}</span>
+                          <span>{'Used: '}{template.usage} {'Times'}</span>
                         </div>
                       </div>
                       <div className="flex gap-2">

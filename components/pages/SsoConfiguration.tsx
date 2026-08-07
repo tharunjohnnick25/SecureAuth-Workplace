@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { Key, CheckCircle, Settings } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const ssoProviders = [
   { name: 'Google Workspace', status: 'Connected', users: 187, protocol: 'SAML 2.0' },
@@ -14,6 +15,7 @@ const ssoProviders = [
 ];
 
 export function SsoConfiguration() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -21,16 +23,15 @@ export function SsoConfiguration() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">SSO Configuration</h1>
-            <p className="text-muted-foreground">Configure Single Sign-On providers</p>
+            <h1 className="text-3xl font-semibold mb-2">{'Ssoconfiguratio'}</h1>
+            <p className="text-muted-foreground">{'Configure single'}</p>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Key className="w-5 h-5" />
-                SSO Providers
-              </CardTitle>
+                {'Ssoproviders'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -47,8 +48,8 @@ export function SsoConfiguration() {
                           </span>
                         </div>
                         <div className="flex gap-4 text-sm text-muted-foreground">
-                          <span>Protocol: {provider.protocol}</span>
-                          {provider.users > 0 && <span>{provider.users} users</span>}
+                          <span>{'Protocol'}{provider.protocol}</span>
+                          {provider.users > 0 && <span>{provider.users} {'Users'}</span>}
                         </div>
                       </div>
                       <Button variant="outline" size="sm">

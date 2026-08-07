@@ -23,7 +23,9 @@
 
   body {
     font-family: var(--font-family-cyber);
-    @apply bg-[var(--color-cyber-dark)] text-white antialiased min-h-screen;
+    @apply bg-[var(--color-cyber-dark)] text-white antialiased min-h-screen select-none;
+    -webkit-user-select: none;
+    user-select: none;
     background-image: 
       radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.03), transparent 25%),
       radial-gradient(circle at 85% 30%, rgba(138, 43, 226, 0.03), transparent 25%);
@@ -84,3 +86,6 @@
   /* Responsive tables — allow horizontal scroll on small screens */
   .table-responsive { @apply overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0; }
 }
+
+.light-theme { filter: invert(1) hue-rotate(180deg); }
+.light-theme img { filter: invert(1) hue-rotate(180deg); }

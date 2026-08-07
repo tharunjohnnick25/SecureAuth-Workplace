@@ -15,6 +15,7 @@ import {
   RotateCw,
   HardDrive,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const backups = [
   { id: '1', name: 'Full System Backup', type: 'Full', size: '245 GB', status: 'Completed', date: '2026-04-30 02:00', duration: '2h 15m', retention: '30 days' },
@@ -45,6 +46,7 @@ const recoveryPoints = [
 ];
 
 export function BackupRecovery() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -53,20 +55,17 @@ export function BackupRecovery() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Backup & Recovery</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Backup recovery'}</h1>
               <p className="text-muted-foreground">
-                Manage data backups and disaster recovery
-              </p>
+                {'Managedatabacku'}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline">
                 <RotateCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
+                {'Refresh'}</Button>
               <Button>
                 <Play className="w-4 h-4 mr-2" />
-                Run Backup Now
-              </Button>
+                {'Run backup now'}</Button>
             </div>
           </div>
 
@@ -91,8 +90,7 @@ export function BackupRecovery() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="w-5 h-5" />
-                  Recent Backups
-                </CardTitle>
+                  {'Recent backups'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -111,19 +109,19 @@ export function BackupRecovery() {
                           </div>
                           <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
                             <div>
-                              <span className="text-xs block">Date</span>
+                              <span className="text-xs block">{'Date'}</span>
                               <span className="text-foreground">{backup.date}</span>
                             </div>
                             <div>
-                              <span className="text-xs block">Duration</span>
+                              <span className="text-xs block">{'Duration'}</span>
                               <span className="text-foreground">{backup.duration}</span>
                             </div>
                             <div>
-                              <span className="text-xs block">Size</span>
+                              <span className="text-xs block">{'Size'}</span>
                               <span className="text-foreground">{backup.size}</span>
                             </div>
                             <div>
-                              <span className="text-xs block">Retention</span>
+                              <span className="text-xs block">{'Retention'}</span>
                               <span className="text-foreground">{backup.retention}</span>
                             </div>
                           </div>
@@ -156,8 +154,7 @@ export function BackupRecovery() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Backup Schedules
-                </CardTitle>
+                  {'Backup schedules'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -173,13 +170,12 @@ export function BackupRecovery() {
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mb-1">{schedule.frequency}</p>
-                      <p className="text-xs text-muted-foreground">Next: {schedule.nextRun}</p>
+                      <p className="text-xs text-muted-foreground">{'Next'}{schedule.nextRun}</p>
                     </div>
                   ))}
                 </div>
                 <Button variant="outline" className="w-full mt-4">
-                  Manage Schedules
-                </Button>
+                  {'Manage schedules'}</Button>
               </CardContent>
             </Card>
           </div>
@@ -187,7 +183,7 @@ export function BackupRecovery() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Recovery Points</CardTitle>
+                <CardTitle>{'Recovery points'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -205,50 +201,45 @@ export function BackupRecovery() {
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{point.type}</span>
-                        <span className="text-success">✓ Verified</span>
+                        <span className="text-success">{'Verified'}</span>
                       </div>
                     </div>
                   ))}
                 </div>
                 <Button className="w-full mt-4">
                   <Upload className="w-4 h-4 mr-2" />
-                  Restore from Backup
-                </Button>
+                  {'Restorefrom back'}</Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Disaster Recovery</CardTitle>
+                <CardTitle>{'Disaster recover'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-success/10 border border-success/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
-                      Recovery Time Objective (RTO)
-                    </h4>
-                    <p className="text-2xl font-bold mb-1">4 hours</p>
-                    <p className="text-sm text-muted-foreground">Target time for system recovery</p>
+                      {'Recovery time obj'}</h4>
+                    <p className="text-2xl font-bold mb-1">{t('4hours_730')}</p>
+                    <p className="text-sm text-muted-foreground">{'Targettimeforsy'}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <Database className="w-4 h-4" />
-                      Recovery Point Objective (RPO)
-                    </h4>
-                    <p className="text-2xl font-bold mb-1">1 hour</p>
-                    <p className="text-sm text-muted-foreground">Maximum acceptable data loss</p>
+                      {'Recovery point ob'}</h4>
+                    <p className="text-2xl font-bold mb-1">{t('1hour_733')}</p>
+                    <p className="text-sm text-muted-foreground">{'Maximumacceptab'}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4" />
-                      Last DR Test
-                    </h4>
-                    <p className="text-lg font-semibold mb-1">March 15, 2026</p>
-                    <p className="text-sm text-muted-foreground">Result: Successful</p>
+                      {'Last drtest'}</h4>
+                    <p className="text-lg font-semibold mb-1">{t('March152026_736')}</p>
+                    <p className="text-sm text-muted-foreground">{'Result successfu'}</p>
                     <Button variant="outline" size="sm" className="w-full mt-3">
-                      Run DR Test
-                    </Button>
+                      {'Run drtest'}</Button>
                   </div>
                 </div>
               </CardContent>

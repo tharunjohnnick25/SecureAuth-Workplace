@@ -29,11 +29,27 @@ import {
   LineChart, Line,
   PieChart, Pie, Cell 
 } from 'recharts';
+import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
+import { useLanguage } from "@/context/LanguageContext";
+import { useRealtimeData } from '@/hooks/useRealtimeData';
 
 // Mock data for admin dashboard
+const mockUsers = [
+  { name: 'Sarah Chen', email: 'sarah.c@enterprise.com', role: 'Security Admin', status: 'Active', risk: 92, last: '2m ago' },
+  { name: 'Marcus Thorne', email: 'm.thorne@enterprise.com', role: 'Cloud Architect', status: 'Active', risk: 85, last: '15m ago' },
+  { name: 'Unknown User', email: 'ip_102.32.11', role: 'Guest', status: 'Blocked', risk: 12, last: '1h ago' },
+  { name: 'Elena Rodriguez', email: 'elena.r@enterprise.com', role: 'DevOps Lead', status: 'Active', risk: 98, last: '4h ago' },
+  { name: 'John Doe', email: 'j.doe@enterprise.com', role: 'Developer', status: 'Active', risk: 75, last: '12h ago' },
+  { name: 'Alex Johnson', email: 'alex.j@enterprise.com', role: 'Engineer', status: 'Active', risk: 60, last: '1d ago' },
+  { name: 'Emily Davis', email: 'emily.d@enterprise.com', role: 'Manager', status: 'Active', risk: 80, last: '2d ago' },
+  { name: 'Michael Brown', email: 'm.brown@enterprise.com', role: 'Guest', status: 'Blocked', risk: 15, last: '3d ago' },
+  { name: 'Chris Lee', email: 'c.lee@enterprise.com', role: 'Developer', status: 'Active', risk: 82, last: '5m ago' },
+  { name: 'Katie Smith', email: 'k.smith@enterprise.com', role: 'Security Admin', status: 'Active', risk: 95, last: '10m ago' },
+];
+
 const userStats = [
   { name: 'Active', value: 840, color: '#10b981' },
   { name: 'Blocked', value: 42, color: '#ef4444' },
@@ -51,7 +67,32 @@ const threatTrend = [
 ];
 
 export function AdminDashboard() {
+  const { t } = useLanguage();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  
+  const { data: realUsers } = useRealtimeData('users');
+
+  const identities = useMemo(() => {
+    if (!realUsers || realUsers.length === 0) return mockUsers;
+    return realUsers.map((u: any, i: number) => ({
+      name: u.full_name || 'Unknown User',
+      email: u.email || '',
+      role: u.role || 'Guest',
+      status: u.status || 'Active',
+      risk: (u.id.length * 7) % 100,
+      last: i === 0 ? 'Just now' : `${i * 15}m ago`
+    }));
+  }, [realUsers]);
+  
+  const filteredIdentities = identities.filter((i: any) => 
+    i.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    i.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredIdentities.length / itemsPerPage) || 1;
+  const paginatedIdentities = filteredIdentities.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
   return (
     <div className="min-h-screen bg-[#020617] text-white overflow-y-auto">
@@ -67,18 +108,16 @@ export function AdminDashboard() {
                 <div className="w-10 h-10 bg-blue-600/10 rounded-lg flex items-center justify-center border border-blue-600/20">
                   <Lock className="text-blue-400 w-6 h-6" />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight">Admin Security Hub</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{'Admin security hu'}</h1>
               </div>
-              <p className="text-gray-400">Enterprise governance and real-time identity protection oversight</p>
+              <p className="text-gray-400">{'Enterprisegover'}</p>
             </div>
 
             <div className="flex items-center gap-4">
-               <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-all">
-                 <Download className="w-4 h-4" /> Export Report
-               </button>
-               <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all">
-                 New Security Policy
-               </button>
+               <button onClick={() => router.push('/reports/governance')} className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-all">
+                 <Download className="w-4 h-4" /> {'Export report'}</button>
+               <button onClick={() => router.push('/security-policy')} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all">
+                 {'New security poli'}</button>
             </div>
           </div>
 
@@ -109,13 +148,13 @@ export function AdminDashboard() {
             <Card className="lg:col-span-2 glass-panel p-8">
                <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h3 className="text-xl font-bold">Threat Mitigation Trend</h3>
-                    <p className="text-sm text-gray-400 font-medium">Weekly blocked vs attempted attacks</p>
+                    <h3 className="text-xl font-bold">{'Threat mitigatio'}</h3>
+                    <p className="text-sm text-gray-400 font-medium">{'Weeklyblockedvs'}</p>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex items-center gap-2">
                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                       <span className="text-xs text-gray-400">Blocked</span>
+                       <span className="text-xs text-gray-400">{'Blocked'}</span>
                     </div>
                   </div>
                </div>
@@ -145,31 +184,26 @@ export function AdminDashboard() {
                   <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
                     <TrendingUp className="text-blue-400 w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-bold">AI Governance Insights</h3>
+                  <h3 className="text-lg font-bold">{'Aigovernance ins'}</h3>
                </div>
 
                <div className="space-y-6 flex-1 relative z-10">
                   <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
                      <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <Activity className="w-3 h-3" /> Anomaly Detection
-                     </div>
+                        <Activity className="w-3 h-3" /> {'Anomaly detectio'}</div>
                      <p className="text-xs text-gray-400 leading-relaxed">
-                        Identity behavior is currently 98% consistent with established baselines. No unusual privileged access patterns detected.
-                     </p>
+                        {'Identitybehavio'}</p>
                   </div>
                   <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl">
                      <div className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <ShieldCheck className="w-3 h-3" /> Policy Optimization
-                     </div>
+                        <ShieldCheck className="w-3 h-3" /> {'Policy optimizat'}</div>
                      <p className="text-xs text-gray-400 leading-relaxed">
-                        Recommended: Enforce mandatory biometric verification for 'Admin' role sessions originating from new regions.
-                     </p>
+                        {'Recommended enfo'}</p>
                   </div>
                </div>
 
-               <button className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-500/20">
-                  Generate Governance Report
-               </button>
+               <button onClick={() => router.push('/reports/governance')} className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-500/20">
+                  {'Generate governa'}</button>
             </Card>
           </div>
 
@@ -177,8 +211,7 @@ export function AdminDashboard() {
           <Card className="glass-panel p-8">
              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
                 <h3 className="text-xl font-bold flex items-center gap-3">
-                  <Users className="w-5 h-5 text-blue-400" /> Identity Fleet Management
-                </h3>
+                  <Users className="w-5 h-5 text-blue-400" /> {'Identity fleet ma'}</h3>
                 
                 <div className="flex items-center gap-4 w-full md:w-auto">
                    <div className="relative flex-1 md:flex-initial">
@@ -201,22 +234,16 @@ export function AdminDashboard() {
                 <table className="w-full">
                    <thead>
                       <tr className="text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
-                         <th className="px-6 py-4">Identity</th>
-                         <th className="px-6 py-4">Role</th>
-                         <th className="px-6 py-4">Status</th>
-                         <th className="px-6 py-4">Risk Score</th>
-                         <th className="px-6 py-4">Last Activity</th>
-                         <th className="px-6 py-4 text-right">Actions</th>
+                         <th className="px-6 py-4">{'Identity'}</th>
+                         <th className="px-6 py-4">{'Role'}</th>
+                         <th className="px-6 py-4">{'Status'}</th>
+                         <th className="px-6 py-4">{'Risk score'}</th>
+                         <th className="px-6 py-4">{'Last activity'}</th>
+                         <th className="px-6 py-4 text-right">{'Actions'}</th>
                       </tr>
                    </thead>
                    <tbody className="divide-y divide-white/5">
-                      {[
-                        { name: 'Sarah Chen', email: 'sarah.c@enterprise.com', role: 'Security Admin', status: 'Active', risk: 12, last: '2m ago' },
-                        { name: 'Marcus Thorne', email: 'm.thorne@enterprise.com', role: 'Cloud Architect', status: 'Active', risk: 24, last: '15m ago' },
-                        { name: 'Unknown User', email: 'ip_102.32.11', role: 'Guest', status: 'Blocked', risk: 92, last: '1h ago' },
-                        { name: 'Elena Rodriguez', email: 'elena.r@enterprise.com', role: 'DevOps Lead', status: 'Active', risk: 8, last: '4h ago' },
-                        { name: 'John Doe', email: 'j.doe@enterprise.com', role: 'Developer', status: 'Active', risk: 15, last: '12h ago' },
-                      ].map((user, i) => (
+                      {paginatedIdentities.map((user, i) => (
                         <tr key={i} className="group hover:bg-white/[0.02] transition-colors">
                            <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
@@ -241,12 +268,17 @@ export function AdminDashboard() {
                            </td>
                            <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
-                                 <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
+                                 <div className="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden">
                                     <div className={`h-full rounded-full ${
-                                      user.risk > 70 ? 'bg-red-500' : user.risk > 30 ? 'bg-yellow-500' : 'bg-green-500'
+                                      user.risk >= 80 ? 'bg-emerald-500' : 'bg-amber-500'
                                     }`} style={{ width: `${user.risk}%` }} />
                                  </div>
-                                 <span className="text-xs font-bold text-white">{user.risk}%</span>
+                                 <div className="flex flex-col">
+                                   <span className="text-xs font-bold text-white">{user.risk} <span className="text-gray-500 font-normal">/ 100</span></span>
+                                   <span className={`text-[9px] uppercase font-bold ${user.risk >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                     {user.risk >= 80 ? 'Secure' : 'At Risk'}
+                                   </span>
+                                 </div>
                               </div>
                            </td>
                            <td className="px-6 py-4">
@@ -272,15 +304,17 @@ export function AdminDashboard() {
              </div>
              
              <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
-                <div>Showing 5 of 1,204 identities</div>
+                <div>Showing {paginatedIdentities.length} of {filteredIdentities.length} identities</div>
                 <div className="flex items-center gap-4">
-                   <button className="hover:text-white transition-colors">Previous</button>
+                   <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="hover:text-white transition-colors disabled:opacity-50">{'Previous'}</button>
                    <div className="flex gap-2">
-                      <button className="w-8 h-8 rounded bg-blue-600 text-white">1</button>
-                      <button className="w-8 h-8 rounded hover:bg-white/5 transition-colors">2</button>
-                      <button className="w-8 h-8 rounded hover:bg-white/5 transition-colors">3</button>
+                      {Array.from({ length: totalPages }).map((_, idx) => (
+                        <button key={idx} onClick={() => setCurrentPage(idx + 1)} className={`w-8 h-8 rounded transition-colors ${currentPage === idx + 1 ? 'bg-blue-600 text-white' : 'hover:bg-white/5'}`}>
+                          {idx + 1}
+                        </button>
+                      ))}
                    </div>
-                   <button className="hover:text-white transition-colors">Next</button>
+                   <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="hover:text-white transition-colors disabled:opacity-50">{'Next'}</button>
                 </div>
              </div>
           </Card>

@@ -7,8 +7,10 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function MfaVerifyPage() {
+    const { t } = useLanguage();
   const router = useRouter();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -75,13 +77,12 @@ export default function MfaVerifyPage() {
               : <Shield className="w-8 h-8 text-white" />
             }
           </div>
-          <h1 className="text-3xl font-semibold mb-2">MFA Verification</h1>
+          <h1 className="text-3xl font-semibold mb-2">{'Mfaverification'}</h1>
           <p className="text-gray-400 text-center text-sm">
-            Enter the 6-digit code from your authenticator app
-          </p>
+            {t('Enterthe6digitc_245')}</p>
           {riskLevel && (
             <p className="text-xs mt-2 text-gray-500">
-              Risk level: <span className={`font-bold uppercase ${
+              {'Risklevel'}<span className={`font-bold uppercase ${
                 riskLevel === 'high' || riskLevel === 'critical' ? 'text-red-400' : 'text-yellow-400'
               }`}>{riskLevel}</span>
             </p>

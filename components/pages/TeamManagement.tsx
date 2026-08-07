@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
-import { DashboardHeader } from '@/components/DashboardHeader';
+import { PageHeader } from '@/components/PageHeader';
 import { Input } from '@/components/Input';
 import { 
   Users, 
@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function TeamManagement() {
+    const { t } = useLanguage();
   const { data: users, loading } = useRealtimeData('users');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -54,19 +56,17 @@ export function TeamManagement() {
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
-          <DashboardHeader 
+          <PageHeader 
             title="User Directory" 
             description="Manage enterprise access and identity profiles"
           >
             <Button variant="outline" className="gap-2" onClick={handleExport}>
               <Download className="w-4 h-4" />
-              Export
-            </Button>
+              {'Export'}</Button>
             <Button className="gap-2">
               <UserPlus className="w-4 h-4" />
-              Invite Member
-            </Button>
-          </DashboardHeader>
+              {'Invite member'}</Button>
+          </PageHeader>
 
           <Card className="mb-6">
             <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
@@ -85,8 +85,7 @@ export function TeamManagement() {
                 </Button>
                 <div className="h-8 w-[1px] bg-border mx-2" />
                 <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  Showing {(filteredUsers as any[]).length} of {(users as any[]).length} users
-                </span>
+                  {'Showing'}{(filteredUsers as any[]).length} {'Of'}{(users as any[]).length} {'Users'}</span>
               </div>
             </CardContent>
           </Card>
@@ -97,11 +96,11 @@ export function TeamManagement() {
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
-                      <th className="px-6 py-4">User</th>
-                      <th className="px-6 py-4">Security Role</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Joined</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
+                      <th className="px-6 py-4">{'User'}</th>
+                      <th className="px-6 py-4">{'Security role'}</th>
+                      <th className="px-6 py-4">{'Status'}</th>
+                      <th className="px-6 py-4">{'Joined'}</th>
+                      <th className="px-6 py-4 text-right">{'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -132,7 +131,7 @@ export function TeamManagement() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                            <span className="text-sm font-medium">Active</span>
+                            <span className="text-sm font-medium">{'Active'}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -155,7 +154,7 @@ export function TeamManagement() {
                              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                                <Users className="w-8 h-8 text-muted-foreground" />
                              </div>
-                             <p className="text-muted-foreground">No users found matching your search</p>
+                             <p className="text-muted-foreground">{'Nousersfoundmat'}</p>
                           </div>
                         </td>
                       </tr>
@@ -170,3 +169,4 @@ export function TeamManagement() {
     </div>
   );
 }
+

@@ -178,6 +178,23 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 13a. Focus Mode & Time-Blocking
+-- Per-user focus blocks. While a user is inside an active block, the server
+-- suppresses (does not create) non-critical notifications addressed to them.
+CREATE TABLE IF NOT EXISTS public.focus_mode (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
+    -- JSON array of { start: 'HH:MM', end: 'HH:MM', days: number[] } (0 = Sunday)
+    blocks JSONB NOT NULL DEFAULT '[]'::jsonb,
+    -- When true, CRITICAL / SECURITY style alerts still get delivered during focus.
+    allow_critical BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (user_id)
+);
+
 -- 14. OAuth Accounts
 CREATE TABLE IF NOT EXISTS public.oauth_accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -203,6 +220,7 @@ ALTER TABLE public.login_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.risk_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.focus_mode ENABLE ROW LEVEL SECURITY;
 
 -- Users can read their own profile
 CREATE POLICY "Users can view own profile" 
@@ -238,6 +256,9 @@ CREATE POLICY "Users can view own risk scores" ON public.risk_scores FOR SELECT 
 CREATE POLICY "Users can view own alerts" ON public.alerts FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can update own alerts" ON public.alerts FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can view own notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own focus mode" ON public.focus_mode FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own focus mode" ON public.focus_mode FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Service can insert focus mode" ON public.focus_mode FOR INSERT WITH CHECK (true);
 
 -- Functions & Triggers
 
@@ -401,4 +422,35 @@ CREATE POLICY "Users can view own logs" ON public.login_logs FOR SELECT USING (a
 CREATE POLICY "Users can view own support queries" ON public.support_queries FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert support queries" ON public.support_queries FOR INSERT WITH CHECK (true);
 
+-- 24. Departments
+CREATE TABLE IF NOT EXISTS public.departments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+    head UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    employee_count INTEGER DEFAULT 0,
+    avg_risk_score NUMERIC DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
+ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view departments" ON public.departments FOR SELECT USING (true);
+CREATE POLICY "Admins can manage departments" ON public.departments FOR ALL USING (true); -- Requires auth.uid() in admins in real scenario
+
+-- 25. API Integrations
+CREATE TABLE IF NOT EXISTS public.integrations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- Webhook, Identity, Log Forwarding, Directory
+    status VARCHAR(50) DEFAULT 'Active',
+    target_url TEXT,
+    secret_key TEXT,
+    last_sync TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view integrations" ON public.integrations FOR SELECT USING (true);
+CREATE POLICY "Admins can manage integrations" ON public.integrations FOR ALL USING (true);

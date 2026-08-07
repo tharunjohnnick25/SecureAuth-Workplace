@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, Quote, Send } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const testimonials = [
   {
@@ -26,12 +27,13 @@ const testimonials = [
 ];
 
 const Testimonials = () => {
+    const { t } = useLanguage();
   return (
     <section className="py-24 bg-slate-900/50">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">Trusted by Security Leaders</h2>
-          <p className="text-gray-400">Join 500+ enterprises securing their future with SecureAuthAI.</p>
+          <h2 className="text-4xl font-bold text-white mb-4">{'Trusted by security leaders'}</h2>
+          <p className="text-gray-400">{'Join 500+ enterprises worldwide'}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -69,15 +71,15 @@ const Testimonials = () => {
 };
 
 const Contact = () => {
+    const { t } = useLanguage();
   return (
     <section id="contact" className="py-24 relative overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="glass-panel max-w-5xl mx-auto overflow-hidden flex flex-col md:flex-row">
           <div className="w-full md:w-2/5 bg-gradient-to-br from-blue-600 to-purple-700 p-12 text-white">
-            <h2 className="text-3xl font-bold mb-6">Let's Secure Your Enterprise</h2>
+            <h2 className="text-3xl font-bold mb-6">{"Let's secure your enterprise"}</h2>
             <p className="text-blue-100 mb-12 leading-relaxed">
-              Ready to upgrade your authentication stack? Our security experts are here to help you design the perfect zero-trust roadmap.
-            </p>
+              {'Ready to upgrade your identity security?'}</p>
             
             <div className="space-y-8">
               <div className="flex items-center gap-4">
@@ -85,8 +87,8 @@ const Contact = () => {
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-blue-200">Email Us</div>
-                  <div className="font-medium">sales@secureauth.ai</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-blue-200">{'Email us'}</div>
+                  <div className="font-medium">{'Sales@SecureAuth.com'}</div>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -94,8 +96,8 @@ const Contact = () => {
                   <Quote className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-blue-200">Call Us</div>
-                  <div className="font-medium">+1 (800) SECURE-AI</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-blue-200">{'Call us'}</div>
+                  <div className="font-medium">{'1-800-SECURE-AI'}</div>
                 </div>
               </div>
             </div>
@@ -105,25 +107,24 @@ const Contact = () => {
             <form className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">First Name</label>
+                  <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">{'First name'}</label>
                   <input type="text" className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-blue-500/50 transition-colors" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Last Name</label>
+                  <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">{'Last name'}</label>
                   <input type="text" className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-blue-500/50 transition-colors" />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Work Email</label>
+                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">{'Work email'}</label>
                 <input type="email" className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white outline-none focus:border-blue-500/50 transition-colors" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Message</label>
+                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">{'Message'}</label>
                 <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-blue-500/50 transition-colors resize-none"></textarea>
               </div>
               <button className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20">
-                Send Message
-              </button>
+                {'Send message'}</button>
             </form>
           </div>
         </div>

@@ -11,10 +11,12 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase/client';
 import { getDeviceFingerprint } from '@/lib/security/fingerprint';
 import { useLocation } from '@/hooks/useLocation';
+import { useLanguage } from "@/context/LanguageContext";
 
 type Step = 'login' | 'analyzing' | 'mfa' | 'camera' | 'success';
 
 export function MultiStepLogin() {
+    const { t } = useLanguage();
   const router = useRouter();
   const [step, setStep] = useState<Step>('login');
   const [email, setEmail] = useState('');
@@ -172,14 +174,14 @@ export function MultiStepLogin() {
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
                     <Shield className="text-white w-10 h-10" />
                   </div>
-                  <h1 className="text-4xl font-bold text-white mb-2 tracking-tight uppercase tracking-[0.2em]">Secure<span className="text-blue-400">Auth</span></h1>
-                  <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-[10px] font-bold text-blue-400 uppercase tracking-widest">Enterprise Access Node</div>
+                  <h1 className="text-4xl font-bold text-white mb-2 tracking-tight uppercase tracking-[0.2em]">{'Secure'}<span className="text-blue-400">{'Auth'}</span></h1>
+                  <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-[10px] font-bold text-blue-400 uppercase tracking-widest">{'Enterprise acces'}</div>
                </div>
 
                <form onSubmit={handleLogin} className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Identity Identifier</label>
+                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">{'Identity identif'}</label>
                        <Input
                          type="email"
                          placeholder="employee@company.com"
@@ -192,8 +194,8 @@ export function MultiStepLogin() {
                     </div>
                     <div className="space-y-2">
                        <div className="flex justify-between items-center px-1">
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Access Key</label>
-                          <button type="button" onClick={() => router.push('/forgot-password')} className="text-[10px] font-bold text-blue-400 hover:text-blue-300">Recover Key?</button>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{'Access key'}</label>
+                          <button type="button" onClick={() => router.push('/forgot-password')} className="text-[10px] font-bold text-blue-400 hover:text-blue-300">{'Recover key'}</button>
                        </div>
                        <div className="relative">
                           <Input
@@ -222,8 +224,8 @@ export function MultiStepLogin() {
                </form>
 
                <div className="mt-8 text-center">
-                  <span className="text-xs text-gray-500">Unrecognized user?</span>
-                  <button onClick={() => router.push('/signup')} className="ml-2 text-xs font-bold text-blue-400 hover:underline">Enroll Now</button>
+                  <span className="text-xs text-gray-500">{'Unrecognizeduse'}</span>
+                  <button onClick={() => router.push('/signup')} className="ml-2 text-xs font-bold text-blue-400 hover:underline">{'Enroll now'}</button>
                </div>
             </motion.div>
           )}
@@ -234,16 +236,16 @@ export function MultiStepLogin() {
                   <Loader2 className="w-20 h-20 text-blue-400 animate-spin" />
                   <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-blue-400/50" />
                </div>
-               <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-wide">Threat Analysis</h2>
-               <p className="text-sm text-gray-400 mb-8 max-w-xs">AI is auditing your device fingerprint and geographic proximity for anomalies...</p>
+               <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-wide">{'Threat analysis'}</h2>
+               <p className="text-sm text-gray-400 mb-8 max-w-xs">{'Aiisauditingyou'}</p>
 
                <div className="space-y-3 w-full max-w-xs">
                   <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                      <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 2 }} className="h-full bg-blue-500" />
                   </div>
                   <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
-                     <span>Fingerprint Audit</span>
-                     <span className="text-blue-400">Active</span>
+                     <span>{'Fingerprint audi'}</span>
+                     <span className="text-blue-400">{'Active'}</span>
                   </div>
                </div>
             </motion.div>
@@ -255,8 +257,8 @@ export function MultiStepLogin() {
                   <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 border border-purple-500/20">
                     <Camera className="text-purple-400 w-8 h-8" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white">Biometric Verification</h2>
-                  <p className="text-sm text-gray-400 mt-2">Suspicious activity detected. Please position your face in the frame to confirm identity.</p>
+                  <h2 className="text-2xl font-bold text-white">{'Biometric verifi'}</h2>
+                  <p className="text-sm text-gray-400 mt-2">{'Suspiciousactiv'}</p>
                </div>
 
                <div className="relative aspect-video bg-black rounded-2xl border border-white/10 overflow-hidden mb-8">
@@ -265,8 +267,7 @@ export function MultiStepLogin() {
                   {!stream && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                        <Button onClick={startCamera} variant="outline" className="borderColor-purple-500/50 text-purple-400">
-                          Enable Camera
-                       </Button>
+                          {'Enable camera'}</Button>
                     </div>
                   )}
                </div>
@@ -275,7 +276,7 @@ export function MultiStepLogin() {
                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Confirm Identity'}
                </Button>
 
-               <button onClick={() => setStep('login')} className="w-full mt-4 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest">Cancel Audit</button>
+               <button onClick={() => setStep('login')} className="w-full mt-4 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest">{'Cancel audit'}</button>
             </motion.div>
           )}
 
@@ -285,8 +286,8 @@ export function MultiStepLogin() {
                    <div className="w-16 h-16 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-4 border border-yellow-500/20">
                      <ShieldAlert className="text-yellow-500 w-8 h-8" />
                    </div>
-                   <h2 className="text-2xl font-bold text-white uppercase tracking-wide">Multi-Factor Node</h2>
-                   <p className="text-xs text-gray-400 mt-2 max-w-xs mx-auto">Input the 6-digit synchronization code from your security device.</p>
+                   <h2 className="text-2xl font-bold text-white uppercase tracking-wide">{'Multi factor node'}</h2>
+                   <p className="text-xs text-gray-400 mt-2 max-w-xs mx-auto">{t('Inputthe6digits_390')}</p>
                 </div>
 
                 <form onSubmit={handleMFA} className="space-y-8">
@@ -311,8 +312,7 @@ export function MultiStepLogin() {
                    </div>
 
                    <Button type="submit" disabled={isLoading} className="w-full h-14 bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-sm uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-yellow-500/20">
-                     Authorize Access
-                   </Button>
+                     {'Authorize access'}</Button>
                 </form>
              </motion.div>
           )}
@@ -322,8 +322,8 @@ export function MultiStepLogin() {
                <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6 border border-green-500/20">
                  <CheckCircle2 className="text-green-400 w-10 h-10" />
                </div>
-               <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-[0.2em]">Access Granted</h2>
-               <p className="text-xs text-gray-400 uppercase tracking-widest">Bridging secure connection to command center...</p>
+               <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-[0.2em]">{'Access granted'}</h2>
+               <p className="text-xs text-gray-400 uppercase tracking-widest">{'Bridgingsecurec'}</p>
 
                <div className="mt-8 flex gap-1">
                   {[...Array(5)].map((_, i) => (

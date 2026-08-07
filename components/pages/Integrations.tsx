@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Activity,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const integrations = [
   {
@@ -90,6 +91,7 @@ const recentActivity = [
 ];
 
 export function Integrations() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -98,15 +100,13 @@ export function Integrations() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Integrations</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Integrations'}</h1>
               <p className="text-muted-foreground">
-                Connect with your favorite tools and services
-              </p>
+                {'Connectwithyour'}</p>
             </div>
             <Button variant="outline">
               <ExternalLink className="w-4 h-4 mr-2" />
-              Browse Marketplace
-            </Button>
+              {'Browse marketpla'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -116,9 +116,9 @@ export function Integrations() {
                   <Puzzle className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Integrations</p>
+                  <p className="text-sm text-muted-foreground">{'Total integratio'}</p>
                   <h3 className="text-2xl font-semibold">{integrations.length}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">6 available</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('6available_968')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -129,9 +129,9 @@ export function Integrations() {
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Connected</p>
+                  <p className="text-sm text-muted-foreground">{'Connected'}</p>
                   <h3 className="text-2xl font-semibold">3</h3>
-                  <p className="text-xs text-success mt-1">All active</p>
+                  <p className="text-xs text-success mt-1">{'Allactive'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -142,9 +142,9 @@ export function Integrations() {
                   <Settings className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Pending Setup</p>
+                  <p className="text-sm text-muted-foreground">{'Pending setup'}</p>
                   <h3 className="text-2xl font-semibold">3</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Ready to connect</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'Readytoconnect'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -153,7 +153,7 @@ export function Integrations() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
             <Card>
               <CardHeader>
-                <CardTitle>Categories</CardTitle>
+                <CardTitle>{'Categories'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -176,7 +176,7 @@ export function Integrations() {
 
             <Card className="lg:col-span-3">
               <CardHeader>
-                <CardTitle>Available Integrations</CardTitle>
+                <CardTitle>{'Available integr'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -209,7 +209,7 @@ export function Integrations() {
                           <div className="flex items-center justify-between">
                             {integration.lastSync && (
                               <span className="text-xs text-muted-foreground">
-                                Last sync: {integration.lastSync}
+                                {'Lastsync'}{integration.lastSync}
                               </span>
                             )}
                             <Button
@@ -220,8 +220,7 @@ export function Integrations() {
                               {integration.status === 'Connected' ? (
                                 <>
                                   <Settings className="w-3 h-3 mr-2" />
-                                  Configure
-                                </>
+                                  {'Configure'}</>
                               ) : (
                                 'Connect'
                               )}
@@ -238,7 +237,7 @@ export function Integrations() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>{'Recent activity'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

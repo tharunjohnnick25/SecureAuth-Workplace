@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card } from '@/components/Card';
@@ -8,22 +9,68 @@ import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { Button } from '@/components/Button';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function NotificationsPage() {
+  const { t } = useLanguage();
   const supabase = createClient();
-  const { data: notifications, loading, refetch } = useRealtimeData('notifications', (q) => 
+  
+  const [mockNotifications, setMockNotifications] = useState<any[]>([]);
+  const [isMock, setIsMock] = useState(false);
+  const { data: realNotifications, loading, refetch: realRefetch } = useRealtimeData('notifications', (q) => 
     q.order('created_at', { ascending: false }).limit(20)
   );
 
+  const fetchMock = async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+      if (Array.isArray(data)) setMockNotifications(data);
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+      setIsMock(true);
+      fetchMock();
+    }
+  }, []);
+
+  const notifications = isMock ? mockNotifications : realNotifications;
+  const refetch = isMock ? fetchMock : realRefetch;
+
   const markAsRead = async (id: string) => {
+    if (isMock) {
+      setMockNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      return;
+    }
     const { error } = await (supabase.from('notifications') as any).update({ is_read: true }).eq('id', id);
     if (!error) refetch();
   };
 
   const deleteNotification = async (id: string) => {
+    if (isMock) {
+      setMockNotifications(prev => prev.filter(n => n.id !== id));
+      toast.success('Notification removed');
+      return;
+    }
     const { error } = await (supabase.from('notifications') as any).delete().eq('id', id);
     if (!error) {
        toast.success('Notification removed');
+       refetch();
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (isMock) {
+      setMockNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      toast.success('All marked as read');
+      return;
+    }
+    const { error } = await (supabase.from('notifications') as any).update({ is_read: true }).eq('is_read', false);
+    if (!error) {
+       toast.success('All marked as read');
        refetch();
     }
   };
@@ -36,12 +83,11 @@ export default function NotificationsPage() {
         <main className="flex-1 p-6 lg:p-8 pt-24">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold mb-1 tracking-tight">Resource Center</h1>
-              <p className="text-gray-400">Manage security alerts and system notifications</p>
+              <h1 className="text-3xl font-bold mb-1 tracking-tight">{'Resource center'}</h1>
+              <p className="text-gray-400">{'Managesecuritya'}</p>
             </div>
-            <Button variant="outline" className="border-white/10 hover:bg-white/5 gap-2">
-              <MailOpen className="w-4 h-4" /> Mark all as read
-            </Button>
+            <Button onClick={markAllAsRead} variant="outline" className="border-white/10 hover:bg-white/5 gap-2">
+              <MailOpen className="w-4 h-4" /> {'Markallasread'}</Button>
           </div>
 
           <div className="max-w-4xl space-y-4">
@@ -61,9 +107,9 @@ export default function NotificationsPage() {
                     <p className="text-sm text-gray-400 leading-relaxed">{notif.message}</p>
                     <div className="flex gap-4 mt-3">
                       {!notif.is_read && (
-                        <button onClick={() => markAsRead(notif.id)} className="text-xs text-blue-400 hover:underline">Mark as read</button>
+                        <button onClick={() => markAsRead(notif.id)} className="text-xs text-blue-400 hover:underline">{'Markasread'}</button>
                       )}
-                      <button onClick={() => deleteNotification(notif.id)} className="text-xs text-red-500/50 hover:text-red-400 hover:underline">Remove</button>
+                      <button onClick={() => deleteNotification(notif.id)} className="text-xs text-red-500/50 hover:text-red-400 hover:underline">{'Remove'}</button>
                     </div>
                   </div>
                 </div>
@@ -71,7 +117,7 @@ export default function NotificationsPage() {
             )) : !loading && (
               <div className="py-20 text-center text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No new notifications at this time.</p>
+                <p>{'Nonewnotificati'}</p>
               </div>
             )}
           </div>
@@ -80,5 +126,3 @@ export default function NotificationsPage() {
     </div>
   );
 }
-
-import { Button } from '@/components/Button';

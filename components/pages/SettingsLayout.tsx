@@ -7,6 +7,7 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { motion } from 'framer-motion';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface SettingSection {
   title: string;
@@ -27,6 +28,7 @@ interface SettingsLayoutProps {
 }
 
 export function SettingsLayout({ title, description, sections }: SettingsLayoutProps) {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -87,7 +89,7 @@ export function SettingsLayout({ title, description, sections }: SettingsLayoutP
               ))}
 
               <div className="flex justify-end pt-4">
-                <Button className="bg-blue-600 hover:bg-blue-500 font-bold px-8">Save Changes</Button>
+                <Button className="bg-blue-600 hover:bg-blue-500 font-bold px-8">{'Save changes'}</Button>
               </div>
             </div>
           </div>

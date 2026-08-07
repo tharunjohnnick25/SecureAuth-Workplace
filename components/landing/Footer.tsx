@@ -8,6 +8,7 @@ const GithubIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" heig
 const TwitterIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>;
 const LinkedinIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>;
 import Link from 'next/link';
+import { useLanguage } from "@/context/LanguageContext";
 
 const faqs = [
   {
@@ -29,23 +30,22 @@ const faqs = [
 ];
 
 const LandingFooter = () => {
+    const { t } = useLanguage();
   return (
     <footer className="bg-slate-950 pt-20 pb-10 border-t border-white/5">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="flex flex-col gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Shield className="text-white w-6 h-6" />
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-12 h-12 overflow-hidden flex items-center justify-center shrink-0">
+                <img src="/new-logo.png" alt="SecureAuth Workplace Logo" className="w-full h-full object-contain drop-shadow-md" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">
-                SecureAuth<span className="text-blue-400">AI</span>
+                SecureAuth Workplace
               </span>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Securing the future of enterprise identity through 
-              behavioral AI and zero-trust intelligence.
-            </p>
+              {'Securing the future of authentication.'}</p>
             <div className="flex gap-4">
               <Link href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-600 transition-colors">
                 <TwitterIcon />
@@ -60,28 +60,28 @@ const LandingFooter = () => {
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6">Product</h4>
+            <h4 className="text-white font-bold mb-6">{'Product'}</h4>
             <ul className="space-y-4 text-sm text-gray-400 font-medium">
-              <li><Link href="#" className="hover:text-blue-400">Features</Link></li>
-              <li><Link href="#" className="hover:text-blue-400">Biometrics</Link></li>
-              <li><Link href="#" className="hover:text-blue-400">Adaptive Auth</Link></li>
-              <li><Link href="#" className="hover:text-blue-400">Risk Engine</Link></li>
+              <li><Link href="#" className="hover:text-blue-400">{'Features'}</Link></li>
+              <li><Link href="#" className="hover:text-blue-400">{'Biometrics'}</Link></li>
+              <li><Link href="#" className="hover:text-blue-400">{'Adaptive auth'}</Link></li>
+              <li><Link href="#" className="hover:text-blue-400">{'Risk engine'}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6">Resources</h4>
+            <h4 className="text-white font-bold mb-6">{'Company'}</h4>
             <ul className="space-y-4 text-sm text-gray-400 font-medium">
-              <li><Link href="#" className="hover:text-blue-400">Documentation</Link></li>
-              <li><Link href="#" className="hover:text-blue-400">Security Blog</Link></li>
-              <li><Link href="#" className="hover:text-blue-400">Case Studies</Link></li>
-              <li><Link href="#" className="hover:text-blue-400">System Status</Link></li>
+              <li><Link href="#about" className="hover:text-blue-400">{'About us'}</Link></li>
+              <li><Link href="#contact" className="hover:text-blue-400">{'Contact us'}</Link></li>
+              <li><Link href="#pricing" className="hover:text-blue-400">{'Subscription plans'}</Link></li>
+              <li><Link href="#" className="hover:text-blue-400">{'Security blog'}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6">Stay Protected</h4>
-            <p className="text-gray-400 text-sm mb-4">Subscribe to our security newsletter.</p>
+            <h4 className="text-white font-bold mb-6">{'Stay protected'}</h4>
+            <p className="text-gray-400 text-sm mb-4">{'Subscribe to our security newsletter'}</p>
             <div className="relative">
               <input 
                 type="email" 
@@ -96,11 +96,11 @@ const LandingFooter = () => {
         </div>
 
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-gray-500 font-medium">
-          <div>© 2024 SecureAuthAI Inc. All rights reserved.</div>
+          <div>&copy; 2024 SecureAuth Workplace Inc. All rights reserved.</div>
           <div className="flex gap-8">
-            <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
-            <Link href="#" className="hover:text-white transition-colors">Cookie Policy</Link>
+            <Link href="#" className="hover:text-white transition-colors">{'Privacy policy'}</Link>
+            <Link href="#" className="hover:text-white transition-colors">{'Terms of Service'}</Link>
+            <Link href="#" className="hover:text-white transition-colors">{'Cookie policy'}</Link>
           </div>
         </div>
       </div>
@@ -109,14 +109,15 @@ const LandingFooter = () => {
 };
 
 const FAQ = () => {
+    const { t } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section className="py-24 bg-slate-950/30">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
-          <p className="text-gray-400">Everything you need to know about SecureAuthAI.</p>
+          <h2 className="text-4xl font-bold text-white mb-4">{'Frequently asked questions'}</h2>
+          <p className="text-gray-400">{'Everything you need to know about SecureAuth Workplace'}</p>
         </div>
 
         <div className="max-w-3xl mx-auto space-y-4">

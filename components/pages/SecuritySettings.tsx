@@ -26,10 +26,12 @@ import { Navbar } from '@/components/Navbar';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
+import { useLanguage } from "@/context/LanguageContext";
 
 type SettingsTab = 'security' | 'devices' | 'sessions' | 'privacy';
 
 export function SecuritySettings() {
+    const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<SettingsTab>('security');
   const [mfaEnabled, setMfaEnabled] = useState(true);
 
@@ -42,8 +44,8 @@ export function SecuritySettings() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-10">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Security & Profile</h1>
-            <p className="text-gray-400">Manage your identity, devices, and global security preferences</p>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">{'Security profile'}</h1>
+            <p className="text-gray-400">{'Manageyourident'}</p>
           </div>
 
           {/* Navigation Tabs */}
@@ -88,8 +90,8 @@ export function SecuritySettings() {
                                    <Key className="text-blue-400 w-6 h-6" />
                                 </div>
                                 <div>
-                                   <h3 className="text-lg font-bold">Multi-Factor Authentication</h3>
-                                   <p className="text-xs text-gray-500">Add an extra layer of security to your account</p>
+                                   <h3 className="text-lg font-bold">{'Multi factor auth'}</h3>
+                                   <p className="text-xs text-gray-500">{'Addanextralayer'}</p>
                                 </div>
                              </div>
                              <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${mfaEnabled ? 'bg-green-500/10 text-green-400' : 'bg-gray-500/10 text-gray-500'}`}>
@@ -102,36 +104,35 @@ export function SecuritySettings() {
                                 <div className="flex items-center gap-4">
                                    <Smartphone className="w-5 h-5 text-gray-400" />
                                    <div>
-                                      <div className="text-sm font-bold">Authenticator App</div>
-                                      <div className="text-xs text-gray-500">Google Authenticator, Authy, etc.</div>
+                                      <div className="text-sm font-bold">{'Authenticator ap'}</div>
+                                      <div className="text-xs text-gray-500">{'Google authentic'}</div>
                                    </div>
                                 </div>
-                                <button className="text-xs font-bold text-blue-400 hover:text-blue-300">Configure</button>
+                                <button className="text-xs font-bold text-blue-400 hover:text-blue-300">{'Configure'}</button>
                              </div>
                              <div className="p-4 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-between group hover:bg-white/[0.08] transition-all">
                                 <div className="flex items-center gap-4">
                                    <ShieldCheck className="w-5 h-5 text-gray-400" />
                                    <div>
-                                      <div className="text-sm font-bold">Hardware Security Key</div>
-                                      <div className="text-xs text-gray-500">YubiKey or other FIDO2 keys</div>
+                                      <div className="text-sm font-bold">{'Hardware securit'}</div>
+                                      <div className="text-xs text-gray-500">{'Yubi keyorother f'}</div>
                                    </div>
                                 </div>
-                                <button className="text-xs font-bold text-blue-400 hover:text-blue-300">Register</button>
+                                <button className="text-xs font-bold text-blue-400 hover:text-blue-300">{'Register'}</button>
                              </div>
                           </div>
                        </Card>
 
                        {/* Password Section */}
                        <Card className="glass-panel p-8">
-                          <h3 className="text-lg font-bold mb-6">Password Management</h3>
+                          <h3 className="text-lg font-bold mb-6">{'Password managem'}</h3>
                           <form className="space-y-4">
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Input type="password" placeholder="Current Password" icon={<Lock className="w-4 h-4" />} className="bg-black/20" />
                                 <Input type="password" placeholder="New Password" icon={<Lock className="w-4 h-4" />} className="bg-black/20" />
                              </div>
                              <Button className="w-full md:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/10">
-                                Update Password
-                             </Button>
+                                {'Update password'}</Button>
                           </form>
                        </Card>
                     </motion.div>
@@ -171,8 +172,7 @@ export function SecuritySettings() {
                          </div>
                        ))}
                        <button className="w-full py-4 border-2 border-dashed border-white/5 rounded-2xl text-xs font-bold text-gray-500 hover:border-blue-500/20 hover:text-blue-400 transition-all">
-                          + Register New Trusted Device
-                       </button>
+                          {'Register new trus'}</button>
                     </motion.div>
                   )}
 
@@ -185,7 +185,7 @@ export function SecuritySettings() {
                       className="space-y-4"
                     >
                        <Card className="glass-panel p-8">
-                          <h3 className="text-lg font-bold mb-6">Current Active Sessions</h3>
+                          <h3 className="text-lg font-bold mb-6">{'Current active se'}</h3>
                           <div className="space-y-4">
                              {[
                                { ip: '192.168.1.1', location: 'New York, US', browser: 'Chrome 122', current: true },
@@ -196,18 +196,17 @@ export function SecuritySettings() {
                                      <Globe className={`w-5 h-5 ${session.current ? 'text-green-400' : 'text-gray-500'}`} />
                                      <div>
                                         <div className="text-sm font-bold flex items-center gap-2">
-                                           {session.ip} {session.current && <span className="text-[10px] bg-green-500/10 text-green-400 px-1.5 py-0.5 rounded">CURRENT</span>}
+                                           {session.ip} {session.current && <span className="text-[10px] bg-green-500/10 text-green-400 px-1.5 py-0.5 rounded">{'Current'}</span>}
                                         </div>
                                         <div className="text-xs text-gray-500">{session.browser} • {session.location}</div>
                                      </div>
                                   </div>
-                                  {!session.current && <button className="text-xs font-bold text-red-400 hover:text-red-300">Revoke</button>}
+                                  {!session.current && <button className="text-xs font-bold text-red-400 hover:text-red-300">{'Revoke'}</button>}
                                </div>
                              ))}
                           </div>
                           <button className="mt-8 text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-2">
-                             <LogOut className="w-4 h-4" /> Terminate All Other Sessions
-                          </button>
+                             <LogOut className="w-4 h-4" /> {'Terminate all oth'}</button>
                        </Card>
                     </motion.div>
                   )}
@@ -221,7 +220,7 @@ export function SecuritySettings() {
                      <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
                         <Shield className="text-blue-400 w-5 h-5" />
                      </div>
-                     <h3 className="font-bold">Security Score</h3>
+                     <h3 className="font-bold">{'Security score'}</h3>
                   </div>
                   <div className="flex items-end gap-2 mb-4">
                      <span className="text-4xl font-black">94</span>
@@ -232,24 +231,23 @@ export function SecuritySettings() {
                   </div>
                   <div className="space-y-3">
                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">MFA Status</span>
-                        <span className="text-green-400 font-bold">Enabled</span>
+                        <span className="text-gray-500">{'Mfastatus'}</span>
+                        <span className="text-green-400 font-bold">{'Enabled'}</span>
                      </div>
                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">Password Age</span>
-                        <span className="text-yellow-400 font-bold">42 Days</span>
+                        <span className="text-gray-500">{'Password age'}</span>
+                        <span className="text-yellow-400 font-bold">{t('42Days_1201')}</span>
                      </div>
                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">Trusted Devices</span>
-                        <span className="text-white font-bold">3/4 Active</span>
+                        <span className="text-gray-500">{'Trusted devices'}</span>
+                        <span className="text-white font-bold">{t('34Active_1203')}</span>
                      </div>
                   </div>
                </Card>
 
                <Card className="glass-panel p-6">
                   <h3 className="font-bold mb-4 flex items-center gap-2">
-                     <Bell className="w-4 h-4 text-purple-400" /> Notifications
-                  </h3>
+                     <Bell className="w-4 h-4 text-purple-400" /> {'Notifications'}</h3>
                   <div className="space-y-4">
                      {[
                        { label: 'Security Alerts', desc: 'Critical account warnings', enabled: true },
@@ -271,14 +269,11 @@ export function SecuritySettings() {
 
                <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-2xl">
                   <h3 className="text-red-400 font-bold mb-2 flex items-center gap-2 text-sm">
-                     <AlertTriangle className="w-4 h-4" /> Danger Zone
-                  </h3>
+                     <AlertTriangle className="w-4 h-4" /> {'Danger zone'}</h3>
                   <p className="text-[10px] text-gray-500 mb-4 uppercase tracking-tighter">
-                     Irreversible actions related to your account identity and data.
-                  </p>
+                     {'Irreversibleact'}</p>
                   <button className="text-xs font-bold text-red-500 hover:text-red-400 underline transition-colors">
-                     Delete Account Permanently
-                  </button>
+                     {'Delete account pe'}</button>
                </div>
             </div>
           </div>

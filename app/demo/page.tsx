@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Shield, Users, Smartphone, ShieldAlert, Cpu, Video, Tv, Volume2, VolumeX, Maximize, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/Button';
 import Link from 'next/link';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function DemoPage() {
+    const { t } = useLanguage();
   const [videoSource, setVideoSource] = useState<'mp4' | 'youtube' | 'vimeo'>('mp4');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -93,14 +95,11 @@ export default function DemoPage() {
             animate={{ opacity: 1, y: 0 }}
           >
             <span className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold uppercase tracking-wider mb-6 inline-block">
-              Interactive Product Walkthrough
-            </span>
+              {'Interactive product demo'}</span>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-              See <span className="text-blue-400 text-glow">SecureAuth</span> in Action
-            </h1>
+              {'See'}<span className="text-blue-400 text-glow">{'Secure auth'}</span> {'In action'}</h1>
             <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-              Choose your preferred playback feed to witness our adaptive MFA, typing behavior analytics, and geo-fenced office security system in action.
-            </p>
+              {'Choose your preferred plan'}</p>
           </motion.div>
 
           {/* Video Source Switcher Tabs */}
@@ -113,8 +112,7 @@ export default function DemoPage() {
                   : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <Video className="w-4 h-4" /> MP4 Video Feed
-            </button>
+              <Video className="w-4 h-4" /> {'MP4 Video Feed'}</button>
             <button 
               onClick={() => setVideoSource('youtube')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold transition-all ${
@@ -123,8 +121,7 @@ export default function DemoPage() {
                   : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <Tv className="w-4 h-4" /> YouTube Live
-            </button>
+              <Tv className="w-4 h-4" /> {'YouTube Live'}</button>
             <button 
               onClick={() => setVideoSource('vimeo')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold transition-all ${
@@ -133,8 +130,7 @@ export default function DemoPage() {
                   : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <Tv className="w-4 h-4" /> Vimeo High-Res
-            </button>
+              <Tv className="w-4 h-4" /> {'Vimeo high res'}</button>
           </div>
 
           {/* Interactive Player Frame */}
@@ -241,8 +237,8 @@ export default function DemoPage() {
       <div className="py-20 px-6 bg-black/40 border-y border-white/5">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Core Capabilities</h2>
-            <p className="text-gray-400">Everything you need to secure your enterprise</p>
+            <h2 className="text-3xl font-bold mb-4">{'Core Capabilities'}</h2>
+            <p className="text-gray-400">{'Everything you need'}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -274,20 +270,17 @@ export default function DemoPage() {
       {/* CTA Section */}
       <div className="py-32 px-6 relative">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to secure your workforce?</h2>
+          <h2 className="text-4xl font-bold mb-6">{'Ready to secure your organization'}</h2>
           <p className="text-xl text-gray-400 mb-10">
-            Join leading enterprises using SecureAuth to protect their critical infrastructure and employee access.
-          </p>
+            {'Join leading enterprises'}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/pricing">
               <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 font-bold px-8">
-                Start Free Trial
-              </Button>
+                {'Start free trial'}</Button>
             </Link>
             <Link href="/signup">
               <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/20 hover:bg-white/5 font-bold px-8">
-                Request Custom Demo
-              </Button>
+                {'Request custom demo'}</Button>
             </Link>
           </div>
         </div>

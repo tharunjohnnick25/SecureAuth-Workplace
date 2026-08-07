@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { Bell, Plus, Settings } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const rules = [
   { name: 'Critical Security Events', channels: ['Email', 'SMS', 'Slack'], status: 'Active', priority: 'High' },
@@ -14,6 +15,7 @@ const rules = [
 ];
 
 export function NotificationRules() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -22,21 +24,19 @@ export function NotificationRules() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Notification Rules</h1>
-              <p className="text-muted-foreground">Configure notification routing and delivery</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Notification rules'}</h1>
+              <p className="text-muted-foreground">{'Configure notification rules and alert channels'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              New Rule
-            </Button>
+              {'New rule'}</Button>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
-                Notification Rules
-              </CardTitle>
+                {'Notification rules'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

@@ -12,6 +12,7 @@ import {
   XCircle,
   Edit,
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const roles = [
   {
@@ -71,6 +72,7 @@ const permissions = [
 ];
 
 export function AccessControl() {
+    const { t } = useLanguage();
   const [selectedRole, setSelectedRole] = useState(roles[0]);
 
   return (
@@ -78,16 +80,13 @@ export function AccessControl() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">
-            Access Control & RBAC
-          </h2>
+            {'Access control'}</h2>
           <p className="text-gray-600 mt-1">
-            Manage roles, permissions, and access policies
-          </p>
+            {'Manage roles and permissions'}</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <Plus className="w-5 h-5" />
-          Create Role
-        </button>
+          {'Create role'}</button>
       </div>
 
       {/* Stats */}
@@ -98,7 +97,7 @@ export function AccessControl() {
               <Shield className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Roles</p>
+              <p className="text-sm text-gray-600">{'Total roles'}</p>
               <p className="text-2xl font-semibold text-gray-900">8</p>
             </div>
           </div>
@@ -109,7 +108,7 @@ export function AccessControl() {
               <Users className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Assigned Users</p>
+              <p className="text-sm text-gray-600">{'Assigned users'}</p>
               <p className="text-2xl font-semibold text-gray-900">500</p>
             </div>
           </div>
@@ -120,7 +119,7 @@ export function AccessControl() {
               <Lock className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Permissions</p>
+              <p className="text-sm text-gray-600">{'Permissions'}</p>
               <p className="text-2xl font-semibold text-gray-900">24</p>
             </div>
           </div>
@@ -131,7 +130,7 @@ export function AccessControl() {
               <Settings className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Active Policies</p>
+              <p className="text-sm text-gray-600">{'Active policies'}</p>
               <p className="text-2xl font-semibold text-gray-900">12</p>
             </div>
           </div>
@@ -143,7 +142,7 @@ export function AccessControl() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="p-4 border-b border-gray-200">
-              <h3 className="font-semibold text-gray-900">Roles</h3>
+              <h3 className="font-semibold text-gray-900">{'Roles'}</h3>
             </div>
             <div className="divide-y divide-gray-200">
               {roles.map((role) => (
@@ -159,8 +158,7 @@ export function AccessControl() {
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full bg-${role.color}-100 text-${role.color}-700`}
                     >
-                      {role.users} users
-                    </span>
+                      {role.users} {'Users'}</span>
                   </div>
                   <p className="text-sm text-gray-600">{role.description}</p>
                 </button>
@@ -182,21 +180,18 @@ export function AccessControl() {
               </div>
               <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Edit className="w-4 h-4" />
-                Edit Role
-              </button>
+                {'Edit role'}</button>
             </div>
             <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-200">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-gray-500" />
                 <span className="text-sm text-gray-600">
-                  {selectedRole.users} assigned users
-                </span>
+                  {selectedRole.users} {'Assigned users'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Lock className="w-5 h-5 text-gray-500" />
                 <span className="text-sm text-gray-600">
-                  {selectedRole.permissions.length} permissions
-                </span>
+                  {selectedRole.permissions.length} {'Permissions'}</span>
               </div>
             </div>
           </div>
@@ -204,7 +199,7 @@ export function AccessControl() {
           {/* Permissions Matrix */}
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="p-6 border-b border-gray-200">
-              <h3 className="font-semibold text-gray-900">Permissions</h3>
+              <h3 className="font-semibold text-gray-900">{'Permissions'}</h3>
             </div>
             <div className="p-6 space-y-6">
               {permissions.map((group, index) => (
@@ -244,27 +239,27 @@ export function AccessControl() {
           {/* Access Policies */}
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="p-6 border-b border-gray-200">
-              <h3 className="font-semibold text-gray-900">Access Policies</h3>
+              <h3 className="font-semibold text-gray-900">{'Access policies'}</h3>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">Session Timeout</p>
-                  <p className="text-sm text-gray-600">Automatic logout after inactivity</p>
+                  <p className="font-medium text-gray-900">{'Session timeout'}</p>
+                  <p className="text-sm text-gray-600">{'Automaticlogout'}</p>
                 </div>
-                <span className="text-sm font-medium text-gray-900">30 minutes</span>
+                <span className="text-sm font-medium text-gray-900">{t('30minutes_31')}</span>
               </div>
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">IP Restrictions</p>
-                  <p className="text-sm text-gray-600">Allowed IP ranges</p>
+                  <p className="font-medium text-gray-900">{'Iprestrictions'}</p>
+                  <p className="text-sm text-gray-600">{'Allowed ipranges'}</p>
                 </div>
                 <span className="text-sm font-medium text-gray-900">10.0.0.0/8</span>
               </div>
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">Time-based Access</p>
-                  <p className="text-sm text-gray-600">Permitted access hours</p>
+                  <p className="font-medium text-gray-900">{'Timebased access'}</p>
+                  <p className="text-sm text-gray-600">{'Permittedaccess'}</p>
                 </div>
                 <span className="text-sm font-medium text-gray-900">24/7</span>
               </div>

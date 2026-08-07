@@ -7,8 +7,10 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function VerifyOtpPage() {
+    const { t } = useLanguage();
   const router = useRouter();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -54,10 +56,9 @@ export default function VerifyOtpPage() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/30">
             <KeyRound className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Verify OTP</h1>
+          <h1 className="text-3xl font-semibold mb-2">{'Verify otp'}</h1>
           <p className="text-gray-400 text-center text-sm">
-            Enter the 6-digit code sent to your device
-          </p>
+            {t('Enterthe6digitc_345')}</p>
         </div>
 
         <form onSubmit={handleVerify} className="space-y-6">

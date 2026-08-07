@@ -36,16 +36,49 @@ export default function ThreatIntelligencePage() {
     })) || [];
   }, [alerts]);
 
+  const chartData = useMemo(() => {
+    if (!alerts || alerts.length === 0) return [];
+    
+    // Group alerts by day of the week
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const counts = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
+    
+    alerts.forEach((a: any) => {
+      const date = new Date(a.created_at);
+      const dayName = days[date.getDay()];
+      counts[dayName as keyof typeof counts]++;
+    });
+
+    return [
+      { name: 'Mon', value: counts.Mon },
+      { name: 'Tue', value: counts.Tue },
+      { name: 'Wed', value: counts.Wed },
+      { name: 'Thu', value: counts.Thu },
+      { name: 'Fri', value: counts.Fri },
+      { name: 'Sat', value: counts.Sat },
+      { name: 'Sun', value: counts.Sun }
+    ];
+  }, [alerts]);
+
+  const barData = useMemo(() => {
+    if (!alerts) return [];
+    const critical = alerts.filter((a: any) => a.severity === 'critical').length;
+    const warning = alerts.filter((a: any) => a.severity === 'warning').length;
+    const info = alerts.filter((a: any) => a.severity === 'info').length;
+    return [
+      { name: 'Critical', value: critical },
+      { name: 'Warning', value: warning },
+      { name: 'Info', value: info },
+    ];
+  }, [alerts]);
+
   return (
     <MetricsDashboard 
       title="Intelligence & Threat Analysis" 
       description="AI-driven realtime threat detection and planetary risk monitoring."
       metrics={stats}
-      chartData={[
-        { name: 'Mon', value: 20 }, { name: 'Tue', value: 35 },
-        { name: 'Wed', value: 25 }, { name: 'Thu', value: 45 },
-        { name: 'Fri', value: 60 }, { name: 'Sat', value: 30 }
-      ]}
+      chartData={chartData}
+      barData={barData}
       recentActivity={recentActivity}
     />
   );

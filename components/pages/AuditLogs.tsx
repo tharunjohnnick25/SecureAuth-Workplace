@@ -16,6 +16,7 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const auditLogs = [
   { id: '1', timestamp: '2026-04-30 14:32:15', user: 'sarah.chen@company.com', action: 'User Login', resource: 'Authentication', status: 'Success', ipAddress: '192.168.1.105', severity: 'info' },
@@ -44,6 +45,7 @@ const topActions = [
 ];
 
 export function AuditLogs() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -52,24 +54,20 @@ export function AuditLogs() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Audit Logs</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Audit logs'}</h1>
               <p className="text-muted-foreground">
-                Track all system activities and security events
-              </p>
+                {'Trackallsystema'}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline">
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
+                {'Filter'}</Button>
               <Button variant="outline">
                 <Calendar className="w-4 h-4 mr-2" />
-                Date Range
-              </Button>
+                {'Date range'}</Button>
               <Button>
                 <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
+                {'Export'}</Button>
             </div>
           </div>
 
@@ -93,8 +91,7 @@ export function AuditLogs() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Recent Activity
-              </CardTitle>
+                {'Recent activity'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
@@ -111,12 +108,12 @@ export function AuditLogs() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left p-3 font-medium">Timestamp</th>
-                      <th className="text-left p-3 font-medium">User</th>
-                      <th className="text-left p-3 font-medium">Action</th>
-                      <th className="text-left p-3 font-medium">Resource</th>
-                      <th className="text-left p-3 font-medium">IP Address</th>
-                      <th className="text-left p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">{'Timestamp'}</th>
+                      <th className="text-left p-3 font-medium">{'User'}</th>
+                      <th className="text-left p-3 font-medium">{'Action'}</th>
+                      <th className="text-left p-3 font-medium">{'Resource'}</th>
+                      <th className="text-left p-3 font-medium">{'Ipaddress'}</th>
+                      <th className="text-left p-3 font-medium">{'Status'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -153,10 +150,10 @@ export function AuditLogs() {
                 </table>
               </div>
               <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Showing 8 of 12,456 entries</p>
+                <p className="text-sm text-muted-foreground">{t('Showing8of12456_698')}</p>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Previous</Button>
-                  <Button variant="outline" size="sm">Next</Button>
+                  <Button variant="outline" size="sm">{'Previous'}</Button>
+                  <Button variant="outline" size="sm">{'Next'}</Button>
                 </div>
               </div>
             </CardContent>
@@ -165,7 +162,7 @@ export function AuditLogs() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Top Actions</CardTitle>
+                <CardTitle>{'Top actions'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -189,37 +186,35 @@ export function AuditLogs() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Retention Policy</CardTitle>
+                <CardTitle>{'Retention policy'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                    <h4 className="font-medium mb-2">Current Settings</h4>
+                    <h4 className="font-medium mb-2">{'Current settings'}</h4>
                     <div className="space-y-2 text-sm text-muted-foreground">
                       <div className="flex items-center justify-between">
-                        <span>Retention Period</span>
-                        <span className="font-medium text-foreground">90 days</span>
+                        <span>{'Retention period'}</span>
+                        <span className="font-medium text-foreground">{t('90days_705')}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Archive Location</span>
-                        <span className="font-medium text-foreground">S3 Bucket</span>
+                        <span>{'Archive location'}</span>
+                        <span className="font-medium text-foreground">{t('S3Bucket_707')}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Compliance Standard</span>
-                        <span className="font-medium text-foreground">SOC 2</span>
+                        <span>{'Compliance stand'}</span>
+                        <span className="font-medium text-foreground">{t('SOC2_709')}</span>
                       </div>
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4" />
-                      Important Notice
-                    </h4>
+                      {'Important notice'}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Audit logs older than 90 days are automatically archived. Archived logs can be restored upon request.
-                    </p>
+                      {'Auditlogsoldert'}</p>
                   </div>
-                  <Button className="w-full">Configure Retention</Button>
+                  <Button className="w-full">{'Configure retent'}</Button>
                 </div>
               </CardContent>
             </Card>

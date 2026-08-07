@@ -8,8 +8,10 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase/client';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function AdminLogin() {
+    const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -67,8 +69,8 @@ export default function AdminLogin() {
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20 mb-6">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Admin Portal</h1>
-          <p className="text-gray-400 text-sm">Sign in to the SecureAuth IAM Console</p>
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">{'Admin portal'}</h1>
+          <p className="text-gray-400 text-sm">{'Sign in to the secure admin portal'}</p>
         </div>
 
         <Card className="glass-panel overflow-hidden border-white/10 shadow-2xl">
@@ -82,7 +84,7 @@ export default function AdminLogin() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Admin Email</label>
+                <label className="text-sm font-semibold text-gray-300">{'Admin email'}</label>
                 <div className="relative">
                   <input
                     type="email"
@@ -97,7 +99,7 @@ export default function AdminLogin() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-semibold text-gray-300">Password</label>
+                  <label className="text-sm font-semibold text-gray-300">{'Password'}</label>
                 </div>
                 <div className="relative">
                   <input
@@ -126,8 +128,7 @@ export default function AdminLogin() {
 
         <div className="mt-8 text-center">
           <Link href="/" className="text-sm text-gray-500 hover:text-white transition-colors">
-            ← Back to Public Site
-          </Link>
+            {'Back to public site'}</Link>
         </div>
       </motion.div>
     </div>

@@ -15,6 +15,7 @@ import {
   Trash2,
   RotateCw,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const webhooks = [
   { id: '1', name: 'Security Alerts Webhook', url: 'https://api.example.com/security/alerts', events: ['security.alert', 'threat.detected'], status: 'Active', lastTrigger: '5 min ago', success: 1245, failed: 3 },
@@ -41,6 +42,7 @@ const recentDeliveries = [
 ];
 
 export function Webhooks() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -49,15 +51,13 @@ export function Webhooks() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Webhooks</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Webhooks'}</h1>
               <p className="text-muted-foreground">
-                Configure and monitor webhook endpoints for real-time event notifications
-              </p>
+                {'Configureandmon'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Add Webhook
-            </Button>
+              {'Add webhook'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -67,9 +67,9 @@ export function Webhooks() {
                   <Webhook className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Webhooks</p>
+                  <p className="text-sm text-muted-foreground">{'Total webhooks'}</p>
                   <h3 className="text-2xl font-semibold">{webhooks.length}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">3 active, 1 inactive</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('3active1inactiv_1373')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -80,9 +80,9 @@ export function Webhooks() {
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                  <p className="text-sm text-muted-foreground">{'Success rate'}</p>
                   <h3 className="text-2xl font-semibold">98.7%</h3>
-                  <p className="text-xs text-success mt-1">Last 24 hours</p>
+                  <p className="text-xs text-success mt-1">{t('Last24hours_1375')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -93,9 +93,9 @@ export function Webhooks() {
                   <Activity className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Deliveries Today</p>
+                  <p className="text-sm text-muted-foreground">{'Deliveries today'}</p>
                   <h3 className="text-2xl font-semibold">2,593</h3>
-                  <p className="text-xs text-muted-foreground mt-1">104 failed</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('104failed_1377')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -105,8 +105,7 @@ export function Webhooks() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Webhook className="w-5 h-5" />
-                Configured Webhooks
-              </CardTitle>
+                {'Configured webho'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -135,15 +134,15 @@ export function Webhooks() {
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
                           <div>
-                            <span className="text-xs">Last Trigger</span>
+                            <span className="text-xs">{'Last trigger'}</span>
                             <p className="font-medium text-foreground">{webhook.lastTrigger}</p>
                           </div>
                           <div>
-                            <span className="text-xs">Success</span>
+                            <span className="text-xs">{'Success'}</span>
                             <p className="font-medium text-success">{webhook.success.toLocaleString()}</p>
                           </div>
                           <div>
-                            <span className="text-xs">Failed</span>
+                            <span className="text-xs">{'Failed'}</span>
                             <p className="font-medium text-destructive">{webhook.failed}</p>
                           </div>
                         </div>
@@ -171,8 +170,7 @@ export function Webhooks() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
-                  Recent Deliveries
-                </CardTitle>
+                  {'Recent deliverie'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -205,15 +203,14 @@ export function Webhooks() {
                 </div>
                 <div className="mt-4">
                   <Button variant="outline" className="w-full">
-                    View All Deliveries
-                  </Button>
+                    {'View all deliveri'}</Button>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Available Event Types</CardTitle>
+                <CardTitle>{'Available event t'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">

@@ -20,8 +20,10 @@ import {
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function MfaSettings() {
+    const { t } = useLanguage();
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [mfaFactors, setMfaFactors] = useState<any[]>([]);
@@ -82,10 +84,9 @@ export function MfaSettings() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Multi-Factor Authentication</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Multi factor auth'}</h1>
               <p className="text-muted-foreground">
-                Configure and manage MFA methods for enhanced security
-              </p>
+                {'Configure and manage MFA settings for your account'}</p>
             </div>
             <Button onClick={() => window.location.href = '/mfa-setup'}>
               <Shield className="w-4 h-4 mr-2" />
@@ -100,12 +101,11 @@ export function MfaSettings() {
                   <Shield className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Enrolled</p>
+                  <p className="text-sm text-muted-foreground">{'Enrolled'}</p>
                   <h3 className="text-2xl font-semibold">{enrolledPercent}%</h3>
                   <p className="text-xs text-success flex items-center gap-1 mt-1">
                     <TrendingUp className="w-3 h-3" />
-                    of users
-                  </p>
+                    {'of users'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -116,9 +116,9 @@ export function MfaSettings() {
                   <Smartphone className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Authenticator</p>
+                  <p className="text-sm text-muted-foreground">{'Authenticator'}</p>
                   <h3 className="text-2xl font-semibold">{mfaEnabledCount}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">with TOTP</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'With totp'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -129,9 +129,9 @@ export function MfaSettings() {
                   <Users className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
+                  <p className="text-sm text-muted-foreground">{'Total users'}</p>
                   <h3 className="text-2xl font-semibold">{totalUsers}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">registered</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'Registered'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -142,9 +142,9 @@ export function MfaSettings() {
                   <XCircle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Not Enrolled</p>
+                  <p className="text-sm text-muted-foreground">{'Not enrolled'}</p>
                   <h3 className="text-2xl font-semibold">{totalUsers - mfaEnabledCount}</h3>
-                  <p className="text-xs text-destructive mt-1">need setup</p>
+                  <p className="text-xs text-destructive mt-1">{'Needs setup'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -155,8 +155,7 @@ export function MfaSettings() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Smartphone className="w-5 h-5" />
-                  Available MFA Methods
-                </CardTitle>
+                  {'Available MFA methods'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -175,14 +174,13 @@ export function MfaSettings() {
                               <h4 className="font-medium">{method.name}</h4>
                               {method.recommended && (
                                 <span className="text-xs px-2 py-0.5 rounded bg-success/20 text-success">
-                                  Recommended
-                                </span>
+                                  {'Recommended'}</span>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">{method.description}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <Users className="w-3 h-3" />
-                              <span>{method.users} users enrolled</span>
+                              <span>{method.users} {'Users enrolled'}</span>
                             </div>
                           </div>
                         </div>
@@ -204,7 +202,7 @@ export function MfaSettings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Your MFA Status</CardTitle>
+                <CardTitle>{'Your MFA status'}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -217,14 +215,11 @@ export function MfaSettings() {
                       <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
                         <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
                           <Shield className="w-4 h-4" />
-                          MFA Not Enabled
-                        </h4>
+                          {'MFA not enabled'}</h4>
                         <p className="text-xs text-muted-foreground">
-                          You haven't set up multi-factor authentication yet. Enable it now to enhance your account security.
-                        </p>
+                          {"You haven't set up MFA yet"}</p>
                         <Button size="sm" className="mt-3" onClick={() => window.location.href = '/mfa-setup'}>
-                          Enable MFA
-                        </Button>
+                          {'Enable MFA'}</Button>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -235,7 +230,7 @@ export function MfaSettings() {
                                 <Smartphone className="w-4 h-4 text-primary" />
                                 <span className="text-sm font-medium">{factor.friendly_name || factor.factor_type}</span>
                               </div>
-                              <span className="text-xs text-success">Active</span>
+                              <span className="text-xs text-success">{'Active'}</span>
                             </div>
                             <Button
                               variant="outline"
@@ -243,8 +238,7 @@ export function MfaSettings() {
                               onClick={() => unenrollMfa(factor.id)}
                               className="w-full text-destructive border-destructive/20 hover:bg-destructive/10"
                             >
-                              Remove
-                            </Button>
+                              {'Remove'}</Button>
                           </div>
                         ))}
                       </div>

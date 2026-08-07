@@ -4,27 +4,50 @@ import React, { useEffect, useState } from 'react';
 import { DataGridPage } from '@/components/pages/DataGridPage';
 import { DashboardService } from '@/lib/services/dashboard';
 import { format } from 'date-fns';
-import { Loader2, FileSpreadsheet, Presentation } from 'lucide-react';
+import { Loader2, FileSpreadsheet, Presentation, LogIn, LogOut } from 'lucide-react';
 import { exportAttendanceToExcel } from '@/lib/utils/exportAttendanceExcel';
 import { exportReportToPPT } from '@/lib/utils/exportPPT';
+import { useLanguage } from "@/context/LanguageContext";
+import { useAuthStore } from '@/store/useAuthStore';
+import { toast } from 'sonner';
 
 export default function Page() {
+  const { t } = useLanguage();
+  const { user } = useAuthStore();
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [marking, setMarking] = useState(false);
+
+  const fetch = async () => {
+    try {
+      const res = await DashboardService.getAttendance();
+      setAttendanceData(res);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await DashboardService.getAttendance();
-        setAttendanceData(res);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetch();
   }, []);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const myTodayRecord = attendanceData.find(a => (a.user_id === user?.id || a.employee_id === user?.id) && a.date === todayStr);
+
+  const handleMarkAttendance = async (type: 'check_in' | 'check_out') => {
+    setMarking(true);
+    try {
+      await DashboardService.markAttendance(type);
+      toast.success(`Successfully ${type === 'check_in' ? 'checked in' : 'checked out'}`);
+      await fetch();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to mark attendance');
+    } finally {
+      setMarking(false);
+    }
+  };
 
   const columns = [
     {
@@ -85,9 +108,9 @@ export default function Page() {
         const checkOut = row.check_out ? new Date(row.check_out) : null;
         if (checkIn && checkOut) {
           const diff = ((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60)).toFixed(1);
-          return <span className="font-semibold text-gray-300">{diff} hrs</span>;
+          return <span className="font-semibold text-gray-300">{diff} {'Hrs'}</span>;
         }
-        return <span className="font-semibold text-gray-300">8.0 hrs</span>;
+        return <span className="font-semibold text-gray-300">80 Hrs</span>;
       }
     },
     { 
@@ -117,6 +140,16 @@ export default function Page() {
       data={attendanceData}
       onExportExcel={() => exportAttendanceToExcel(attendanceData)}
       onExportPPT={() => exportReportToPPT(attendanceData, 'Attendance Report')}
+      primaryAction={
+        !myTodayRecord 
+          ? { label: marking ? 'Processing...' : 'Check In', icon: LogIn, onClick: () => handleMarkAttendance('check_in') }
+          : undefined
+      }
+      secondaryAction={
+        myTodayRecord && !myTodayRecord.check_out 
+          ? { label: marking ? 'Processing...' : 'Check Out', icon: LogOut, onClick: () => handleMarkAttendance('check_out') }
+          : undefined
+      }
     />
   );
 }

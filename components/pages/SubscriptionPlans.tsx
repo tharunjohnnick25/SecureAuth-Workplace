@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { CheckCircle, Crown } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const plans = [
   { name: 'Starter', price: '$99', features: ['Up to 100 devices', 'Basic security scans', 'Email support'], current: false },
@@ -13,6 +14,7 @@ const plans = [
 ];
 
 export function SubscriptionPlans() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -20,8 +22,8 @@ export function SubscriptionPlans() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Subscription Plans</h1>
-            <p className="text-muted-foreground">Choose the plan that fits your needs</p>
+            <h1 className="text-3xl font-semibold mb-2">{'Subscription pla'}</h1>
+            <p className="text-muted-foreground">{'Choosetheplanth'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -31,13 +33,13 @@ export function SubscriptionPlans() {
                   {plan.current && (
                     <div className="flex items-center gap-2 mb-4">
                       <Crown className="w-4 h-4 text-warning" />
-                      <span className="text-sm font-medium text-warning">Current Plan</span>
+                      <span className="text-sm font-medium text-warning">{'Current plan'}</span>
                     </div>
                   )}
                   <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
                   <div className="mb-6">
                     <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="text-muted-foreground">{'Month'}</span>
                   </div>
                   <ul className="space-y-3 mb-6">
                     {plan.features.map((feature, i) => (

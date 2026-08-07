@@ -12,6 +12,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from "@/context/LanguageContext";
+
+import { useAuthStore } from '@/store/useAuthStore';
 
 const STATUS_STYLES: Record<string, string> = {
   Active: 'bg-green-500/10 text-green-400 border-green-500/20',
@@ -23,12 +26,25 @@ const STATUS_STYLES: Record<string, string> = {
   Terminated: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
 
+const SUBSCRIPTION_STYLES: Record<string, string> = {
+  Free: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  'Basic Protection': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  Professional: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  Enterprise: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+};
+
+const SUBSCRIPTION_OPTIONS = ['Free', 'Basic Protection', 'Professional', 'Enterprise'];
+
 const STATUS_OPTIONS: EmployeeStatus[] = ['Active', 'Inactive', 'Resigned', 'On Leave', 'Suspended', 'Retired', 'Terminated'];
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern', 'Temporary'];
 const GENDERS = ['Male', 'Female', 'Other'];
 
 export default function EmployeesPage() {
+    const { t } = useLanguage();
   const router = useRouter();
+  const { user } = useAuthStore();
+  const userDomain = user?.email?.split('@')[1];
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +66,7 @@ export default function EmployeesPage() {
     try {
       const result = await EmployeeService.getEmployees({
         search: searchTerm || undefined,
+        domain: userDomain,
         ...filters,
         sort_by: sortBy,
         sort_order: sortOrder,
@@ -123,6 +140,16 @@ export default function EmployeesPage() {
     }
   };
 
+  const updateSubscription = async (id: string, subscription: string) => {
+    try {
+      await EmployeeService.updateEmployee(id, { subscription } as any);
+      toast.success(`Subscription updated to ${subscription}`);
+      loadEmployees();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to update subscription');
+    }
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -158,26 +185,23 @@ export default function EmployeesPage() {
       <Sidebar />
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />
-        <main className="pt-20 p-4 sm:p-6 lg:p-8">
+        <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-1 text-white">Employee Directory</h1>
-              <p className="text-gray-400 text-sm">Manage employees, roles, and departmental assignments.</p>
+              <h1 className="text-3xl font-bold mb-1 text-white">{'Employee directory'}</h1>
+              <p className="text-gray-400 text-sm">{'Manage employees'}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {selectedIds.size > 0 && (
-                <span className="text-sm text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg">{selectedIds.size} selected</span>
+                <span className="text-sm text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg">{selectedIds.size} {'Selected'}</span>
               )}
               <Button onClick={() => setShowImport(true)} variant="outline" className="border-white/10">
-                <Upload className="w-4 h-4 mr-1.5" /> Import
-              </Button>
+                <Upload className="w-4 h-4 mr-1.5" /> {'Import'}</Button>
               <Button onClick={handleExport} variant="outline" className="border-white/10">
-                <Download className="w-4 h-4 mr-1.5" /> Export
-              </Button>
+                <Download className="w-4 h-4 mr-1.5" /> {'Export'}</Button>
               <Link href="/employees/new">
                 <Button className="bg-blue-600 hover:bg-blue-500">
-                  <UserPlus className="w-4 h-4 mr-1.5" /> Add Employee
-                </Button>
+                  <UserPlus className="w-4 h-4 mr-1.5" /> {'Add employee'}</Button>
               </Link>
             </div>
           </div>
@@ -196,7 +220,7 @@ export default function EmployeesPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="border-white/10" onClick={() => setShowFilters(!showFilters)}>
-                  <Filter className="w-4 h-4 mr-1.5" /> Filters <ChevronDown className={`w-3 h-3 ml-1 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                  <Filter className="w-4 h-4 mr-1.5" /> {'Filters'}<ChevronDown className={`w-3 h-3 ml-1 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                 </Button>
                 <Button variant="outline" className="border-white/10" onClick={loadEmployees}>
                   <RotateCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -209,29 +233,28 @@ export default function EmployeesPage() {
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-b border-white/10 overflow-hidden">
                   <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                     <select value={filters.status || ''} onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-                      <option value="">All Status</option>
+                      <option value="">{'All status'}</option>
                       {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                     <select value={filters.department || ''} onChange={(e) => setFilters(f => ({ ...f, department: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-                      <option value="">All Departments</option>
+                      <option value="">{'All departments'}</option>
                       {departments.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                     <select value={filters.designation || ''} onChange={(e) => setFilters(f => ({ ...f, designation: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-                      <option value="">All Designations</option>
+                      <option value="">{'All designations'}</option>
                       {Array.from(new Set(employees.map(e => e.designation).filter(Boolean))).map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                     <select value={filters.gender || ''} onChange={(e) => setFilters(f => ({ ...f, gender: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-                      <option value="">All Genders</option>
+                      <option value="">{'All genders'}</option>
                       {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
                     <select value={filters.employment_type || ''} onChange={(e) => setFilters(f => ({ ...f, employment_type: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-                      <option value="">All Types</option>
+                      <option value="">{'All types'}</option>
                       {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                     {Object.keys(filters).length > 0 && (
                       <button onClick={() => setFilters({})} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
-                        <X className="w-3 h-3" /> Clear Filters
-                      </button>
+                        <X className="w-3 h-3" /> {'Clear filters'}</button>
                     )}
                   </div>
                 </motion.div>
@@ -246,32 +269,32 @@ export default function EmployeesPage() {
                       <input type="checkbox" checked={selectedIds.size === employees.length && employees.length > 0} onChange={toggleSelectAll} className="rounded border-white/20" />
                     </th>
                     <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs cursor-pointer" onClick={() => { setSortBy('full_name'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc'); }}>
-                      Employee {sortBy === 'full_name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      {'Employee'}{sortBy === 'full_name' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">Department</th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">Designation</th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">Type</th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">Status</th>
-                    <th className="px-4 py-3 text-right font-semibold uppercase tracking-wider text-xs">Actions</th>
+                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Department'}</th>
+                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Designation'}</th>
+                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Type'}</th>
+                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">Subscription</th>
+                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Status'}</th>
+                    <th className="px-4 py-3 text-right font-semibold uppercase tracking-wider text-xs">{'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-16 text-center text-gray-500">
+                      <td colSpan={8} className="px-4 py-16 text-center text-gray-500">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                        Loading employees...
-                      </td>
+                        {'Loading employees...'}</td>
                     </tr>
                   ) : filteredEmployees.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-16 text-center text-gray-500">
+                      <td colSpan={8} className="px-4 py-16 text-center text-gray-500">
                         <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p>No employees found</p>
+                        <p>{'No employees found'}</p>
                         {searchTerm || Object.keys(filters).length > 0 ? (
-                          <p className="text-xs mt-1">Try adjusting your search or filters</p>
+                          <p className="text-xs mt-1">{'Try adjusting your search or filters'}</p>
                         ) : (
-                          <Link href="/employees/new" className="text-blue-400 hover:text-blue-300 text-xs mt-1 inline-block">Add your first employee</Link>
+                          <Link href="/employees/new" className="text-blue-400 hover:text-blue-300 text-xs mt-1 inline-block">{'Add your first employee'}</Link>
                         )}
                       </td>
                     </tr>
@@ -305,6 +328,21 @@ export default function EmployeesPage() {
                       <td className="px-4 py-3 text-sm text-gray-300">{emp.department || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-300">{emp.designation || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-300">{emp.employment_type || '-'}</td>
+                      <td className="px-4 py-3">
+                        <div className="relative group/sub">
+                          <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-full border cursor-pointer block w-fit ${SUBSCRIPTION_STYLES[emp.subscription || 'Free'] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+                            {emp.subscription || 'Free'}
+                          </span>
+                          <div className="absolute left-0 top-full mt-1 bg-[#0b132b] border border-white/10 rounded-xl p-1.5 shadow-2xl z-50 hidden group-hover/sub:block min-w-[130px]">
+                            {SUBSCRIPTION_OPTIONS.filter(s => s !== (emp.subscription || 'Free')).map(s => (
+                              <button key={s} onClick={() => updateSubscription(emp.id, s)}
+                                className="block w-full text-left px-3 py-1.5 text-xs rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors">
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         <div className="relative group/status">
                           <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-full border cursor-pointer block w-fit ${STATUS_STYLES[emp.status] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
@@ -340,7 +378,7 @@ export default function EmployeesPage() {
             </div>
 
             <div className="p-4 border-t border-white/10 flex justify-between items-center text-sm text-gray-400">
-              <span>{filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''}</span>
+              <span>{filteredEmployees.length} {'Employee'}{filteredEmployees.length !== 1 ? 's' : ''}</span>
             </div>
           </Card>
         </main>
@@ -356,15 +394,15 @@ export default function EmployeesPage() {
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Delete Employee</h3>
-                  <p className="text-xs text-gray-400">This action cannot be undone.</p>
+                  <h3 className="text-lg font-bold text-white">{'Delete employee'}</h3>
+                  <p className="text-xs text-gray-400">{'This action cannot be undone'}</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-300 mb-6">Are you sure you want to delete this employee? All associated data will be permanently removed.</p>
+              <p className="text-sm text-gray-300 mb-6">{'Are you sure you want to delete this employee?'}</p>
               <div className="flex justify-end gap-3">
-                <Button variant="outline" className="border-white/10" onClick={() => setShowDeleteConfirm(null)}>Cancel</Button>
+                <Button variant="outline" className="border-white/10" onClick={() => setShowDeleteConfirm(null)}>{'Cancel'}</Button>
                 <Button variant="destructive" onClick={() => handleDelete(showDeleteConfirm)} disabled={deleting}>
-                  {deleting ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Deleting...</> : 'Delete'}
+                  {deleting ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> {'Deleting'}</> : 'Delete'}
                 </Button>
               </div>
             </motion.div>
@@ -381,8 +419,8 @@ export default function EmployeesPage() {
                     <FileSpreadsheet className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Import Employees</h3>
-                    <p className="text-xs text-gray-400">Upload a CSV file with employee data</p>
+                    <h3 className="text-lg font-bold text-white">{'Import employees'}</h3>
+                    <p className="text-xs text-gray-400">{'Upload a CSV file with employee data'}</p>
                   </div>
                 </div>
                 <button onClick={() => { setShowImport(false); setImportResult(null); setImportFile(null); }} className="text-gray-400 hover:text-white">
@@ -399,45 +437,45 @@ export default function EmployeesPage() {
                       <div>
                         <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 text-emerald-400" />
                         <p className="text-sm text-white font-medium">{importFile.name}</p>
-                        <p className="text-xs text-gray-500">{(importFile.size / 1024).toFixed(1)} KB</p>
-                        <button onClick={() => setImportFile(null)} className="text-xs text-red-400 hover:text-red-300 mt-2">Remove</button>
+                        <p className="text-xs text-gray-500">{(importFile.size / 1024).toFixed(1)} {'Kb'}</p>
+                        <button onClick={() => setImportFile(null)} className="text-xs text-red-400 hover:text-red-300 mt-2">{'Remove'}</button>
                       </div>
                     ) : (
                       <>
                         <Upload className="w-10 h-10 mx-auto mb-2 text-gray-500" />
-                        <p className="text-sm text-gray-400">Drop a CSV file here or click to browse</p>
-                        <p className="text-xs text-gray-500 mt-1">Required columns: full_name, email</p>
+                        <p className="text-sm text-gray-400">{'Drop a CSV file here'}</p>
+                        <p className="text-xs text-gray-500 mt-1">{'Required columns: name, email, department'}</p>
                         <input type="file" accept=".csv,.xlsx" onChange={(e) => setImportFile(e.target.files?.[0] || null)} className="hidden" id="import-file" />
-                        <label htmlFor="import-file" className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer mt-2 inline-block">Browse files</label>
+                        <label htmlFor="import-file" className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer mt-2 inline-block">{'Browse files'}</label>
                       </>
                     )}
                   </div>
                   <div className="flex justify-end gap-3 mt-6">
-                    <Button variant="outline" className="border-white/10" onClick={() => { setShowImport(false); setImportResult(null); setImportFile(null); }}>Cancel</Button>
+                    <Button variant="outline" className="border-white/10" onClick={() => { setShowImport(false); setImportResult(null); setImportFile(null); }}>{'Cancel'}</Button>
                     <Button onClick={handleImport} disabled={!importFile || importing} className="bg-emerald-600 hover:bg-emerald-500">
-                      {importing ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Importing...</> : 'Import'}
+                      {importing ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> {'Importing'}</> : 'Import'}
                     </Button>
                   </div>
                 </>
               ) : (
                 <div>
                   <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mb-4">
-                    <p className="text-emerald-400 font-semibold">Import Complete</p>
+                    <p className="text-emerald-400 font-semibold">{'Import complete'}</p>
                     <div className="flex gap-4 mt-2 text-sm">
-                      <span className="text-gray-300">Total: <strong className="text-white">{importResult.total}</strong></span>
-                      <span className="text-emerald-400">Imported: <strong>{importResult.imported}</strong></span>
-                      <span className="text-yellow-400">Skipped: <strong>{importResult.skipped}</strong></span>
+                      <span className="text-gray-300">{'Total'}<strong className="text-white">{importResult.total}</strong></span>
+                      <span className="text-emerald-400">{'Imported'}<strong>{importResult.imported}</strong></span>
+                      <span className="text-yellow-400">{'Skipped'}<strong>{importResult.skipped}</strong></span>
                     </div>
                   </div>
                   {importResult.errors.length > 0 && (
                     <div className="max-h-32 overflow-y-auto space-y-1 mb-4">
                       {importResult.errors.map((err: any, i: number) => (
-                        <p key={i} className="text-xs text-red-400">Row {err.row}: {err.message}</p>
+                        <p key={i} className="text-xs text-red-400">{'Row'}{err.row}: {err.message}</p>
                       ))}
                     </div>
                   )}
                   <div className="flex justify-end">
-                    <Button onClick={() => { setShowImport(false); setImportResult(null); setImportFile(null); }}>Done</Button>
+                    <Button onClick={() => { setShowImport(false); setImportResult(null); setImportFile(null); }}>{'Done'}</Button>
                   </div>
                 </div>
               )}

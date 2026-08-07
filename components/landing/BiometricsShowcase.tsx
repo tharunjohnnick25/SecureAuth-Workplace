@@ -3,8 +3,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Smartphone, MousePointer2, Keyboard, MapPin, Search, ShieldCheck } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const BiometricsShowcase = () => {
+    const { t } = useLanguage();
   const items = [
     {
       title: 'Device Intelligence',
@@ -36,11 +38,9 @@ const BiometricsShowcase = () => {
     <section id="security" className="py-24 bg-slate-900/30">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <h2 className="text-4xl font-bold text-white mb-6">Beyond Simple <span className="text-purple-400">Passwords</span></h2>
+          <h2 className="text-4xl font-bold text-white mb-6">{'Beyond simple'}<span className="text-purple-400">{'Passwords'}</span></h2>
           <p className="text-lg text-gray-400">
-            SecureAuthAI uses a multi-layered approach to verify identity, looking at how 
-            users interact with their devices, not just what secrets they know.
-          </p>
+            {'Secure authentication using AI-powered behavioral biometrics.'}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
@@ -73,11 +73,9 @@ const BiometricsShowcase = () => {
           className="mt-20 p-8 rounded-[40px] bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-white/10 flex flex-col md:flex-row items-center gap-12 text-center md:text-left"
         >
           <div className="flex-1">
-            <h3 className="text-3xl font-bold text-white mb-4">Zero Trust starts with SecureAuthAI</h3>
+            <h3 className="text-3xl font-bold text-white mb-4">{'Zero trust starts here'}</h3>
             <p className="text-gray-400 text-lg">
-              Our platform integrates seamlessly with your existing infrastructure, 
-              providing a unified security layer across all your applications.
-            </p>
+              {'Our platform integrates seamlessly with your existing identity infrastructure.'}</p>
           </div>
           <div className="flex items-center gap-6">
             <div className="flex -space-x-4">
@@ -91,7 +89,7 @@ const BiometricsShowcase = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-white">500+</div>
-              <div className="text-sm text-gray-500 font-semibold uppercase tracking-wider">Trusted Companies</div>
+              <div className="text-sm text-gray-500 font-semibold uppercase tracking-wider">{'Trusted companies worldwide'}</div>
             </div>
           </div>
         </motion.div>

@@ -1,0 +1,122 @@
+{
+  "conversations": [
+    {
+      "id": "conv-1786009947675-02isdl",
+      "key": "EMP-ADMIN01::EMP-MOCK01",
+      "participants": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "employee_id": "EMP-ADMIN01",
+          "full_name": "Admin User",
+          "role": "ADMIN"
+        },
+        {
+          "id": "mock-1",
+          "employee_id": "EMP-MOCK01",
+          "full_name": "Sarah Chen",
+          "role": "Security Admin"
+        }
+      ],
+      "created_at": "2026-08-06T09:52:27.675Z",
+      "last_message_at": "2026-08-06T09:52:42.483Z",
+      "last_message_preview": "hello colleague, this is a persistence test"
+    },
+    {
+      "id": "conv-1786010564461-wuaxgk",
+      "key": "EMP-MOCK02::EMP00003",
+      "participants": [
+        {
+          "id": "00b10cf1-aa9d-4ea7-80a1-93e2be1beb9a",
+          "employee_id": "EMP00003",
+          "full_name": "JOHNCENA User",
+          "role": "EMPLOYEE"
+        },
+        {
+          "id": "mock-2",
+          "employee_id": "EMP-MOCK02",
+          "full_name": "Marcus Thorne",
+          "role": "Cloud Architect"
+        }
+      ],
+      "created_at": "2026-08-06T10:02:44.461Z",
+      "last_message_at": "2026-08-06T10:02:51.263Z",
+      "last_message_preview": "hi maame"
+    },
+    {
+      "id": "conv-1786089673966-gtsj8r",
+      "key": "EMP00003::EMP00005",
+      "participants": [
+        {
+          "id": "5b4d3270-1f6c-4edd-94d9-68adea3fba69",
+          "employee_id": "EMP00005",
+          "full_name": "tharun User",
+          "role": "ADMIN"
+        },
+        {
+          "id": "00b10cf1-aa9d-4ea7-80a1-93e2be1beb9a",
+          "employee_id": "EMP00003",
+          "full_name": "JOHNCENA",
+          "role": "EMPLOYEE"
+        }
+      ],
+      "created_at": "2026-08-07T08:01:13.966Z",
+      "last_message_at": "2026-08-07T08:01:26.333Z",
+      "last_message_preview": "Can we schedule a quick meeting?"
+    },
+    {
+      "id": "conv-1786090672577-dbk9lz",
+      "key": "EMP00004::EMP00005",
+      "participants": [
+        {
+          "id": "4108f1ac-8c31-4233-8f2b-6be36b807e46",
+          "employee_id": "EMP00004",
+          "full_name": "john User",
+          "role": "EMPLOYEE"
+        },
+        {
+          "id": "5b4d3270-1f6c-4edd-94d9-68adea3fba69",
+          "employee_id": "EMP00005",
+          "full_name": "tharun",
+          "role": "ADMIN"
+        }
+      ],
+      "created_at": "2026-08-07T08:17:52.577Z",
+      "last_message_at": "2026-08-07T08:17:58.454Z",
+      "last_message_preview": "Can we schedule a quick meeting?"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1786009962483-deuk4n",
+      "conversation_id": "conv-1786009947675-02isdl",
+      "sender_employee_id": "EMP-ADMIN01",
+      "sender_name": "Admin User",
+      "content": "hello colleague, this is a persistence test",
+      "created_at": "2026-08-06T09:52:42.483Z"
+    },
+    {
+      "id": "msg-1786010571263-9lxlum",
+      "conversation_id": "conv-1786010564461-wuaxgk",
+      "sender_employee_id": "EMP00003",
+      "sender_name": "JOHNCENA User",
+      "content": "hi maame",
+      "created_at": "2026-08-06T10:02:51.263Z"
+    },
+    {
+      "id": "msg-1786089686333-2daat3",
+      "conversation_id": "conv-1786089673966-gtsj8r",
+      "sender_employee_id": "EMP00005",
+      "sender_name": "tharun User",
+      "content": "Can we schedule a quick meeting?",
+      "created_at": "2026-08-07T08:01:26.333Z"
+    },
+    {
+      "id": "msg-1786090678454-1hyhdg",
+      "conversation_id": "conv-1786090672577-dbk9lz",
+      "sender_employee_id": "EMP00004",
+      "sender_name": "john User",
+      "content": "Can we schedule a quick meeting?",
+      "created_at": "2026-08-07T08:17:58.454Z"
+    }
+  ]
+}

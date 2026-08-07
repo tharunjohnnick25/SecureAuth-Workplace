@@ -4,8 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { DataGridPage } from '@/components/pages/DataGridPage';
 import { supabase } from '@/lib/supabase';
 import { Loader2, Building2, ShieldCheck } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function OfficesPage() {
+    const { t } = useLanguage();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +57,7 @@ export default function OfficesPage() {
           render: () => (
             <div className="flex items-center gap-2 text-emerald-400">
                <ShieldCheck className="w-3 h-3" />
-               <span className="text-[10px] font-bold uppercase">Hardened</span>
+               <span className="text-[10px] font-bold uppercase">{'Hardened'}</span>
             </div>
           )
         },

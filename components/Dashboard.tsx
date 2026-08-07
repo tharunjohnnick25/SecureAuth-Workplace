@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { DashboardService } from "@/lib/services/dashboard";
 import {
@@ -25,6 +26,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useLanguage } from "@/context/LanguageContext";
 
 const authData = [
   { name: "Mon", success: 2400, failed: 24 },
@@ -111,6 +113,7 @@ const securityAlerts = [
 ];
 
 export function Dashboard() {
+    const { t } = useLanguage();
   const [stats, setStats] = useState<any>(null);
   const [activities, setActivities] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -155,11 +158,9 @@ export function Dashboard() {
     <div className="space-y-6 text-white">
       <div>
         <h2 className="text-2xl font-semibold text-white">
-          Security Dashboard
-        </h2>
+          {'Security dashboa'}</h2>
         <p className="text-gray-400 mt-1">
-          Real-time overview of your enterprise security posture
-        </p>
+          {'Realtimeovervie'}</p>
       </div>
 
       {/* Key Metrics */}
@@ -167,11 +168,11 @@ export function Dashboard() {
         <div className="glass-card p-6 rounded-lg border border-white/10 bg-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 font-medium">Total Users</p>
+              <p className="text-sm text-gray-400 font-medium">{'Total users'}</p>
               <p className="text-3xl font-bold text-white mt-2">{stats?.totalUsers || 0}</p>
               <p className="text-sm text-blue-400 mt-2 flex items-center gap-1 font-semibold">
                 <Shield className="w-4 h-4" />
-                <span>Active Protection</span>
+                <span>{'Active protectio'}</span>
               </p>
             </div>
             <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -183,11 +184,11 @@ export function Dashboard() {
         <div className="glass-card p-6 rounded-lg border border-white/10 bg-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 font-medium">Active Sessions</p>
+              <p className="text-sm text-gray-400 font-medium">{'Active sessions'}</p>
               <p className="text-3xl font-bold text-white mt-2">{stats?.activeSessions || 0}</p>
               <p className="text-sm text-green-400 mt-2 flex items-center gap-1 font-semibold">
                 <Activity className="w-4 h-4" />
-                <span>Live Traffic</span>
+                <span>{'Live traffic'}</span>
               </p>
             </div>
             <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center border border-green-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -199,9 +200,9 @@ export function Dashboard() {
         <div className="glass-card p-6 rounded-lg border border-white/10 bg-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 font-medium">Failed Attempts</p>
+              <p className="text-sm text-gray-400 font-medium">{'Failed attempts'}</p>
               <p className="text-3xl font-bold text-white mt-2">{stats?.failedAttempts || 0}</p>
-              <p className="text-sm text-red-400 mt-2 font-semibold">Last 24 hours</p>
+              <p className="text-sm text-red-400 mt-2 font-semibold">{t('Last24hours_43')}</p>
             </div>
             <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
               <AlertTriangle className="w-6 h-6 text-red-400" />
@@ -212,11 +213,11 @@ export function Dashboard() {
         <div className="glass-card p-6 rounded-lg border border-white/10 bg-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 font-medium">MFA Coverage</p>
+              <p className="text-sm text-gray-400 font-medium">{'Mfacoverage'}</p>
               <p className="text-3xl font-bold text-white mt-2">{stats?.mfaEnabledPercent || 0}%</p>
               <p className="text-sm text-purple-400 mt-2 flex items-center gap-1 font-semibold">
                 <CheckCircle className="w-4 h-4" />
-                <span>Zero Trust Active</span>
+                <span>{'Zero trust active'}</span>
               </p>
             </div>
             <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
@@ -232,8 +233,7 @@ export function Dashboard() {
         <div className="glass-card p-6 rounded-xl border border-white/10 bg-[#0A0F1D]">
           <h3 className="font-bold text-white mb-6 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-blue-400" />
-            Authentication Activity
-          </h3>
+            {'Authentication a'}</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={authData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -268,8 +268,7 @@ export function Dashboard() {
         <div className="glass-card p-6 rounded-xl border border-white/10 bg-[#0A0F1D]">
           <h3 className="font-bold text-white mb-6 flex items-center gap-2">
             <Users className="w-4 h-4 text-purple-400" />
-            Role Distribution
-          </h3>
+            {'Role distributio'}</h3>
           <div className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
@@ -305,8 +304,7 @@ export function Dashboard() {
           <div className="p-6 border-b border-white/5 bg-white/5">
             <h3 className="font-bold text-white flex items-center gap-2">
                <AlertTriangle className="w-5 h-5 text-amber-500" />
-               Security Alerts
-            </h3>
+               {'Security alerts'}</h3>
           </div>
           <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto">
             {alerts.length > 0 ? alerts.map((alert) => (
@@ -345,7 +343,7 @@ export function Dashboard() {
             )) : (
               <div className="p-10 text-center">
                  <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-4 opacity-50" />
-                 <p className="text-gray-500 text-sm">No security threats detected</p>
+                 <p className="text-gray-500 text-sm">{'Nosecuritythrea'}</p>
               </div>
             )}
           </div>
@@ -356,8 +354,7 @@ export function Dashboard() {
           <div className="p-6 border-b border-white/5 bg-white/5">
             <h3 className="font-bold text-white flex items-center gap-2">
               <Activity className="w-5 h-5 text-blue-500" />
-              Recent Activity
-            </h3>
+              {'Recent activity'}</h3>
           </div>
           <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto">
             {activities.length > 0 ? activities.map((activity) => (
@@ -372,7 +369,7 @@ export function Dashboard() {
                     </p>
                     <div className="flex items-center gap-3 mt-2">
                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5">
-                         IP: {activity.ip}
+                         {'Ip'}{activity.ip}
                        </p>
                        <span className="text-[10px] text-gray-600 font-bold">{new Date(activity.timestamp).toLocaleString()}</span>
                     </div>
@@ -390,7 +387,7 @@ export function Dashboard() {
               </div>
             )) : (
               <div className="p-10 text-center">
-                 <p className="text-gray-500 text-sm">No recent activity found</p>
+                 <p className="text-gray-500 text-sm">{'Norecentactivit'}</p>
               </div>
             )}
           </div>

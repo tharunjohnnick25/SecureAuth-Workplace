@@ -1,8 +1,48 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { MockEmployees, isMockMode } from '@/lib/mock-employees';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   try {
+    if (isMockMode()) {
+      const { searchParams } = new URL(req.url);
+      const search = (searchParams.get('search') || '').toLowerCase();
+      const department = searchParams.get('department') || '';
+      const status = searchParams.get('status') || '';
+      const sortBy = searchParams.get('sort_by') || 'full_name';
+      const sortOrder = searchParams.get('sort_order') || 'asc';
+      const domain = searchParams.get('domain') || '';
+      const page = parseInt(searchParams.get('page') || '1');
+      const limit = parseInt(searchParams.get('limit') || '50');
+
+      let data = MockEmployees.getAll();
+      if (search) {
+        data = data.filter(e =>
+          [e.full_name, e.email, e.employee_id, e.department, e.designation, e.phone]
+            .filter(Boolean)
+            .some(v => String(v).toLowerCase().includes(search))
+        );
+      }
+      if (department) data = data.filter(e => e.department === department);
+      if (status) data = data.filter(e => e.status === status);
+      if (domain) data = data.filter(e => e.email.toLowerCase().endsWith(`@${domain.toLowerCase()}`));
+
+      data.sort((a, b) => {
+        const av = String(a[sortBy] ?? '');
+        const bv = String(b[sortBy] ?? '');
+        return sortOrder === 'desc' ? bv.localeCompare(av) : av.localeCompare(bv);
+      });
+
+      const total = data.length;
+      const from = (page - 1) * limit;
+      const pageData = data.slice(from, from + limit).map(e => ({
+        ...e,
+        subscription: e.subscription || 'Free',
+      }));
+
+      return NextResponse.json({ data: pageData, total, success: true });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { searchParams } = new URL(req.url);
 
@@ -13,6 +53,7 @@ export async function GET(req: NextRequest) {
     const gender = searchParams.get('gender') || '';
     const employmentType = searchParams.get('employment_type') || '';
     const managerId = searchParams.get('manager_id') || '';
+    const domain = searchParams.get('domain') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const sortBy = searchParams.get('sort_by') || 'full_name';
@@ -31,6 +72,7 @@ export async function GET(req: NextRequest) {
     if (gender) query = query.eq('gender', gender);
     if (employmentType) query = query.eq('employment_type', employmentType);
     if (managerId) query = query.eq('manager_id', managerId);
+    if (domain) query = query.ilike('email', `%@${domain}`);
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -52,8 +94,27 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
     const body = await req.json();
+
+    if (isMockMode()) {
+      if (!body.full_name || !body.email) {
+        return NextResponse.json({ error: 'Full name and email are required', success: false }, { status: 400 });
+      }
+      if (MockEmployees.findByEmail(body.email)) {
+        return NextResponse.json({ error: `Email "${body.email}" already exists`, success: false }, { status: 409 });
+      }
+      if (body.employee_id && MockEmployees.getAll().some(e => e.employee_id === body.employee_id)) {
+        return NextResponse.json({ error: `Employee ID "${body.employee_id}" already exists`, success: false }, { status: 409 });
+      }
+      const record = MockEmployees.add({
+        ...body,
+        status: body.status || 'Active',
+        employment_type: body.employment_type || 'Full-time',
+      });
+      return NextResponse.json({ data: record, success: true }, { status: 201 });
+    }
+
+    const supabase = await createServerSupabaseClient();
     const { full_name, email, phone, employee_id } = body;
 
     if (!full_name || !email) {

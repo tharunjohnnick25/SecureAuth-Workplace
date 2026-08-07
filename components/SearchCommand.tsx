@@ -12,50 +12,79 @@ import {
   Users, 
   Bell, 
   Target, 
-  Activity, 
-  Lock,
-  Globe,
-  FileText,
-  Key,
-  User,
-  AlertTriangle
+  Globe, 
+  FileText, 
+  Video, 
+  MessageSquare, 
+  Calendar, 
+  FileCheck, 
+  Clock, 
+  HardDrive, 
+  ClipboardList, 
+  CreditCard, 
+  Plug, 
+  UserCog, 
+  ShieldAlert, 
+  User, 
+  AlertTriangle 
 } from 'lucide-react';
 import { Command } from 'cmdk';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from "@/context/LanguageContext";
+import { useAuthStore } from "@/store/useAuthStore";
+
+const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
 
 const STATIC_PAGES = [
   { group: 'Overview', items: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { name: 'Attendance & Login', href: '/attendance', icon: Clock },
     { name: 'Notifications', href: '/notifications', icon: Bell },
+    { name: 'Calendar', href: '/calendar', icon: Calendar },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  ]},
+  { group: 'Work & Collaboration', items: [
+    { name: 'My Tasks', href: '/tasks', icon: FileCheck },
+    { name: 'Chat with Colleagues', href: '/chat', icon: MessageSquare },
+    { name: 'Leave Apply', href: '/leaves', icon: Clock },
+    { name: 'Secure Notes', href: '/notes', icon: FileText },
+    { name: 'Company Drive', href: '/workspace', icon: HardDrive },
+    { name: 'Video Meetings', href: '/meetings', icon: Video },
+    { name: 'Web Bookmarks', href: '/bookmarks', icon: Globe },
+    { name: 'Automated Reminders', href: '/reminders', icon: Bell },
   ]},
   { group: 'Security', items: [
     { name: 'Security Center', href: '/security', icon: Shield },
-    { name: 'Risk Score', href: '/security/risk-score', icon: Target },
-    { name: 'Zero Trust Configuration', href: '/security/zero-trust', icon: Lock },
-    { name: 'Device Fingerprinting', href: '/security/fingerprinting', icon: Smartphone },
-    { name: 'Threat Intelligence', href: '/threat-intelligence', icon: Activity },
+    { name: 'Threat Intelligence', href: '/threat-intelligence', icon: Target },
+    { name: 'AI Risk Monitoring', href: '/dashboard/risk', icon: ShieldAlert },
+    { name: 'Device Fingerprinting', href: '/devices', icon: Smartphone },
   ]},
-  { group: 'Management', items: [
-    { name: 'Users & Roles', href: '/admin/users', icon: Users },
-    { name: 'Access Control Matrix', href: '/admin/permissions', icon: Lock },
-    { name: 'Audit Logs', href: '/admin/audit', icon: FileText },
-    { name: 'Geographic Map', href: '/admin/geo-map', icon: Globe },
+  { group: 'Administration', items: [
+    { name: 'Employee Directory', href: '/employees', icon: Users },
+    { name: 'Access Requests', href: '/access-requests', icon: FileCheck },
+    { name: 'Roles & Permissions', href: '/roles-permissions', icon: UserCog },
+    { name: 'Attendance Reports', href: '/admin/attendance', icon: ClipboardList },
+    { name: 'Audit Logs', href: '/audit-logs', icon: FileText },
+    { name: 'Subscription Plans', href: '/pricing', icon: CreditCard },
   ]},
   { group: 'Integration', items: [
-    { name: 'API Keys', href: '/api-keys', icon: Key },
+    { name: 'API Integrations', href: '/integrations', icon: Plug },
+    { name: 'Code Compiler', href: '/admin/compiler', icon: Plug },
     { name: 'Settings', href: '/settings', icon: Settings },
   ]}
 ];
 
 export function GlobalSearch() {
+  const { t } = useLanguage();
+  const { user } = useAuthStore();
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
-  const [dynamicResults, setDynamicResults] = React.useState<{users: any[], alerts: any[], devices: any[]}>({
+  const [dynamicResults, setDynamicResults] = React.useState<{users: any[], alerts: any[], devices: any[], meetings: any[]}>({
     users: [],
     alerts: [],
-    devices: []
+    devices: [],
+    meetings: []
   });
   const router = useRouter();
   const supabase = createClient();
@@ -73,11 +102,39 @@ export function GlobalSearch() {
 
   React.useEffect(() => {
     if (search.length < 2) {
-      setDynamicResults({ users: [], alerts: [], devices: [] });
+      setDynamicResults({ users: [], alerts: [], devices: [], meetings: [] });
       return;
     }
 
     const performSearch = async () => {
+      if (MOCK_MODE) {
+        const q = encodeURIComponent(search);
+        const [uRes, mRes] = await Promise.all([
+          fetch(`/api/employees?search=${q}&limit=3`).catch(() => null),
+          user?.id
+            ? fetch(`/api/meetings?user_id=${encodeURIComponent(user.id)}`).catch(() => null)
+            : Promise.resolve(null),
+        ]);
+
+        let users: any[] = [];
+        if (uRes && uRes.ok) {
+          const uData = await uRes.json();
+          users = (uData.data || []).slice(0, 3);
+        }
+
+        let meetings: any[] = [];
+        if (mRes && mRes.ok) {
+          const mData = await mRes.json();
+          const term = search.toLowerCase();
+          meetings = (mData.data || [])
+            .filter((m: any) => String(m.title || '').toLowerCase().includes(term))
+            .slice(0, 3);
+        }
+
+        setDynamicResults({ users, alerts: [], devices: [], meetings });
+        return;
+      }
+
       const [uRes, aRes, dRes] = await Promise.all([
         supabase.from('users').select('id, full_name, email').ilike('full_name', `%${search}%`).limit(3),
         supabase.from('alerts').select('id, message, type').ilike('message', `%${search}%`).limit(3),
@@ -87,7 +144,8 @@ export function GlobalSearch() {
       setDynamicResults({
         users: uRes.data || [],
         alerts: aRes.data || [],
-        devices: dRes.data || []
+        devices: dRes.data || [],
+        meetings: []
       });
     };
 
@@ -110,11 +168,9 @@ export function GlobalSearch() {
           <Search className="w-4 h-4" />
         </div>
         <div className="w-full rounded-lg bg-input-background/50 border border-border px-10 py-2.5 text-sm text-muted-foreground group-hover:border-primary/50 transition-all">
-          Search entities, users, security...
-        </div>
+          {'Search entities...'}</div>
         <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border border-border bg-muted/50 text-[10px] font-medium text-muted-foreground">
-          ⌘K
-        </div>
+          {'K'}</div>
       </div>
 
       <AnimatePresence>
@@ -139,7 +195,7 @@ export function GlobalSearch() {
                   <Search className="w-5 h-5 text-gray-400 mr-3" />
                   <Command.Input
                     autoFocus
-                    placeholder="Search users, alerts, pages..."
+                    placeholder="Search users, meetings, pages..."
                     value={search}
                     onValueChange={setSearch}
                     className="flex-1 bg-transparent border-none outline-none text-lg text-gray-800 dark:text-gray-100 placeholder:text-gray-400"
@@ -148,17 +204,28 @@ export function GlobalSearch() {
 
                 <Command.List className="max-h-[60vh] overflow-y-auto p-2 scroll-py-2 bg-white dark:bg-[#1a1a2e] rounded-b-xl">
                   <Command.Empty className="p-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                    No results found for &quot;{search}&quot;
-                  </Command.Empty>
+                    {'No results found for "'}{search}{'"'}</Command.Empty>
 
                   {/* Dynamic Results */}
                   {dynamicResults.users.length > 0 && (
                     <Command.Group heading="Users Found" className="px-2 py-2 text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold">
-                       {dynamicResults.users.map(u => (
+                       {dynamicResults.users.map((u: any) => (
                          <Command.Item key={u.id} onSelect={() => handleSelect(`/admin/users?id=${u.id}`)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-white/5 cursor-pointer">
                             <User className="w-4 h-4 text-blue-500" />
                             <span>{u.full_name}</span>
-                            <span className="text-xs text-gray-400 ml-auto">{u.email}</span>
+                            <span className="text-xs text-gray-400 ml-auto truncate">{u.email}</span>
+                         </Command.Item>
+                       ))}
+                    </Command.Group>
+                  )}
+
+                  {dynamicResults.meetings.length > 0 && (
+                    <Command.Group heading="Meetings Found" className="px-2 py-2 text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold">
+                       {dynamicResults.meetings.map((m: any) => (
+                         <Command.Item key={m.id} onSelect={() => handleSelect(`/meetings/${m.id}/pre-join`)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-800 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-500/10 cursor-pointer">
+                            <Video className="w-4 h-4 text-green-500" />
+                            <span className="truncate">{m.title}</span>
+                            <span className="text-xs text-gray-400 ml-auto truncate">{m.host_name}</span>
                          </Command.Item>
                        ))}
                     </Command.Group>
@@ -166,7 +233,7 @@ export function GlobalSearch() {
 
                   {dynamicResults.alerts.length > 0 && (
                     <Command.Group heading="Security Alerts" className="px-2 py-2 text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold">
-                       {dynamicResults.alerts.map(a => (
+                       {dynamicResults.alerts.map((a: any) => (
                          <Command.Item key={a.id} onSelect={() => handleSelect(`/security/alerts?id=${a.id}`)} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-800 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer">
                             <AlertTriangle className="w-4 h-4 text-red-500" />
                             <span className="truncate">{a.message}</span>
@@ -197,10 +264,10 @@ export function GlobalSearch() {
 
                 <div className="flex items-center justify-between border-t border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-[#1a1a2e] text-[10px] text-gray-500 dark:text-gray-400">
                   <div className="flex gap-4">
-                    <span className="flex items-center gap-1"><span className="px-1 rounded border border-gray-300 dark:border-white/20 bg-white dark:bg-black/30">↑↓</span> Move</span>
-                    <span className="flex items-center gap-1"><span className="px-1 rounded border border-gray-300 dark:border-white/20 bg-white dark:bg-black/30">Enter</span> Select</span>
+                    <span className="flex items-center gap-1"><span className="px-1 rounded border border-gray-300 dark:border-white/20 bg-white dark:bg-black/30">↑↓</span> {'Move'}</span>
+                    <span className="flex items-center gap-1"><span className="px-1 rounded border border-gray-300 dark:border-white/20 bg-white dark:bg-black/30">{'Enter'}</span> {'Select'}</span>
                   </div>
-                  <div className="font-mono">SecureAuth AI</div>
+                  <div className="font-mono">{'SecureAuth Workplace'}</div>
                 </div>
               </Command>
             </motion.div>

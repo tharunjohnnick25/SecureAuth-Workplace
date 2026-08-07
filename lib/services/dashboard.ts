@@ -19,10 +19,13 @@ export const DashboardService = {
   },
 
   getAttendance: async () => {
-    // We can fetch attendance from activities if required, or keep it generic
-    // Currently, it just mapped login logs
-    const res = await apiClient.get<ApiResponse<any[]>>('/api/analytics/activities');
+    const res = await apiClient.get<ApiResponse<any[]>>('/api/employee/attendance');
     return res.data || [];
+  },
+
+  markAttendance: async (type: 'check_in' | 'check_out', locationData?: any) => {
+    const res = await apiClient.post<ApiResponse<any>>('/api/employee/attendance', { type, ...locationData });
+    return res.data;
   },
 
   getDepartments: async (): Promise<Department[]> => {
@@ -33,6 +36,17 @@ export const DashboardService = {
   addDepartment: async (name: string, head?: string): Promise<Department> => {
     const res = await apiClient.post<ApiResponse<Department>>('/api/departments', { name, head });
     if (!res.data) throw new Error('Failed to create department');
+    return res.data;
+  },
+
+  getIntegrations: async (): Promise<any[]> => {
+    const res = await apiClient.get<ApiResponse<any[]>>('/api/integrations');
+    return res.data || [];
+  },
+
+  createIntegration: async (data: any): Promise<any> => {
+    const res = await apiClient.post<ApiResponse<any>>('/api/integrations', data);
+    if (!res.data) throw new Error('Failed to create integration');
     return res.data;
   }
 };

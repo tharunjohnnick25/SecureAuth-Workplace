@@ -7,8 +7,10 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Card } from '@/components/Card';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ResetPasswordPage() {
+    const { t } = useLanguage();
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -75,17 +77,15 @@ export default function ResetPasswordPage() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/30">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Reset Password</h1>
+          <h1 className="text-3xl font-semibold mb-2">{'Reset password'}</h1>
           <p className="text-gray-400 text-center text-sm">
-            Enter your new password
-          </p>
+            {'Enteryournewpas'}</p>
         </div>
 
         {submitted ? (
           <div className="text-center space-y-4">
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-400">
-              Password reset successfully! Redirecting to login...
-            </div>
+              {'Passwordresetsu'}</div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,7 +97,7 @@ export default function ResetPasswordPage() {
             )}
 
             <div>
-              <label className="block mb-2 text-sm text-gray-300">New Password</label>
+              <label className="block mb-2 text-sm text-gray-300">{'New password'}</label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label className="block mb-2 text-sm text-gray-300">Confirm New Password</label>
+              <label className="block mb-2 text-sm text-gray-300">{'Confirm new passw'}</label>
               <Input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Re-enter new password"

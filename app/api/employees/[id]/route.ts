@@ -1,9 +1,17 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { MockEmployees, isMockMode } from '@/lib/mock-employees';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
+
+    if (isMockMode()) {
+      const data = MockEmployees.getById(id);
+      if (!data) return NextResponse.json({ error: 'Employee not found', success: false }, { status: 404 });
+      return NextResponse.json({ data: { ...data, manager_name: 'Mock Manager' }, success: true });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
 
@@ -25,8 +33,15 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
-    const supabase = await createServerSupabaseClient();
     const body = await req.json();
+
+    if (isMockMode()) {
+      const record = MockEmployees.update(id, body);
+      if (!record) return NextResponse.json({ error: 'Employee not found', success: false }, { status: 404 });
+      return NextResponse.json({ data: record, success: true });
+    }
+
+    const supabase = await createServerSupabaseClient();
     const { email, phone, employee_id } = body;
 
     if (employee_id) {
@@ -60,6 +75,14 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
+
+    if (isMockMode()) {
+      if (!MockEmployees.remove(id)) {
+        return NextResponse.json({ error: 'Employee not found', success: false }, { status: 404 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) throw error;

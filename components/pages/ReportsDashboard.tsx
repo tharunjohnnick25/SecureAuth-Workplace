@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { FileText, Plus, Calendar, TrendingUp } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const reports = [
   { name: 'Security Summary', type: 'Executive', lastGenerated: '2026-04-30', schedule: 'Weekly' },
@@ -14,6 +15,7 @@ const reports = [
 ];
 
 export function ReportsDashboard() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -22,21 +24,19 @@ export function ReportsDashboard() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Reports Dashboard</h1>
-              <p className="text-muted-foreground">Overview of generated reports</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Reports dashboar'}</h1>
+              <p className="text-muted-foreground">{'Overviewofgener'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              New Report
-            </Button>
+              {'New report'}</Button>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Available Reports
-              </CardTitle>
+                {'Available report'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -49,11 +49,11 @@ export function ReportsDashboard() {
                           <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary">{report.type}</span>
                         </div>
                         <div className="flex gap-4 text-sm text-muted-foreground">
-                          <span>Last: {report.lastGenerated}</span>
-                          <span>Schedule: {report.schedule}</span>
+                          <span>{'Last'}{report.lastGenerated}</span>
+                          <span>{'Schedule'}{report.schedule}</span>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">View Report</Button>
+                      <Button variant="outline" size="sm">{'View report'}</Button>
                     </div>
                   </div>
                 ))}

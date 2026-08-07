@@ -12,6 +12,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { ShieldAlert, TrendingUp, Users, Target } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const data = [
   { name: '00:00', risk: 10 },
@@ -24,6 +25,7 @@ const data = [
 ];
 
 const RiskVisualization = () => {
+    const { t } = useLanguage();
   return (
     <section id="analytics" className="py-24 overflow-hidden">
       <div className="container mx-auto px-6">
@@ -39,12 +41,10 @@ const RiskVisualization = () => {
                 <ShieldAlert className="text-blue-400 w-6 h-6" />
               </div>
               <h2 className="text-4xl font-bold text-white mb-6">
-                Predictive <span className="text-blue-400">Threat Intelligence</span>
+                {'Predictive'}<span className="text-blue-400">{'Threat intellige'}</span>
               </h2>
               <p className="text-lg text-gray-400 mb-8">
-                Our AI models analyze millions of authentication events per second to identify 
-                anomalies before they become breaches. Get a real-time view of your risk posture.
-              </p>
+                {'Our aimodelsanal'}</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {[
@@ -76,12 +76,11 @@ const RiskVisualization = () => {
             <div className="glass-panel p-6 md:p-8">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h3 className="text-lg font-bold text-white">Global Risk Trend</h3>
-                  <p className="text-sm text-gray-400">Real-time AI monitoring</p>
+                  <h3 className="text-lg font-bold text-white">{'Global risk trend'}</h3>
+                  <p className="text-sm text-gray-400">{'Realtime aimonit'}</p>
                 </div>
                 <div className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/30">
-                  LIVE STATUS
-                </div>
+                  {'Livestatus'}</div>
               </div>
 
               <div className="h-[300px] w-full">
@@ -116,9 +115,8 @@ const RiskVisualization = () => {
               <div className="mt-8 pt-8 border-t border-white/10 flex items-center justify-between text-xs text-gray-400 font-medium">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  ANOMALY DETECTION ACTIVE
-                </div>
-                <div>LAST UPDATED: JUST NOW</div>
+                  {'Anomalydetectio'}</div>
+                <div>{'Lastupdatedjust'}</div>
               </div>
             </div>
           </motion.div>

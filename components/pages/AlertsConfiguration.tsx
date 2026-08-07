@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { Bell, Plus, Edit, Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const alertRules = [
   { id: '1', name: 'High CPU Usage', condition: 'CPU > 80% for 5 minutes', severity: 'critical', status: 'Active', notifications: ['Email', 'Slack'] },
@@ -20,6 +21,7 @@ const stats = [
 ];
 
 export function AlertsConfiguration() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -28,13 +30,12 @@ export function AlertsConfiguration() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Alert Configuration</h1>
-              <p className="text-muted-foreground">Configure alerting rules and notifications</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Alert configurat'}</h1>
+              <p className="text-muted-foreground">{'Configurealerti'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              New Alert Rule
-            </Button>
+              {'New alert rule'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -55,7 +56,7 @@ export function AlertsConfiguration() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Alert Rules</CardTitle>
+              <CardTitle>{'Alert rules'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

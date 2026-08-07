@@ -4,7 +4,7 @@ const serverUrl = process.env.CAPACITOR_SERVER_URL;
 
 const config: CapacitorConfig = {
   appId: 'com.secureauth.app',
-  appName: 'SecureAuth AI',
+  appName: 'SecureAuth Workplace',
   webDir: 'out',
 
   ...(serverUrl

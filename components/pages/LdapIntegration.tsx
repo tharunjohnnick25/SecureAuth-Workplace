@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { Database, CheckCircle, Settings, RefreshCw } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const ldapConfig = [
   { setting: 'LDAP Server', value: 'ldap://dc.example.com:389', status: 'Connected' },
@@ -14,6 +15,7 @@ const ldapConfig = [
 ];
 
 export function LdapIntegration() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -22,18 +24,16 @@ export function LdapIntegration() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">LDAP Integration</h1>
-              <p className="text-muted-foreground">Configure LDAP/Active Directory integration</p>
+              <h1 className="text-3xl font-semibold mb-2">{'LDAP integration'}</h1>
+              <p className="text-muted-foreground">{'Configure LDAP connections to sync your directory users'}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Test Connection
-              </Button>
+                {'Test connection'}</Button>
               <Button>
                 <Settings className="w-4 h-4 mr-2" />
-                Save Configuration
-              </Button>
+                {'Save configuration'}</Button>
             </div>
           </div>
 
@@ -41,8 +41,7 @@ export function LdapIntegration() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="w-5 h-5" />
-                LDAP Configuration
-              </CardTitle>
+                {'LDAP configuration'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

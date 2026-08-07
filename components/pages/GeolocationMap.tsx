@@ -14,6 +14,7 @@ import {
   Download,
 } from 'lucide-react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { useLanguage } from "@/context/LanguageContext";
 
 const loginLocations = [
   { city: 'New York', country: 'United States', lat: 40.7128, lng: -74.0060, logins: 1245, status: 'normal', risk: 'low' },
@@ -48,6 +49,7 @@ const anomalies = [
 ];
 
 export function GeolocationMap() {
+    const { t } = useLanguage();
   const { data: dbLogins } = useRealtimeData('login_logs');
 
   const locations = useMemo(() => {
@@ -73,20 +75,17 @@ export function GeolocationMap() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Geographic Login Map</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Geographic login'}</h1>
               <p className="text-muted-foreground">
-                Track and visualize login locations worldwide
-              </p>
+                {'Trackandvisuali'}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline">
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
+                {'Filter'}</Button>
               <Button variant="outline">
                 <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
+                {'Export'}</Button>
             </div>
           </div>
 
@@ -97,9 +96,9 @@ export function GeolocationMap() {
                   <Globe className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Countries</p>
+                  <p className="text-sm text-muted-foreground">{'Countries'}</p>
                   <h3 className="text-2xl font-semibold">45</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Active locations</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'Activelocations'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -110,9 +109,9 @@ export function GeolocationMap() {
                   <MapPin className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Logins</p>
+                  <p className="text-sm text-muted-foreground">{'Total logins'}</p>
                   <h3 className="text-2xl font-semibold">4,150</h3>
-                  <p className="text-xs text-success mt-1">Last 24 hours</p>
+                  <p className="text-xs text-success mt-1">{t('Last24hours_904')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -123,7 +122,7 @@ export function GeolocationMap() {
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Normal</p>
+                  <p className="text-sm text-muted-foreground">{'Normal'}</p>
                   <h3 className="text-2xl font-semibold">4,127</h3>
                   <p className="text-xs text-muted-foreground mt-1">99.4%</p>
                 </div>
@@ -136,9 +135,9 @@ export function GeolocationMap() {
                   <AlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Suspicious</p>
+                  <p className="text-sm text-muted-foreground">{'Suspicious'}</p>
                   <h3 className="text-2xl font-semibold">23</h3>
-                  <p className="text-xs text-destructive mt-1">Requires review</p>
+                  <p className="text-xs text-destructive mt-1">{'Requiresreview'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -148,19 +147,16 @@ export function GeolocationMap() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="w-5 h-5" />
-                World Map
-              </CardTitle>
+                {'World map'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-input-background/30 rounded-lg p-8 min-h-[400px] flex items-center justify-center">
                 <div className="text-center">
                   <Globe className="w-16 h-16 mx-auto mb-4 text-primary" />
                   <p className="text-muted-foreground">
-                    Interactive world map with login location pins would be displayed here
-                  </p>
+                    {'Interactiveworl'}</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Showing {loginLocations.length} active locations with real-time login data
-                  </p>
+                    {'Showing'}{loginLocations.length} {'Activelocations'}</p>
                 </div>
               </div>
             </CardContent>
@@ -169,7 +165,7 @@ export function GeolocationMap() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader>
-                <CardTitle>Top Countries</CardTitle>
+                <CardTitle>{'Top countries'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -180,7 +176,7 @@ export function GeolocationMap() {
                           <span className="text-2xl">{country.flag}</span>
                           <span className="text-sm font-medium">{country.country}</span>
                         </div>
-                        <span className="text-sm text-muted-foreground">{country.logins.toLocaleString()} logins</span>
+                        <span className="text-sm text-muted-foreground">{country.logins.toLocaleString()} {'Logins'}</span>
                       </div>
                       <div className="w-full bg-input-background rounded-full h-2">
                         <div
@@ -198,8 +194,7 @@ export function GeolocationMap() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
-                  Location Anomalies
-                </CardTitle>
+                  {'Location anomali'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -219,7 +214,7 @@ export function GeolocationMap() {
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">{anomaly.description}</p>
-                      <p className="text-xs text-muted-foreground">User: {anomaly.user}</p>
+                      <p className="text-xs text-muted-foreground">{'User'}{anomaly.user}</p>
                     </div>
                   ))}
                 </div>
@@ -230,7 +225,7 @@ export function GeolocationMap() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Login Locations</CardTitle>
+                <CardTitle>{'Recent login loca'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -262,44 +257,44 @@ export function GeolocationMap() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Login Heatmap Stats</CardTitle>
+                <CardTitle>{'Login heatmap sta'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                    <h4 className="text-sm font-medium mb-3">Peak Login Hours (UTC)</h4>
+                    <h4 className="text-sm font-medium mb-3">{'Peak login hours u'}</h4>
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div>
-                        <div className="text-2xl font-bold mb-1">9-11 AM</div>
-                        <div className="text-xs text-muted-foreground">Europe</div>
+                        <div className="text-2xl font-bold mb-1">{t('911AM_919')}</div>
+                        <div className="text-xs text-muted-foreground">{'Europe'}</div>
                       </div>
                       <div>
-                        <div className="text-2xl font-bold mb-1">2-4 PM</div>
-                        <div className="text-xs text-muted-foreground">Americas</div>
+                        <div className="text-2xl font-bold mb-1">{t('24PM_921')}</div>
+                        <div className="text-xs text-muted-foreground">{'Americas'}</div>
                       </div>
                       <div>
-                        <div className="text-2xl font-bold mb-1">6-8 AM</div>
-                        <div className="text-xs text-muted-foreground">Asia</div>
+                        <div className="text-2xl font-bold mb-1">{t('68AM_923')}</div>
+                        <div className="text-xs text-muted-foreground">{'Asia'}</div>
                       </div>
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-input-background/30">
-                    <h4 className="text-sm font-medium mb-3">Geographic Distribution</h4>
+                    <h4 className="text-sm font-medium mb-3">{'Geographic distr'}</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">North America</span>
+                        <span className="text-muted-foreground">{'North america'}</span>
                         <span className="font-medium">38%</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Europe</span>
+                        <span className="text-muted-foreground">{'Europe'}</span>
                         <span className="font-medium">32%</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Asia Pacific</span>
+                        <span className="text-muted-foreground">{'Asia pacific'}</span>
                         <span className="font-medium">25%</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Other</span>
+                        <span className="text-muted-foreground">{'Other'}</span>
                         <span className="font-medium">5%</span>
                       </div>
                     </div>

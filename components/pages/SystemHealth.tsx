@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useLanguage } from "@/context/LanguageContext";
 
 const systemMetrics = [
   { label: 'CPU Usage', value: '45%', icon: Cpu, color: 'success', trend: '+2%' },
@@ -58,6 +59,7 @@ const alerts = [
 ];
 
 export function SystemHealth() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -66,15 +68,13 @@ export function SystemHealth() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">System Health</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'System health'}</h1>
               <p className="text-muted-foreground">
-                Monitor system performance and resource utilization
-              </p>
+                {'Monitorsystempe'}</p>
             </div>
             <Button variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
+              {'Refresh'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -102,8 +102,7 @@ export function SystemHealth() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Cpu className="w-5 h-5" />
-                  CPU Usage (24h)
-                </CardTitle>
+                  {t('CPUUsage24h_1275')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
@@ -140,8 +139,7 @@ export function SystemHealth() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Server className="w-5 h-5" />
-                  Memory Usage (24h)
-                </CardTitle>
+                  {t('MemoryUsage24h_1276')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
@@ -173,20 +171,19 @@ export function SystemHealth() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
-                Services Status
-              </CardTitle>
+                {'Services status'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left p-3 font-medium">Service</th>
-                      <th className="text-left p-3 font-medium">Status</th>
-                      <th className="text-left p-3 font-medium">Uptime</th>
-                      <th className="text-left p-3 font-medium">CPU</th>
-                      <th className="text-left p-3 font-medium">Memory</th>
-                      <th className="text-right p-3 font-medium">Actions</th>
+                      <th className="text-left p-3 font-medium">{'Service'}</th>
+                      <th className="text-left p-3 font-medium">{'Status'}</th>
+                      <th className="text-left p-3 font-medium">{'Uptime'}</th>
+                      <th className="text-left p-3 font-medium">{'Cpu'}</th>
+                      <th className="text-left p-3 font-medium">{'Memory'}</th>
+                      <th className="text-right p-3 font-medium">{'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -210,8 +207,7 @@ export function SystemHealth() {
                         <td className="p-3 text-sm">{service.memory}</td>
                         <td className="p-3 text-right">
                           <Button variant="outline" size="sm">
-                            Details
-                          </Button>
+                            {'Details'}</Button>
                         </td>
                       </tr>
                     ))}
@@ -223,7 +219,7 @@ export function SystemHealth() {
 
           <Card>
             <CardHeader>
-              <CardTitle>System Alerts</CardTitle>
+              <CardTitle>{'System alerts'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

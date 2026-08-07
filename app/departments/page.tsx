@@ -14,10 +14,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
+import { useLanguage } from "@/context/LanguageContext";
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6', '#f97316'];
 
 export default function DepartmentsPage() {
+    const { t } = useLanguage();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [analytics, setAnalytics] = useState<DepartmentAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -155,19 +157,17 @@ export default function DepartmentsPage() {
       <Sidebar />
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />
-        <main className="pt-20 p-4 sm:p-6 lg:p-8">
+        <main className="pt-28 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-1 text-white">Departments</h1>
-              <p className="text-gray-400 text-sm">Manage departments, assign heads, and monitor employee distribution.</p>
+              <h1 className="text-3xl font-bold mb-1 text-white">{'Departments'}</h1>
+              <p className="text-gray-400 text-sm">{'Manage departments'}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" className="border-white/10" onClick={() => { fetchData(); fetchAnalytics(); }}>
-                <RotateCw className="w-4 h-4 mr-1" /> Refresh
-              </Button>
+                <RotateCw className="w-4 h-4 mr-1" /> {'Refresh'}</Button>
               <Button className="bg-blue-600 hover:bg-blue-500" onClick={() => handleOpenModal()}>
-                <Plus className="w-4 h-4 mr-1.5" /> Add Department
-              </Button>
+                <Plus className="w-4 h-4 mr-1.5" /> {'Add department'}</Button>
             </div>
           </div>
 
@@ -195,12 +195,12 @@ export default function DepartmentsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
-              <CardHeader><CardTitle className="text-white text-sm">Employees Per Department</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-white text-sm">{'Employees per Department'}</CardTitle></CardHeader>
               <CardContent className="h-72">
                 {analyticsLoading ? (
                   <div className="flex items-center justify-center h-full"><Loader2 className="w-6 h-6 animate-spin text-gray-500" /></div>
                 ) : pieData.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-gray-500 text-sm">No data available</div>
+                  <div className="flex items-center justify-center h-full text-gray-500 text-sm">{'No data available'}</div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={analytics?.departments?.map(d => ({ name: d.name, Active: d.activeCount, Inactive: d.inactiveCount })) || []}>
@@ -217,12 +217,12 @@ export default function DepartmentsPage() {
             </Card>
 
             <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
-              <CardHeader><CardTitle className="text-white text-sm">Department Distribution</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-white text-sm">{'Department Distribution'}</CardTitle></CardHeader>
               <CardContent className="h-72">
                 {analyticsLoading ? (
                   <div className="flex items-center justify-center h-full"><Loader2 className="w-6 h-6 animate-spin text-gray-500" /></div>
                 ) : pieData.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-gray-500 text-sm">No data available</div>
+                  <div className="flex items-center justify-center h-full text-gray-500 text-sm">{'No data available'}</div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <RePieChart>
@@ -251,12 +251,12 @@ export default function DepartmentsPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-white/5 text-gray-400">
                   <tr>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Department</th>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Head</th>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Total Employees</th>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Active</th>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Inactive</th>
-                    <th className="px-6 py-4 text-right font-semibold uppercase tracking-wider text-xs">Actions</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{'Department'}</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{'Head'}</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{'Total employees'}</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{'Active'}</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{'Inactive'}</th>
+                    <th className="px-6 py-4 text-right font-semibold uppercase tracking-wider text-xs">{'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -265,9 +265,9 @@ export default function DepartmentsPage() {
                   ) : filteredDepartments.length === 0 ? (
                     <tr><td colSpan={6} className="px-6 py-16 text-center text-gray-500">
                       <Building2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>No departments found</p>
-                      {searchTerm ? <p className="text-xs mt-1">Try adjusting your search</p> :
-                        <button onClick={() => handleOpenModal()} className="text-blue-400 hover:text-blue-300 text-xs mt-1">Add your first department</button>}
+                      <p>{'No departments found'}</p>
+                      {searchTerm ? <p className="text-xs mt-1">{'Try adjusting your search'}</p> :
+                        <button onClick={() => handleOpenModal()} className="text-blue-400 hover:text-blue-300 text-xs mt-1">{'Add your first department'}</button>}
                     </td></tr>
                   ) : filteredDepartments.map((dept, i) => (
                     <motion.tr key={dept.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
@@ -338,21 +338,21 @@ export default function DepartmentsPage() {
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Department Name <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{'Department name'}<span className="text-red-400">*</span></label>
                   <input type="text" required autoFocus={!editMode} placeholder="e.g. Cybersecurity & SOC"
                     value={name} onChange={(e) => { setName(e.target.value); if (error) setError(null); }}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Description</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{'Description'}</label>
                   <textarea placeholder="Department description..." value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Department Head</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{'Department head'}</label>
                   <select value={headId} onChange={(e) => setHeadId(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
-                    <option value="">Unassigned</option>
+                    <option value="">{'Unassigned'}</option>
                     {activeEmployees.map(emp => (
                       <option key={emp.id} value={emp.id}>{emp.full_name} ({emp.email})</option>
                     ))}
@@ -360,11 +360,11 @@ export default function DepartmentsPage() {
                 </div>
                 <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                   <button type="button" onClick={handleCloseModal} disabled={submitting}
-                    className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 text-sm font-semibold transition-all">Cancel</button>
+                    className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 text-sm font-semibold transition-all">{'Cancel'}</button>
                   <button type="submit" disabled={submitting || !name.trim()}
                     className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-bold shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2">
-                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Saving...</span></>
-                      : <><Save className="w-4 h-4" /><span>{editMode ? 'Update' : 'Save'} Department</span></>}
+                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /><span>{'Saving'}</span></>
+                      : <><Save className="w-4 h-4" /><span>{editMode ? 'Update' : 'Save'} {'Department'}</span></>}
                   </button>
                 </div>
               </form>
@@ -378,13 +378,13 @@ export default function DepartmentsPage() {
               className="bg-[#0b132b] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center"><AlertCircle className="w-6 h-6" /></div>
-                <div><h3 className="text-lg font-bold text-white">Delete Department</h3><p className="text-xs text-gray-400">This action cannot be undone.</p></div>
+                <div><h3 className="text-lg font-bold text-white">{'Delete Department'}</h3><p className="text-xs text-gray-400">{'This action cannot be undone'}</p></div>
               </div>
-              <p className="text-sm text-gray-300 mb-6">Are you sure you want to delete this department? Employees assigned to it will lose their department association.</p>
+              <p className="text-sm text-gray-300 mb-6">{'Are you sure you want to delete this department?'}</p>
               <div className="flex justify-end gap-3">
-                <Button variant="outline" className="border-white/10" onClick={() => setShowDeleteConfirm(null)}>Cancel</Button>
+                <Button variant="outline" className="border-white/10" onClick={() => setShowDeleteConfirm(null)}>{'Cancel'}</Button>
                 <Button variant="destructive" onClick={() => handleDelete(showDeleteConfirm)} disabled={deleting}>
-                  {deleting ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Deleting...</> : 'Delete'}
+                  {deleting ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> {'Deleting'}</> : 'Delete'}
                 </Button>
               </div>
             </motion.div>

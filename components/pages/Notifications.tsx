@@ -20,6 +20,7 @@ import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useLanguage } from "@/context/LanguageContext";
 
 const IconMap: Record<string, any> = {
   Shield, Smartphone, MapPin, CheckCircle, AlertTriangle, Info,
@@ -33,6 +34,7 @@ const IconMap: Record<string, any> = {
 };
 
 export function Notifications() {
+    const { t } = useLanguage();
   const { user } = useAuthStore();
   const { data: dbNotifications, loading, refetch } = useRealtimeData<any>('notifications', (q) =>
     q.select('*').eq('user_id', user?.id).order('created_at', { ascending: false })
@@ -85,16 +87,14 @@ export function Notifications() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Notifications</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Notifications'}</h1>
               <p className="text-muted-foreground">
-                Stay updated with your security alerts and activity
-              </p>
+                {'Stay updated with the latest security alerts'}</p>
             </div>
             <div className="flex gap-2">
               {unreadCount > 0 && (
                 <Button variant="outline" size="sm" onClick={markAllAsRead}>
-                  Mark All as Read
-                </Button>
+                  {'Mark all as read'}</Button>
               )}
             </div>
           </div>
@@ -106,7 +106,7 @@ export function Notifications() {
                   <Bell className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="text-sm text-muted-foreground">{'Total'}</p>
                   <h3 className="text-2xl font-semibold">{displayNotifications.length}</h3>
                 </div>
               </CardContent>
@@ -118,7 +118,7 @@ export function Notifications() {
                   <AlertTriangle className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Unread</p>
+                  <p className="text-sm text-muted-foreground">{'Unread'}</p>
                   <h3 className="text-2xl font-semibold">{unreadCount}</h3>
                 </div>
               </CardContent>
@@ -130,7 +130,7 @@ export function Notifications() {
                   <Shield className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">High Priority</p>
+                  <p className="text-sm text-muted-foreground">{'High priority'}</p>
                   <h3 className="text-2xl font-semibold">{highPriorityCount}</h3>
                 </div>
               </CardContent>
@@ -139,7 +139,7 @@ export function Notifications() {
 
           <Card>
             <CardHeader>
-              <CardTitle>All Notifications</CardTitle>
+              <CardTitle>{'All notifications'}</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -148,8 +148,7 @@ export function Notifications() {
                 </div>
               ) : displayNotifications.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No notifications yet. Security alerts and activity updates will appear here.
-                </div>
+                  {'No notifications'}</div>
               ) : (
                 <div className="space-y-3">
                   {displayNotifications.map((notification: any) => {

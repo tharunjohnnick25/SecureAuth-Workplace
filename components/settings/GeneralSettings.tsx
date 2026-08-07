@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Icons } from "@/components/ui/icons"
 import { toast } from "@/hooks/use-toast"
+import { useLanguage } from "@/context/LanguageContext";
 
 const generalSettingsSchema = z.object({
   theme: z.string(),
@@ -18,6 +19,7 @@ const generalSettingsSchema = z.object({
 })
 
 export function GeneralSettings() {
+    const { t } = useLanguage();
   const [isLoading, setIsLoading] = React.useState(false)
 
   const form = useForm<z.infer<typeof generalSettingsSchema>>({
@@ -44,10 +46,9 @@ export function GeneralSettings() {
   return (
     <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
       <CardHeader>
-        <CardTitle className="text-xl font-bold text-white">General Preferences</CardTitle>
+        <CardTitle className="text-xl font-bold text-white">{'General preferences'}</CardTitle>
         <CardDescription className="text-zinc-400">
-          Configure how the platform looks and feels to you.
-        </CardDescription>
+          {'Configure how the app looks and behaves for your account'}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -57,7 +58,7 @@ export function GeneralSettings() {
               name="theme"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-zinc-300">Default Theme</FormLabel>
+                  <FormLabel className="text-zinc-300">{'Default theme'}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-white/5 border-white/10 text-white">
@@ -65,9 +66,9 @@ export function GeneralSettings() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                      <SelectItem value="dark">Secure Dark Mode</SelectItem>
-                      <SelectItem value="light">System Light Mode</SelectItem>
-                      <SelectItem value="system">System Default</SelectItem>
+                      <SelectItem value="dark">{'Secure dark mode'}</SelectItem>
+                      <SelectItem value="light">{'System light mode'}</SelectItem>
+                      <SelectItem value="system">{'System default'}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -80,7 +81,7 @@ export function GeneralSettings() {
               name="language"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-zinc-300">System Language</FormLabel>
+                  <FormLabel className="text-zinc-300">{'System language'}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-white/5 border-white/10 text-white">
@@ -88,9 +89,9 @@ export function GeneralSettings() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                      <SelectItem value="en">English (US)</SelectItem>
-                      <SelectItem value="es">Spanish (ES)</SelectItem>
-                      <SelectItem value="de">German (DE)</SelectItem>
+                      <SelectItem value="en">{'English (US)'}</SelectItem>
+                      <SelectItem value="es">{'Spanish (es)'}</SelectItem>
+                      <SelectItem value="de">{'German (de)'}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -103,7 +104,7 @@ export function GeneralSettings() {
               name="timezone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-zinc-300">Time Zone</FormLabel>
+                  <FormLabel className="text-zinc-300">{'Time zone'}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-white/5 border-white/10 text-white">
@@ -111,9 +112,9 @@ export function GeneralSettings() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                      <SelectItem value="UTC">UTC (Greenwich Mean Time)</SelectItem>
-                      <SelectItem value="EST">EST (Eastern Standard Time)</SelectItem>
-                      <SelectItem value="IST">IST (India Standard Time)</SelectItem>
+                      <SelectItem value="UTC">{'UTC (Greenwich Mean Time)'}</SelectItem>
+                      <SelectItem value="EST">{'EST (Eastern Standard)'}</SelectItem>
+                      <SelectItem value="IST">{'Istindia standar'}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -124,8 +125,7 @@ export function GeneralSettings() {
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90">
                 {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
-              </Button>
+                {'Save changes'}</Button>
             </div>
           </form>
         </Form>

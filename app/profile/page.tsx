@@ -7,7 +7,7 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Shield, CreditCard, Activity, Laptop, Eye, Check, AlertTriangle, ShieldCheck, Trash2, Camera, Loader2 } from 'lucide-react';
+import { User, Shield, CreditCard, Activity, Laptop, Eye, Check, AlertTriangle, ShieldCheck, Trash2, Camera, Loader2, FileText } from 'lucide-react';
 import { BillingSection } from '@/components/settings/BillingSection';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -46,6 +46,20 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     setFetching(true);
     try {
+      if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+        const savedAvatar = user?.id ? localStorage.getItem(`mock_avatar_${user.id}`) : null;
+        setProfile({ avatar_url: savedAvatar || user?.avatar_url });
+        setPersonalInfo({
+          name: user?.full_name || 'User',
+          email: user?.email || '',
+          phone: '',
+          company: 'SecureAuth Corp',
+          employeeId: user?.employee_id || `EMP-${user?.id?.substring(0, 4)?.toUpperCase() || '0001'}`,
+          role: user?.role || 'Employee'
+        });
+        return;
+      }
+
       const { data } = await supabase
         .from('users')
         .select('*')
@@ -72,6 +86,11 @@ export default function ProfilePage() {
   const handleSavePersonalInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+        toast.success('Profile updated successfully');
+        return;
+      }
+
       const { error } = await (supabase.from('users') as any)
         .update({
           full_name: personalInfo.name,
@@ -92,6 +111,20 @@ export default function ProfilePage() {
     if (!file) return;
     setUploadingImage(true);
     try {
+      if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const result = ev.target?.result as string;
+          setProfile((prev: any) => ({ ...prev, avatar_url: result }));
+          setUser({ ...user!, avatar_url: result });
+          if (user?.id) localStorage.setItem(`mock_avatar_${user.id}`, result);
+          toast.success('Profile image updated');
+          setUploadingImage(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
       const fileExt = file.name.split('.').pop();
       const filePath = `${user?.id}/profile.${fileExt}`;
       await supabase.storage.from('profile-images').upload(filePath, file, { upsert: true });
@@ -102,7 +135,6 @@ export default function ProfilePage() {
       toast.success('Profile image updated');
     } catch (err: any) {
       toast.error(err.message || 'Failed to upload image');
-    } finally {
       setUploadingImage(false);
     }
   };

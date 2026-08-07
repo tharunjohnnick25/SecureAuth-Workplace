@@ -1,8 +1,10 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from "@/context/LanguageContext";
 
 type NotificationItem = {
   id: string | number;
@@ -14,6 +16,7 @@ type NotificationItem = {
 };
 
 export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    const { t } = useLanguage();
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,16 +47,16 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
           className="fixed top-16 right-4 w-80 bg-slate-900 border border-white/10 rounded-lg shadow-xl z-50"
         >
           <div className="flex items-center justify-between p-4 border-b border-white/10">
-            <h3 className="text-sm font-semibold text-white">Notifications</h3>
+            <h3 className="text-sm font-semibold text-white">{'Notifications'}</h3>
             <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-full transition-colors">
               <X className="w-4 h-4 text-gray-400" />
             </button>
           </div>
           <div className="max-h-60 overflow-y-auto">
             {loading ? (
-              <p className="p-4 text-sm text-gray-400">Loading notifications...</p>
+              <p className="p-4 text-sm text-gray-400">{'Loadingnotifica'}</p>
             ) : notifications.length === 0 ? (
-              <p className="p-4 text-sm text-gray-400">No new notifications.</p>
+              <p className="p-4 text-sm text-gray-400">{'Nonewnotificati'}</p>
             ) : (
               notifications.map((n) => (
                 <div key={n.id} className="px-4 py-3 border-b border-white/5 hover:bg-white/5">

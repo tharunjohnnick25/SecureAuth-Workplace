@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { Calendar, Plus, Clock } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const schedules = [
   { report: 'Security Summary', frequency: 'Weekly - Monday 9:00 AM', recipients: ['security@company.com'], nextRun: '2026-05-05 09:00', status: 'Active' },
@@ -13,6 +14,7 @@ const schedules = [
 ];
 
 export function ScheduledReports() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -21,21 +23,19 @@ export function ScheduledReports() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Scheduled Reports</h1>
-              <p className="text-muted-foreground">Automate report generation and delivery</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Scheduled report'}</h1>
+              <p className="text-muted-foreground">{'Automatereportg'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              New Schedule
-            </Button>
+              {'New schedule'}</Button>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Report Schedules
-              </CardTitle>
+                {'Report schedules'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -52,11 +52,11 @@ export function ScheduledReports() {
                             <Clock className="w-4 h-4" />
                             <span>{schedule.frequency}</span>
                           </div>
-                          <p>Recipients: {schedule.recipients.join(', ')}</p>
-                          <p>Next run: {schedule.nextRun}</p>
+                          <p>{'Recipients'}{schedule.recipients.join(', ')}</p>
+                          <p>{'Nextrun'}{schedule.nextRun}</p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">Edit Schedule</Button>
+                      <Button variant="outline" size="sm">{'Edit schedule'}</Button>
                     </div>
                   </div>
                 ))}

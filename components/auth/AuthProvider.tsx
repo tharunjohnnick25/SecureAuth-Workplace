@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { log } from '@/lib/logger';
+import { useBehaviorTracker } from '@/hooks/useBehaviorTracker';
 
 interface AuthContextType {
   session: Session | null;
@@ -28,6 +29,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const syncingRef = useRef<string | null>(null);
   const initRef = useRef(false);
+
+  // Initialize behavioral tracking silently for authenticated users
+  useBehaviorTracker(session?.user?.id || null, session?.access_token || 'default');
 
   useEffect(() => {
     if (initRef.current) return;
@@ -79,7 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
           syncingRef.current = null;
-          logout();
+          if (_event === 'SIGNED_OUT') {
+            logout();
+          }
         }
       } catch (err) {
         log('error', 'AuthProvider.onAuthStateChange', String(err));
@@ -158,6 +164,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      // Record check-out time before invalidating the session
+      await fetch('/api/attendance/checkout', { method: 'POST' });
       await supabase.auth.signOut();
     } catch (err) {
       log('error', 'signOut', String(err));

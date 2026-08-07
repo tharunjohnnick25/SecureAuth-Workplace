@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
-import { DashboardHeader } from '@/components/DashboardHeader';
+import { PageHeader } from '@/components/PageHeader';
 import {
   Shield,
   AlertTriangle,
@@ -20,6 +20,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useLanguage } from "@/context/LanguageContext";
 
 const securityEvents = [
   { id: 'EVT-2024-0891', type: 'Brute Force Attack', severity: 'critical', source: '45.33.32.156', target: 'SSH Server', status: 'Blocked', timestamp: '2026-04-30 14:35:12' },
@@ -47,6 +48,7 @@ const eventStats = [
 ];
 
 export function SecurityEvents() {
+    const { t } = useLanguage();
   const { data: dbEvents } = useRealtimeData('threat_logs');
 
   const events = useMemo(() => {
@@ -68,19 +70,17 @@ export function SecurityEvents() {
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
-          <DashboardHeader 
+          <PageHeader 
             title="Security Events" 
             description="Monitor and respond to security events in real-time"
           >
             <Button variant="outline">
               <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
+              {'Filter'}</Button>
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-          </DashboardHeader>
+              {'Export'}</Button>
+          </PageHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {eventStats.map((stat, index) => (
@@ -108,8 +108,7 @@ export function SecurityEvents() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
-                Event Timeline (Last 24 Hours)
-              </CardTitle>
+                {'Event timeline la'}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -138,8 +137,7 @@ export function SecurityEvents() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
-                Recent Security Events
-              </CardTitle>
+                {'Recent security e'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -175,11 +173,11 @@ export function SecurityEvents() {
                           <p className="text-sm font-medium mb-2">{event.type}</p>
                           <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
                             <div>
-                              <span className="block">Source</span>
+                              <span className="block">{'Source'}</span>
                               <span className="font-mono text-foreground">{event.source}</span>
                             </div>
                             <div>
-                              <span className="block">Target</span>
+                              <span className="block">{'Target'}</span>
                               <span className="text-foreground">{event.target}</span>
                             </div>
                           </div>
@@ -201,8 +199,7 @@ export function SecurityEvents() {
                         </p>
                         <Button variant="outline" size="sm" className="mt-2">
                           <Eye className="w-3 h-3 mr-1" />
-                          Details
-                        </Button>
+                          {'Details'}</Button>
                       </div>
                     </div>
                   </div>
@@ -215,3 +212,4 @@ export function SecurityEvents() {
     </div>
   );
 }
+

@@ -29,6 +29,7 @@ import {
   getRoleLabel,
   UserRole,
 } from '@/lib/rbac';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface CustomRole {
   id: string;
@@ -40,6 +41,7 @@ interface CustomRole {
 }
 
 export function RolesPermissions() {
+    const { t } = useLanguage();
   const [roles, setRoles] = useState<CustomRole[]>([]);
   const [permissionsMap, setPermissionsMap] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -306,16 +308,14 @@ export function RolesPermissions() {
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-semibold mb-2">Roles & Permissions</h1>
+                <h1 className="text-3xl font-semibold mb-2">{'Roles permission'}</h1>
                 {isSandboxMode && (
                   <span className="text-[10px] px-2 py-0.5 rounded bg-warning/20 border border-warning/30 text-warning uppercase font-bold tracking-wider animate-pulse">
-                    Local Sandbox Mode
-                  </span>
+                    {'Local sandbox mod'}</span>
                 )}
               </div>
               <p className="text-muted-foreground">
-                Configure role-based access control, manage identities, and grant modular team permissions
-              </p>
+                {'Configureroleba'}</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="relative w-64">
@@ -329,8 +329,7 @@ export function RolesPermissions() {
               </div>
               <Button onClick={() => setIsCreateModalOpen(true)} className="h-10">
                 <Plus className="w-4 h-4 mr-2" />
-                Create Role
-              </Button>
+                {'Create role'}</Button>
             </div>
           </div>
 
@@ -342,9 +341,9 @@ export function RolesPermissions() {
                   <Shield className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Identities / Roles</p>
-                  <h3 className="text-2xl font-semibold">{roles.length} Roles</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Hierarchically isolated</p>
+                  <p className="text-sm text-muted-foreground">{'Identities roles'}</p>
+                  <h3 className="text-2xl font-semibold">{roles.length} {'Roles'}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{'Hierarchicallyi'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -355,11 +354,10 @@ export function RolesPermissions() {
                   <Users className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Assigned Active Directory</p>
+                  <p className="text-sm text-muted-foreground">{'Assigned active d'}</p>
                   <h3 className="text-2xl font-semibold">
-                    {roles.reduce((acc, curr) => acc + curr.users_count, 0)} Employees
-                  </h3>
-                  <p className="text-xs text-success mt-1">Status isolation active</p>
+                    {roles.reduce((acc, curr) => acc + curr.users_count, 0)} {'Employees'}</h3>
+                  <p className="text-xs text-success mt-1">{'Statusisolation'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -370,9 +368,9 @@ export function RolesPermissions() {
                   <CheckCircle className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">System Permissions</p>
-                  <h3 className="text-2xl font-semibold">{PERMISSIONS.length} Permissions</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Across {Object.keys(groupedPermissions).length} major modules</p>
+                  <p className="text-sm text-muted-foreground">{'System permissio'}</p>
+                  <h3 className="text-2xl font-semibold">{PERMISSIONS.length} {'Permissions'}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{'Across'}{Object.keys(groupedPermissions).length} {'Majormodules'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -383,11 +381,10 @@ export function RolesPermissions() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
               <div className="w-full max-w-md bg-[#0b0f19] border border-primary/20 backdrop-blur-md rounded-xl p-6 shadow-[0_0_20px_rgba(0,240,255,0.1)]">
                 <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary" /> Create Custom Access Role
-                </h3>
+                  <Shield className="w-5 h-5 text-primary" /> {'Create custom acc'}</h3>
                 <form onSubmit={handleCreateRole} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Role Name</label>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{'Role name'}</label>
                     <Input
                       placeholder="e.g. Finance Auditor"
                       value={newRoleName}
@@ -397,7 +394,7 @@ export function RolesPermissions() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{'Description'}</label>
                     <Input
                       placeholder="Manage billing statements and audit logs"
                       value={newRoleDesc}
@@ -406,13 +403,13 @@ export function RolesPermissions() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Clone Permissions From</label>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{'Clone permission'}</label>
                     <select
                       value={cloneSourceRole}
                       onChange={(e) => setCloneSourceRole(e.target.value)}
                       className="w-full h-10 px-3 rounded-md bg-[#131924] border border-white/10 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
                     >
-                      <option value="">-- Don't Clone (Empty permissions) --</option>
+                      <option value="">{'Dont clone emptyp'}</option>
                       {roles.map(r => (
                         <option key={r.code} value={r.code}>{r.name}</option>
                       ))}
@@ -420,11 +417,9 @@ export function RolesPermissions() {
                   </div>
                   <div className="flex justify-end gap-3 pt-2">
                     <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                      Cancel
-                    </Button>
+                      {'Cancel'}</Button>
                     <Button type="submit">
-                      Create Role
-                    </Button>
+                      {'Create role'}</Button>
                   </div>
                 </form>
               </div>
@@ -436,8 +431,7 @@ export function RolesPermissions() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
-                Configured Directory Roles
-              </CardTitle>
+                {'Configured direc'}</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -460,12 +454,10 @@ export function RolesPermissions() {
                             <h4 className="font-semibold text-white">{role.name}</h4>
                             {!role.editable ? (
                               <span className="text-[9px] px-2 py-0.5 rounded bg-white/10 text-gray-400 uppercase font-bold tracking-wider flex items-center gap-1 border border-white/5">
-                                <Lock className="w-2.5 h-2.5" /> System Built-In
-                              </span>
+                                <Lock className="w-2.5 h-2.5" /> {'System built in'}</span>
                             ) : (
                               <span className="text-[9px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-wider border border-primary/20">
-                                Custom
-                              </span>
+                                {'Custom'}</span>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground leading-relaxed">{role.description}</p>
@@ -473,8 +465,8 @@ export function RolesPermissions() {
                       </div>
                       <div className="flex items-center justify-between md:justify-end gap-6">
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-white">{role.users_count} users</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">assigned</p>
+                          <p className="text-sm font-semibold text-white">{role.users_count} {'Users'}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{'Assigned'}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -508,8 +500,7 @@ export function RolesPermissions() {
                   ))}
                   {filteredRoles.length === 0 && (
                     <div className="py-6 text-center text-muted-foreground text-sm">
-                      No matching roles found. Try searching for other terms or create a new role.
-                    </div>
+                      {'Nomatchingroles'}</div>
                   )}
                 </div>
               )}
@@ -519,14 +510,14 @@ export function RolesPermissions() {
           {/* Dynamic Permissions Matrix */}
           <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle>Enterprise Permission Matrix</CardTitle>
+              <CardTitle>{'Enterprise permi'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-white/10 text-xs text-muted-foreground uppercase tracking-widest">
-                      <th className="text-left p-3 font-semibold w-1/4">Module & Capability</th>
+                      <th className="text-left p-3 font-semibold w-1/4">{'Module capabilit'}</th>
                       {roles.map(role => (
                         <th key={role.code} className="text-center p-3 font-semibold min-w-[120px]">
                           <span className="block text-white text-[11px] font-bold">{role.name}</span>

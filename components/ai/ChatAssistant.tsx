@@ -17,6 +17,7 @@ import {
   Cpu
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -25,13 +26,14 @@ interface Message {
 }
 
 export function ChatAssistant() {
+    const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: "Hello! I am your SecureAuth AI Assistant. How can I help secure your account today?"
+      content: "Hello! I am your SecureAuth Workplace Assistant. How can I help secure your account today?"
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -122,11 +124,11 @@ export function ChatAssistant() {
                 </div>
                 <div>
                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                     CyberAssistant <Sparkles className="w-3 h-3 text-purple-400" />
+                     {'Cyber assistant'}<Sparkles className="w-3 h-3 text-purple-400" />
                    </h3>
                    <div className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Neural Logic Online</span>
+                      <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{'Neural logic onli'}</span>
                    </div>
                 </div>
               </div>
@@ -201,11 +203,11 @@ export function ChatAssistant() {
                <div className="mt-3 flex items-center justify-center gap-4">
                   <div className="flex items-center gap-1">
                     <Shield className="w-3 h-3 text-green-500" />
-                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-tighter">Verified Logic</span>
+                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-tighter">{'Verified logic'}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Lock className="w-3 h-3 text-blue-500" />
-                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-tighter">Secure Link</span>
+                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-tighter">{'Secure link'}</span>
                   </div>
                </div>
             </form>

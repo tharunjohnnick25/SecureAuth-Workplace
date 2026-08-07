@@ -13,6 +13,7 @@ import {
   TrendingUp,
   AlertTriangle,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const policySettings = [
   { name: 'Minimum Length', value: '12 characters', enabled: true, compliance: 'SOC 2' },
@@ -47,6 +48,7 @@ const strengthDistribution = [
 ];
 
 export function PasswordPolicies() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -55,15 +57,13 @@ export function PasswordPolicies() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Password Policies</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Password policie'}</h1>
               <p className="text-muted-foreground">
-                Configure and enforce password security requirements
-              </p>
+                {'Configureandenf'}</p>
             </div>
             <Button>
               <Shield className="w-4 h-4 mr-2" />
-              Save Changes
-            </Button>
+              {'Save changes'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -91,8 +91,7 @@ export function PasswordPolicies() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Key className="w-5 h-5" />
-                  Policy Configuration
-                </CardTitle>
+                  {'Policy configura'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -128,7 +127,7 @@ export function PasswordPolicies() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Password Strength</CardTitle>
+                <CardTitle>{'Password strengt'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -137,7 +136,7 @@ export function PasswordPolicies() {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">{item.level}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">{item.count} users</span>
+                          <span className="text-sm text-muted-foreground">{item.count} {'Users'}</span>
                           <span className={`text-sm font-semibold text-${item.color}`}>{item.percentage}%</span>
                         </div>
                       </div>
@@ -151,9 +150,9 @@ export function PasswordPolicies() {
                   ))}
                 </div>
                 <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <h4 className="text-sm font-medium mb-2">Overall Score</h4>
+                  <h4 className="text-sm font-medium mb-2">{'Overall score'}</h4>
                   <div className="text-4xl font-bold text-primary mb-1">8.2/10</div>
-                  <p className="text-xs text-muted-foreground">Good password security posture</p>
+                  <p className="text-xs text-muted-foreground">{'Goodpasswordsec'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -161,19 +160,19 @@ export function PasswordPolicies() {
 
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>User Compliance Status</CardTitle>
+              <CardTitle>{'User compliance s'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left p-3 font-medium">User</th>
-                      <th className="text-left p-3 font-medium">Status</th>
-                      <th className="text-left p-3 font-medium">Strength</th>
-                      <th className="text-left p-3 font-medium">Last Changed</th>
-                      <th className="text-left p-3 font-medium">Expires In</th>
-                      <th className="text-right p-3 font-medium">Actions</th>
+                      <th className="text-left p-3 font-medium">{'User'}</th>
+                      <th className="text-left p-3 font-medium">{'Status'}</th>
+                      <th className="text-left p-3 font-medium">{'Strength'}</th>
+                      <th className="text-left p-3 font-medium">{'Last changed'}</th>
+                      <th className="text-left p-3 font-medium">{'Expires in'}</th>
+                      <th className="text-right p-3 font-medium">{'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -206,8 +205,7 @@ export function PasswordPolicies() {
                         </td>
                         <td className="p-3 text-right">
                           <Button variant="outline" size="sm">
-                            Force Reset
-                          </Button>
+                            {'Force reset'}</Button>
                         </td>
                       </tr>
                     ))}
@@ -219,7 +217,7 @@ export function PasswordPolicies() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recommended Best Practices</CardTitle>
+              <CardTitle>{'Recommended best'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,10 +225,9 @@ export function PasswordPolicies() {
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-medium mb-1">Implement MFA</h4>
+                      <h4 className="font-medium mb-1">{'Implement mfa'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Multi-factor authentication significantly reduces password-related risks.
-                      </p>
+                        {'Multifactorauth'}</p>
                     </div>
                   </div>
                 </div>
@@ -238,10 +235,9 @@ export function PasswordPolicies() {
                   <div className="flex items-start gap-3">
                     <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-medium mb-1">Regular Audits</h4>
+                      <h4 className="font-medium mb-1">{'Regular audits'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Conduct periodic password audits to identify weak or compromised credentials.
-                      </p>
+                        {'Conductperiodic'}</p>
                     </div>
                   </div>
                 </div>
@@ -249,10 +245,9 @@ export function PasswordPolicies() {
                   <div className="flex items-start gap-3">
                     <Key className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-medium mb-1">Password Manager</h4>
+                      <h4 className="font-medium mb-1">{'Password manager'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Encourage use of enterprise password managers for strong, unique passwords.
-                      </p>
+                        {'Encourageuseofe'}</p>
                     </div>
                   </div>
                 </div>
@@ -260,10 +255,9 @@ export function PasswordPolicies() {
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-medium mb-1">Breach Monitoring</h4>
+                      <h4 className="font-medium mb-1">{'Breach monitorin'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Monitor for compromised credentials in data breaches and force resets.
-                      </p>
+                        {'Monitorforcompr'}</p>
                     </div>
                   </div>
                 </div>

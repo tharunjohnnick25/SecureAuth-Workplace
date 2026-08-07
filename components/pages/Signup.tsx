@@ -7,8 +7,10 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Card } from '@/components/Card';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Signup() {
+    const { t } = useLanguage();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -56,30 +58,29 @@ export function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-3xl" />
       </div>
 
       <Card className="w-full max-w-md relative">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
-            <Shield className="w-8 h-8 text-primary-foreground" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/30">
+            <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Request Access</h1>
-          <p className="text-muted-foreground text-center">
-            Register with your company email
-          </p>
+          <h1 className="text-3xl font-semibold mb-2 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">{'Request access'}</h1>
+          <p className="text-gray-400 text-center text-sm">
+            {'Registerwithyou'}</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
           {formData.email && !formData.email.includes('@') && (
             <div className="p-2 bg-destructive/10 border border-destructive/20 rounded text-xs text-destructive text-center">
-              Please enter a valid email address.
-            </div>
+              {'Pleaseenteraval'}</div>
           )}
           
           <div>
-            <label className="block mb-2 text-sm">Full Name</label>
+            <label className="block mb-2 text-sm text-gray-300">{'Full name'}</label>
             <Input
               type="text"
               placeholder="John Doe"
@@ -91,7 +92,7 @@ export function Signup() {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm">Company Email</label>
+            <label className="block mb-2 text-sm text-gray-300">{'Company email'}</label>
             <Input
               type="email"
               placeholder="employee@company.com"
@@ -103,7 +104,7 @@ export function Signup() {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm">Password</label>
+            <label className="block mb-2 text-sm text-gray-300">{'Password'}</label>
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'}
@@ -113,18 +114,18 @@ export function Signup() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block mb-2 text-sm">Confirm Password</label>
+            <label className="block mb-2 text-sm text-gray-300">{'Confirm password'}</label>
             <Input
               type={showPassword ? 'text' : 'password'}
               placeholder="Re-enter your password"
@@ -135,19 +136,23 @@ export function Signup() {
             />
           </div>
 
-          <Button type="submit" className="w-full" size="lg" disabled={loading}>
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all" 
+            size="lg" 
+            disabled={loading}
+          >
             {loading ? 'Submitting Request...' : 'Submit Access Request'}
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          Already have an account?{' '}
+        <div className="mt-6 text-center text-sm text-gray-400">
+          {'Alreadyhaveanac'}{' '}
           <button
             onClick={() => router.push('/login')}
-            className="text-primary hover:underline"
+            className="text-cyan-400 hover:text-cyan-300 transition-colors"
           >
-            Sign in
-          </button>
+            {'Signin'}</button>
         </div>
       </Card>
     </div>

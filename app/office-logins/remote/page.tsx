@@ -5,8 +5,10 @@ import { DataGridPage } from '@/components/pages/DataGridPage';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { Loader2, Globe } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function RemoteLoginsPage() {
+    const { t } = useLanguage();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,8 +75,7 @@ export default function RemoteLoginsPage() {
              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                (val || 0) > 60 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'
              }`}>
-               {val || 0} Score
-             </span>
+               {val || 0} {'Score'}</span>
           )
         }
       ]}

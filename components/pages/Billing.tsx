@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { CreditCard, Download, Calendar } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const invoices = [
   { id: 'INV-2024-04', date: '2026-04-01', amount: '$2,499.00', status: 'Paid' },
@@ -13,6 +14,7 @@ const invoices = [
 ];
 
 export function Billing() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -20,14 +22,14 @@ export function Billing() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Billing & Invoices</h1>
-            <p className="text-muted-foreground">Manage billing information and view invoices</p>
+            <h1 className="text-3xl font-semibold mb-2">{'Billing invoices'}</h1>
+            <p className="text-muted-foreground">{'Managebillingin'}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Invoices</CardTitle>
+                <CardTitle>{'Invoices'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -50,7 +52,7 @@ export function Billing() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Payment Method</CardTitle>
+                <CardTitle>{'Payment method'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="p-4 rounded-lg bg-input-background/30 mb-4">
@@ -58,9 +60,9 @@ export function Billing() {
                     <CreditCard className="w-5 h-5" />
                     <span className="font-medium">•••• •••• •••• 4242</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">Expires 12/2027</p>
+                  <p className="text-sm text-muted-foreground">{t('Expires122027_743')}</p>
                 </div>
-                <Button variant="outline" className="w-full">Update Payment Method</Button>
+                <Button variant="outline" className="w-full">{'Update payment me'}</Button>
               </CardContent>
             </Card>
           </div>

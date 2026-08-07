@@ -5,8 +5,10 @@ import { DataGridPage } from '@/components/pages/DataGridPage';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { Loader2, Users } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function OnsiteLoginsPage() {
+    const { t } = useLanguage();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,8 +69,7 @@ export default function OnsiteLoginsPage() {
           label: 'Verification',
           render: () => (
              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-400 border border-green-500/20">
-               ID Verified
-             </span>
+               {'Idverified'}</span>
           )
         }
       ]}

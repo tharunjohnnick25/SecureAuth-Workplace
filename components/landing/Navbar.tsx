@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Shield, Menu, X, ChevronRight } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const LandingNavbar = () => {
+    const { t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -30,12 +32,12 @@ const LandingNavbar = () => {
     }`}>
       <div className="container mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-blue-500/20 transition-all">
-            <Shield className="text-white w-6 h-6" />
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 overflow-hidden flex items-center justify-center shrink-0">
+            <img src="/new-logo.png" alt="SecureAuth Workplace Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <span className="text-xl font-bold tracking-tight text-white">
-            SecureAuth<span className="text-blue-400">AI</span>
+            SecureAuth Workplace
           </span>
         </Link>
 
@@ -58,14 +60,12 @@ const LandingNavbar = () => {
             href="/login" 
             className="text-sm font-medium text-white hover:text-blue-400 transition-colors"
           >
-            Sign In
-          </Link>
+            {'Sign in'}</Link>
           <Link 
             href="/signup" 
             className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-full transition-all flex items-center gap-2 group"
           >
-            Get Started
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {'Get started'}<ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
@@ -96,8 +96,8 @@ const LandingNavbar = () => {
             </Link>
           ))}
           <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
-            <Link href="/login" className="text-center text-white font-medium">Sign In</Link>
-            <Link href="/signup" className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl text-center">Get Started</Link>
+            <Link href="/login" className="text-center text-white font-medium">{'Sign in'}</Link>
+            <Link href="/signup" className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl text-center">{'Get started'}</Link>
           </div>
         </motion.div>
       )}

@@ -1,0 +1,67 @@
+[
+  {
+    "id": "mock-1",
+    "employee_id": "EMP-MOCK01",
+    "full_name": "Sarah Chen",
+    "email": "sarah.c@enterprise.com",
+    "role": "Security Admin",
+    "status": "Active",
+    "department": "Security",
+    "designation": "Security Analyst",
+    "employment_type": "Full-time",
+    "subscription": "Basic Protection",
+    "password_hash": "2ef9129c5dd88be49e7b7941c624e02c:06b516a91e20f2c3d011be968d769bb5d34a1315ecb29df86d605e49507d784af8627e0b23ec2ec64a652a57aabe3fd4015402b2fec4c8a2ed421c6a337a189b",
+    "created_at": "2026-08-06T08:31:58.506Z",
+    "updated_at": "2026-08-06T16:04:10.365Z"
+  },
+  {
+    "id": "mock-2",
+    "employee_id": "EMP-MOCK02",
+    "full_name": "Marcus Thorne",
+    "email": "m.thorne@enterprise.com",
+    "role": "Cloud Architect",
+    "status": "Active",
+    "department": "Engineering",
+    "designation": "Cloud Architect",
+    "employment_type": "Full-time",
+    "subscription": "Professional",
+    "password_hash": "a4011794f4abc4f64b2532e01459da26:84c55b53aec425d0a2a3b09f9b23a0f9745f15a5142b1e270a23618b60fe593adcc8e7fa403d5109937dd9bf4ba57ffa24c9a4aff52ce36e3e2c5bd57dfe8a3f",
+    "created_at": "2026-08-06T08:31:58.594Z"
+  },
+  {
+    "id": "00b10cf1-aa9d-4ea7-80a1-93e2be1beb9a",
+    "full_name": "JOHNCENA",
+    "email": "prrashanth@tcs.com",
+    "role": "EMPLOYEE",
+    "status": "Active",
+    "employment_type": "Full-time",
+    "created_at": "2026-08-06T08:31:58.629Z",
+    "updated_at": "2026-08-06T08:31:58.629Z",
+    "password_hash": "112d7895ce4f14a3dff73128f357743f:2e56f998d325d0bcda08f09dc9fda46a78e1d816872c3ac09bb870c57dfdf32a7a84bec69f1393b35a286d6f6b4d249864424915925e81dc8d30ad88f0722733",
+    "employee_id": "EMP00003"
+  },
+  {
+    "id": "4108f1ac-8c31-4233-8f2b-6be36b807e46",
+    "full_name": "john",
+    "email": "prashanth@tcs.com",
+    "role": "EMPLOYEE",
+    "status": "Active",
+    "employment_type": "Full-time",
+    "created_at": "2026-08-07T07:30:57.827Z",
+    "updated_at": "2026-08-07T07:30:57.827Z",
+    "password_hash": "f20f15cc24faf188ae60c3bad2afeddd:562f494c3760d13870ca10821c8b977049ccd63a42852c597223bab00cf4de22b71c96400790fd7695688057380f495e28b1b0261b398be0a8c8789ba1485c09",
+    "employee_id": "EMP00004"
+  },
+  {
+    "id": "5b4d3270-1f6c-4edd-94d9-68adea3fba69",
+    "full_name": "tharun",
+    "email": "tharun@tcs.com",
+    "role": "ADMIN",
+    "status": "Active",
+    "employment_type": "Full-time",
+    "created_at": "2026-08-07T07:35:07.055Z",
+    "updated_at": "2026-08-07T07:35:07.055Z",
+    "password_hash": "27c6606af6ff6cbc1dd4666614b373ed:3e5562a8ed94acb6496986a4970792214b631aa9d0b14a4126679cf431dc195988716e24df1f5cff540ff7974eec33b28d90c00f64dc3bbbc00888366c0c4310",
+    "employee_id": "EMP00005"
+  }
+]

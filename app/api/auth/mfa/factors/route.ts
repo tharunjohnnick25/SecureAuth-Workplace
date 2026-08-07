@@ -1,8 +1,17 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { isMockMode } from '@/lib/mock-employees';
 
 export async function GET() {
   try {
+    if (isMockMode()) {
+      return NextResponse.json({
+        all: [{ id: 'mock-totp-factor', type: 'totp' }],
+        totp: [{ id: 'mock-totp-factor', type: 'totp' }],
+        phone: [],
+      });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {

@@ -6,6 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { Activity, TrendingUp, Clock, Zap, Download } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useLanguage } from "@/context/LanguageContext";
 
 const performanceData = [
   { time: '00:00', response: 145, throughput: 2400, errors: 2 },
@@ -24,6 +25,7 @@ const metrics = [
 ];
 
 export function PerformanceMetrics() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -32,13 +34,12 @@ export function PerformanceMetrics() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Performance Metrics</h1>
-              <p className="text-muted-foreground">Monitor application performance and optimization</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Performance metr'}</h1>
+              <p className="text-muted-foreground">{'Monitorapplicat'}</p>
             </div>
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
-              Export Report
-            </Button>
+              {'Export report'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -61,7 +62,7 @@ export function PerformanceMetrics() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Response Time (24h)</CardTitle>
+                <CardTitle>{t('ResponseTime24h_1066')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -78,7 +79,7 @@ export function PerformanceMetrics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Throughput (24h)</CardTitle>
+                <CardTitle>{t('Throughput24h_1067')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>

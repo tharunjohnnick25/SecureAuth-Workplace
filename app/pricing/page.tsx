@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Check, X, Shield, Zap, Building2, ChevronRight, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Navbar } from '@/components/Navbar';
+import { Sidebar } from '@/components/Sidebar';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
@@ -121,6 +122,31 @@ export default function PricingPage() {
         return;
       }
 
+      if (order.isMock) {
+        const verifyRes = await fetch('/api/razorpay/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id: order.id,
+            razorpay_payment_id: 'pay_mock',
+            razorpay_signature: 'mock',
+            planId: plan.id,
+            amount,
+            billingCycle,
+            currency: 'INR',
+          }),
+        });
+        const verifyData = await verifyRes.json().catch(() => ({}));
+        if (verifyRes.ok && verifyData.success) {
+          toast.success(`Subscription to ${plan.name} (${billingCycle}) activated!`);
+          router.push('/dashboard');
+        } else {
+          toast.error(verifyData.message || 'Payment verification failed.');
+        }
+        setLoadingPlan(null);
+        return;
+      }
+
       const options: any = {
         key: order.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -198,7 +224,9 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 overflow-y-auto">
-      <Navbar />
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300">
+        <Navbar />
       
       <div className="container mx-auto px-6 py-28">
         <div className="text-center max-w-3xl mx-auto mb-14">
@@ -281,8 +309,7 @@ export default function PricingPage() {
                   </div>
                   {isYearly && (
                     <div className="text-xs text-green-400 font-semibold mt-1">
-                      Billed ₹{plan.yearlyTotal.toLocaleString('en-IN')} / year (Save 20%)
-                    </div>
+                      {'Billed'}{plan.yearlyTotal.toLocaleString('en-IN')} {t('yearSave20_254')}</div>
                   )}
                 </div>
                 
@@ -299,7 +326,7 @@ export default function PricingPage() {
                 </Button>
                 
                 <div className="space-y-4 flex-1">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Included Features</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">{'Included feature'}</p>
                   {plan.features.map(feature => (
                     <div key={feature} className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-green-400 shrink-0" />
@@ -316,6 +343,7 @@ export default function PricingPage() {
               </motion.div>
             );
           })}
+        </div>
         </div>
       </div>
     </div>

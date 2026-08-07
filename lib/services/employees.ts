@@ -11,6 +11,7 @@ export const EmployeeService = {
     gender?: string;
     employment_type?: string;
     manager_id?: string;
+    domain?: string;
     page?: number;
     limit?: number;
     sort_by?: string;

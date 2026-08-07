@@ -5,10 +5,12 @@ import { Shield, Smartphone, KeyRound, Loader2, CheckCircle2 } from 'lucide-reac
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 type SetupStep = 'choose' | 'totp' | 'recovery' | 'complete';
 
 export default function MfaSetupPage() {
+    const { t } = useLanguage();
   const [step, setStep] = useState<SetupStep>('choose');
   const [loading, setLoading] = useState(false);
   const [factorId, setFactorId] = useState('');
@@ -85,10 +87,9 @@ export default function MfaSetupPage() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/30">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Set Up MFA</h1>
+          <h1 className="text-3xl font-semibold mb-2">{'Set up mfa'}</h1>
           <p className="text-gray-400 text-center text-sm">
-            Enhance your account security
-          </p>
+            {'Enhanceyouracco'}</p>
         </div>
 
         {step === 'choose' && (
@@ -102,8 +103,8 @@ export default function MfaSetupPage() {
                 <Smartphone className="w-6 h-6 text-cyan-400" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-white">Authenticator App</p>
-                <p className="text-xs text-gray-400">Use Google Authenticator or similar</p>
+                <p className="font-semibold text-white">{'Authenticator ap'}</p>
+                <p className="text-xs text-gray-400">{'Use google authen'}</p>
               </div>
             </button>
 
@@ -115,8 +116,8 @@ export default function MfaSetupPage() {
                 <KeyRound className="w-6 h-6 text-purple-400" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-white">Security Key</p>
-                <p className="text-xs text-gray-400">USB/NFC hardware key (coming soon)</p>
+                <p className="font-semibold text-white">{'Security key'}</p>
+                <p className="text-xs text-gray-400">{'Usbnfchardwarek'}</p>
               </div>
             </button>
           </div>
@@ -125,10 +126,9 @@ export default function MfaSetupPage() {
         {step === 'totp' && (
           <div className="space-y-6">
             <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-              <p className="text-sm text-cyan-400 font-medium mb-2">Scan QR Code</p>
+              <p className="text-sm text-cyan-400 font-medium mb-2">{'Scan qrcode'}</p>
               <p className="text-xs text-gray-400">
-                Open your authenticator app and scan the QR code, or manually enter the secret key.
-              </p>
+                {'Openyourauthent'}</p>
             </div>
 
             {qrCode && (
@@ -139,13 +139,13 @@ export default function MfaSetupPage() {
 
             {secret && (
               <div className="p-3 bg-white/5 rounded-xl">
-                <p className="text-xs text-gray-400 mb-1">Secret Key:</p>
+                <p className="text-xs text-gray-400 mb-1">{'Secret key'}</p>
                 <p className="text-sm font-mono text-cyan-400 break-all">{secret}</p>
               </div>
             )}
 
             <div>
-              <label className="block mb-2 text-sm text-gray-300">Verification Code</label>
+              <label className="block mb-2 text-sm text-gray-300">{'Verification cod'}</label>
               <input
                 type="text"
                 maxLength={6}
@@ -170,10 +170,9 @@ export default function MfaSetupPage() {
         {step === 'recovery' && (
           <div className="space-y-6">
             <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-              <p className="text-sm text-yellow-400 font-medium mb-2">Save Recovery Codes</p>
+              <p className="text-sm text-yellow-400 font-medium mb-2">{'Save recovery cod'}</p>
               <p className="text-xs text-gray-400">
-                Store these codes in a safe place. Each code can only be used once.
-              </p>
+                {'Storethesecodes'}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -186,11 +185,9 @@ export default function MfaSetupPage() {
 
             <div className="flex gap-3">
               <Button onClick={copyCodes} variant="outline" className="flex-1">
-                Copy Codes
-              </Button>
+                {'Copy codes'}</Button>
               <Button onClick={finishSetup} className="flex-1">
-                Done
-              </Button>
+                {'Done'}</Button>
             </div>
           </div>
         )}
@@ -202,8 +199,8 @@ export default function MfaSetupPage() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
               </div>
             </div>
-            <p className="text-emerald-400 font-semibold">MFA Enabled Successfully!</p>
-            <p className="text-xs text-gray-400">Redirecting to settings...</p>
+            <p className="text-emerald-400 font-semibold">{'Mfaenabled succe'}</p>
+            <p className="text-xs text-gray-400">{'Redirectingtose'}</p>
           </div>
         )}
       </Card>

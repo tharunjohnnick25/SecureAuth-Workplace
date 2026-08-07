@@ -1,9 +1,21 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { isMockMode } from '@/lib/mock-employees';
 
 export async function POST(req: NextRequest) {
   try {
     const { factorId, code } = await req.json();
+
+    if (isMockMode()) {
+      if (!code || String(code).replace(/\D/g, '').length !== 6) {
+        return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
+      }
+      return NextResponse.json({
+        success: true,
+        recoveryCodes: generateRecoveryCodes(),
+      });
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {

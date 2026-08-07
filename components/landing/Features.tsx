@@ -10,8 +10,12 @@ import {
   Activity, 
   Zap, 
   Lock, 
-  Eye 
+  Eye,
+  Video,
+  HardDrive,
+  MessageSquare
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const features = [
   {
@@ -56,9 +60,31 @@ const features = [
     color: 'text-orange-400',
     bgColor: 'bg-orange-400/10',
   },
+  {
+    title: 'Secure Video Meetings',
+    description: 'Host protected virtual meetings with built-in access controls, ensuring only authenticated employees can join.',
+    icon: Video,
+    color: 'text-pink-400',
+    bgColor: 'bg-pink-400/10',
+  },
+  {
+    title: 'Encrypted Company Drive',
+    description: 'Share and collaborate on sensitive documents in a unified workspace with zero-trust file access rules.',
+    icon: HardDrive,
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-400/10',
+  },
+  {
+    title: 'Enterprise Chat & Comms',
+    description: 'Seamlessly communicate with colleagues through secure real-time messaging, channels, and team threads.',
+    icon: MessageSquare,
+    color: 'text-indigo-400',
+    bgColor: 'bg-indigo-400/10',
+  },
 ];
 
 const Features = () => {
+    const { t } = useLanguage();
   return (
     <section id="features" className="py-24 bg-slate-950/50 relative">
       <div className="container mx-auto px-6">
@@ -69,7 +95,7 @@ const Features = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold text-white mb-6"
           >
-            Security Features for the <span className="text-blue-400 text-glow">Modern Enterprise</span>
+            {'Security & Workplace features for '}<span className="text-blue-400 text-glow">{'Modern enterprises'}</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -78,9 +104,7 @@ const Features = () => {
             transition={{ delay: 0.1 }}
             className="text-lg text-gray-400"
           >
-            Deploy enterprise-grade security in minutes. Our unified platform 
-            handles the complexity so you can focus on your core business.
-          </motion.p>
+            {'Deploy enterprise-grade security in minutes.'}</motion.p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

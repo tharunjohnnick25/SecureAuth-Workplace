@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { cn } from "./utils";
 import { Button } from "./button";
+import { useLanguage } from "@/context/LanguageContext";
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -33,6 +34,7 @@ type CarouselContextProps = {
 const CarouselContext = React.createContext<CarouselContextProps | null>(null);
 
 function useCarousel() {
+    const { t } = useLanguage();
   const context = React.useContext(CarouselContext);
 
   if (!context) {
@@ -51,6 +53,7 @@ function Carousel({
   children,
   ...props
 }: React.ComponentProps<"div"> & CarouselProps) {
+    const { t } = useLanguage();
   const [carouselRef, api] = useEmblaCarousel(
     {
       ...opts,
@@ -133,6 +136,7 @@ function Carousel({
 }
 
 function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
+    const { t } = useLanguage();
   const { carouselRef, orientation } = useCarousel();
 
   return (
@@ -154,6 +158,7 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
+    const { t } = useLanguage();
   const { orientation } = useCarousel();
 
   return (
@@ -177,6 +182,7 @@ function CarouselPrevious({
   size = "icon",
   ...props
 }: React.ComponentProps<typeof Button>) {
+    const { t } = useLanguage();
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
 
   return (
@@ -196,7 +202,7 @@ function CarouselPrevious({
       {...props}
     >
       <ArrowLeft />
-      <span className="sr-only">Previous slide</span>
+      <span className="sr-only">{'Previousslide'}</span>
     </Button>
   );
 }
@@ -207,6 +213,7 @@ function CarouselNext({
   size = "icon",
   ...props
 }: React.ComponentProps<typeof Button>) {
+    const { t } = useLanguage();
   const { orientation, scrollNext, canScrollNext } = useCarousel();
 
   return (
@@ -226,7 +233,7 @@ function CarouselNext({
       {...props}
     >
       <ArrowRight />
-      <span className="sr-only">Next slide</span>
+      <span className="sr-only">{'Nextslide'}</span>
     </Button>
   );
 }

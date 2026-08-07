@@ -26,6 +26,7 @@ import {
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
+import { useLanguage } from "@/context/LanguageContext";
 
 // Mock live data generator
 const generateLiveStream = () => {
@@ -36,6 +37,7 @@ const generateLiveStream = () => {
 };
 
 export function TypingAnalytics() {
+    const { t } = useLanguage();
   const [typingText, setTypingText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [confidence, setConfidence] = useState(0);
@@ -81,16 +83,16 @@ export function TypingAnalytics() {
                 <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
                   <Fingerprint className="text-purple-400 w-6 h-6" />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight">Typing Biometrics Analysis</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{'Typing biometric'}</h1>
               </div>
-              <p className="text-gray-400">Behavioral neural profiling and real-time keystroke dynamics</p>
+              <p className="text-gray-400">{'Behavioralneura'}</p>
             </div>
             
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3 px-4 py-2 glass-panel border-purple-500/20">
                  <Cpu className={`w-4 h-4 text-purple-400 ${isAnalyzing ? 'animate-spin-slow' : ''}`} />
                  <span className="text-xs font-bold uppercase tracking-widest text-gray-300">
-                    Neural Engine: {isAnalyzing ? 'Active' : 'Idle'}
+                    {'Neural engine'}{isAnalyzing ? 'Active' : 'Idle'}
                  </span>
               </div>
             </div>
@@ -104,8 +106,7 @@ export function TypingAnalytics() {
                </div>
                
                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                 <Keyboard className="w-5 h-5 text-purple-400" /> Biometric Capture Node
-               </h3>
+                 <Keyboard className="w-5 h-5 text-purple-400" /> {'Biometric captur'}</h3>
                
                <div className="space-y-6">
                  <div className="relative">
@@ -131,7 +132,7 @@ export function TypingAnalytics() {
                               />
                             ))}
                          </div>
-                         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Profiling...</span>
+                         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">{'Profiling'}</span>
                       </motion.div>
                     )}
                  </div>
@@ -160,7 +161,7 @@ export function TypingAnalytics() {
                  status === 'matched' ? 'from-green-500/5' : status === 'anomaly' ? 'from-red-500/5' : 'from-purple-500/5'
                } to-transparent`}></div>
                
-               <h3 className="text-xl font-bold mb-10 relative">Neural Identity Verification</h3>
+               <h3 className="text-xl font-bold mb-10 relative">{'Neural identity v'}</h3>
                
                <div className="relative w-48 h-48 flex items-center justify-center mb-8">
                   {/* Outer Rings */}
@@ -196,7 +197,7 @@ export function TypingAnalytics() {
                       )}
                     </AnimatePresence>
                     <div className="text-3xl font-black text-white">{confidence}%</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Confidence</div>
+                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{'Confidence'}</div>
                   </div>
                </div>
 
@@ -213,8 +214,7 @@ export function TypingAnalytics() {
                   </div>
                   
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    Identity verified against historical baseline via 12-factor neural analysis.
-                  </p>
+                    {'Identityverifie'}</p>
                </div>
             </Card>
           </div>
@@ -224,9 +224,8 @@ export function TypingAnalytics() {
             <Card className="lg:col-span-2 glass-panel p-6">
                <div className="flex items-center justify-between mb-8">
                   <h3 className="text-lg font-bold flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-blue-400" /> Real-time Rhythm Stream
-                  </h3>
-                  <div className="text-xs text-gray-500 font-mono">FREQ_V2_ENCODED</div>
+                    <Activity className="w-4 h-4 text-blue-400" /> {'Realtime rhythm s'}</h3>
+                  <div className="text-xs text-gray-500 font-mono">{t('FREQV2ENCODED_1326')}</div>
                </div>
                
                <div className="h-[250px] w-full">
@@ -259,7 +258,7 @@ export function TypingAnalytics() {
 
             {/* Neural Insights */}
             <Card className="glass-panel p-6">
-               <h3 className="text-lg font-bold mb-6">Neural Insights</h3>
+               <h3 className="text-lg font-bold mb-6">{'Neural insights'}</h3>
                <div className="space-y-4">
                   {[
                     { label: 'Baseline Stability', val: 'High', color: 'text-green-400' },
@@ -277,9 +276,7 @@ export function TypingAnalytics() {
                <div className="mt-6 p-4 bg-blue-500/5 rounded-xl border border-blue-500/10 flex items-start gap-3">
                   <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-gray-400 leading-relaxed uppercase tracking-tighter">
-                    AI learning active. System is currently mapping secondary keystroke 
-                    intervals to further strengthen the identity profile.
-                  </p>
+                    {'Ailearningactiv'}</p>
                </div>
             </Card>
           </div>

@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const apiKeys = [
   { id: '1', name: 'Production API Key', key: 'sk_prod_abc123...xyz789', created: '2026-01-15', lastUsed: '2 hours ago', status: 'Active', requests: '1.2M' },
@@ -32,6 +33,7 @@ const usageStats = [
 ];
 
 export function ApiKeys() {
+    const { t } = useLanguage();
   const [showKeys, setShowKeys] = useState<{ [key: string]: boolean }>({});
 
   const toggleKeyVisibility = (id: string) => {
@@ -46,15 +48,13 @@ export function ApiKeys() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">API Keys</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Apikeys'}</h1>
               <p className="text-muted-foreground">
-                Manage your API keys and monitor usage
-              </p>
+                {'Manageyour apike'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Create New Key
-            </Button>
+              {'Create new key'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -64,9 +64,9 @@ export function ApiKeys() {
                   <Key className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Keys</p>
+                  <p className="text-sm text-muted-foreground">{'Total keys'}</p>
                   <h3 className="text-2xl font-semibold">{apiKeys.length}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">3 active, 1 inactive</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('3active1inactiv_663')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -77,9 +77,9 @@ export function ApiKeys() {
                   <Activity className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Requests Today</p>
-                  <h3 className="text-2xl font-semibold">15.2K</h3>
-                  <p className="text-xs text-success mt-1">99.1% success rate</p>
+                  <p className="text-sm text-muted-foreground">{'Requests today'}</p>
+                  <h3 className="text-2xl font-semibold">{t('152K_665')}</h3>
+                  <p className="text-xs text-success mt-1">{t('991successrate_666')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -90,9 +90,9 @@ export function ApiKeys() {
                   <AlertCircle className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Rate Limit</p>
+                  <p className="text-sm text-muted-foreground">{'Rate limit'}</p>
                   <h3 className="text-2xl font-semibold">72%</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Of monthly quota</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'Ofmonthlyquota'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -102,8 +102,7 @@ export function ApiKeys() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Key className="w-5 h-5" />
-                Your API Keys
-              </CardTitle>
+                {'Your apikeys'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -142,15 +141,15 @@ export function ApiKeys() {
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
                           <div>
-                            <span className="text-xs">Created</span>
+                            <span className="text-xs">{'Created'}</span>
                             <p className="font-medium text-foreground">{apiKey.created}</p>
                           </div>
                           <div>
-                            <span className="text-xs">Last Used</span>
+                            <span className="text-xs">{'Last used'}</span>
                             <p className="font-medium text-foreground">{apiKey.lastUsed}</p>
                           </div>
                           <div>
-                            <span className="text-xs">Total Requests</span>
+                            <span className="text-xs">{'Total requests'}</span>
                             <p className="font-medium text-foreground">{apiKey.requests}</p>
                           </div>
                         </div>
@@ -158,8 +157,7 @@ export function ApiKeys() {
                       <div className="flex gap-2 ml-4">
                         <Button variant="outline" size="sm">
                           <Activity className="w-4 h-4 mr-2" />
-                          View Usage
-                        </Button>
+                          {'View usage'}</Button>
                         <Button variant="outline" size="sm">
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
@@ -176,8 +174,7 @@ export function ApiKeys() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
-                  Usage Statistics
-                </CardTitle>
+                  {'Usage statistics'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -186,21 +183,21 @@ export function ApiKeys() {
                       <h4 className="font-medium mb-3">{stat.period}</h4>
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <p className="text-muted-foreground mb-1">Total</p>
+                          <p className="text-muted-foreground mb-1">{'Total'}</p>
                           <p className="text-xl font-semibold">{stat.requests.toLocaleString()}</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground mb-1">Success</p>
+                          <p className="text-muted-foreground mb-1">{'Success'}</p>
                           <p className="text-xl font-semibold text-success">{stat.success.toLocaleString()}</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground mb-1">Failed</p>
+                          <p className="text-muted-foreground mb-1">{'Failed'}</p>
                           <p className="text-xl font-semibold text-destructive">{stat.failed.toLocaleString()}</p>
                         </div>
                       </div>
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                          <span>Success Rate</span>
+                          <span>{'Success rate'}</span>
                           <span>{((stat.success / stat.requests) * 100).toFixed(2)}%</span>
                         </div>
                         <div className="w-full bg-input-background rounded-full h-2">
@@ -220,37 +217,30 @@ export function ApiKeys() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertCircle className="w-5 h-5" />
-                  Security Best Practices
-                </CardTitle>
+                  {'Security best pra'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <Key className="w-4 h-4" />
-                      Keep Your Keys Secure
-                    </h4>
+                      {'Keep your keys sec'}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Never share your API keys or commit them to version control. Use environment variables instead.
-                    </p>
+                      {'Nevershareyour a'}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <Clock className="w-4 h-4" />
-                      Rotate Regularly
-                    </h4>
+                      {'Rotate regularly'}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Rotate your API keys every 90 days or immediately if you suspect they've been compromised.
-                    </p>
+                      {'Rotateyour apike'}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-success/10 border border-success/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <Activity className="w-4 h-4" />
-                      Monitor Usage
-                    </h4>
+                      {'Monitor usage'}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Regularly review API key usage patterns to detect any anomalous activity.
-                    </p>
+                      {'Regularlyreview'}</p>
                   </div>
                 </div>
               </CardContent>

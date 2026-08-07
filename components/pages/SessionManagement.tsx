@@ -18,8 +18,10 @@ import {
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function SessionManagement() {
+    const { t } = useLanguage();
   const { data: sessions, loading, refetch } = useRealtimeData('sessions', (q) => q.select('*').order('last_active', { ascending: false }));
   const [revoking, setRevoking] = useState<string | null>(null);
 
@@ -49,13 +51,12 @@ export function SessionManagement() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Session Management</h1>
-              <p className="text-muted-foreground">Monitor and manage all active authentication sessions</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Session manageme'}</h1>
+              <p className="text-muted-foreground">{'Monitorandmanag'}</p>
             </div>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+              {'Refresh'}</Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -65,7 +66,7 @@ export function SessionManagement() {
                   <Activity className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Sessions</p>
+                  <p className="text-sm text-muted-foreground">{'Active sessions'}</p>
                   <h3 className="text-2xl font-semibold">{(sessions as any[]).filter((s: any) => s.is_active).length}</h3>
                 </div>
               </CardContent>
@@ -77,7 +78,7 @@ export function SessionManagement() {
                   <Shield className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Secure Devices</p>
+                  <p className="text-sm text-muted-foreground">{'Secure devices'}</p>
                   <h3 className="text-2xl font-semibold">{new Set((sessions as any[]).map((s: any) => s.device_id)).size}</h3>
                 </div>
               </CardContent>
@@ -89,8 +90,8 @@ export function SessionManagement() {
                   <Globe className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Geographic Spread</p>
-                  <h3 className="text-2xl font-semibold">{new Set((sessions as any[]).map((s: any) => s.ip_address)).size} IPs</h3>
+                  <p className="text-sm text-muted-foreground">{'Geographic sprea'}</p>
+                  <h3 className="text-2xl font-semibold">{new Set((sessions as any[]).map((s: any) => s.ip_address)).size} {'Ips'}</h3>
                 </div>
               </CardContent>
             </Card>
@@ -98,18 +99,18 @@ export function SessionManagement() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Active Authentication Contexts</CardTitle>
+              <CardTitle>{'Active authentic'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
-                      <th className="px-4 py-3">Device / Browser</th>
-                      <th className="px-4 py-3">IP Address</th>
-                      <th className="px-4 py-3">Last Seen</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-right">Actions</th>
+                      <th className="px-4 py-3">{'Device browser'}</th>
+                      <th className="px-4 py-3">{'Ipaddress'}</th>
+                      <th className="px-4 py-3">{'Last seen'}</th>
+                      <th className="px-4 py-3">{'Status'}</th>
+                      <th className="px-4 py-3 text-right">{'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -157,12 +158,10 @@ export function SessionManagement() {
                               className="gap-2"
                             >
                               <XCircle className="w-4 h-4" />
-                              Revoke
-                            </Button>
+                              {'Revoke'}</Button>
                           ) : (
                             <Button variant="ghost" size="sm" disabled className="text-muted-foreground">
-                              Terminated
-                            </Button>
+                              {'Terminated'}</Button>
                           )}
                         </td>
                       </tr>
@@ -170,8 +169,7 @@ export function SessionManagement() {
                     {(sessions as any[]).length === 0 && !loading && (
                       <tr>
                         <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
-                          No active sessions found.
-                        </td>
+                          {'Noactivesession'}</td>
                       </tr>
                     )}
                   </tbody>

@@ -4,8 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ShieldAlert, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/Button';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function AuthErrorPage() {
+    const { t } = useLanguage();
   const searchParams = useSearchParams();
   const message = searchParams.get('message') || 'Authentication failed. Please try again.';
 
@@ -20,17 +22,17 @@ export default function AuthErrorPage() {
         <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto border border-red-500/20">
           <ShieldAlert className="w-10 h-10 text-red-400" />
         </div>
-        <h1 className="text-3xl font-bold text-white">Authentication Error</h1>
+        <h1 className="text-3xl font-bold text-white">{'Authentication e'}</h1>
         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <p className="text-sm text-red-400">{message}</p>
         </div>
         <div className="pt-4 flex flex-col gap-3">
           <Link href="/login">
-            <Button className="w-full">Return to Login</Button>
+            <Button className="w-full">{'Returnto login'}</Button>
           </Link>
           <Link href="/">
-            <Button variant="outline" className="w-full">Back to Home</Button>
+            <Button variant="outline" className="w-full">{'Backto home'}</Button>
           </Link>
         </div>
       </div>

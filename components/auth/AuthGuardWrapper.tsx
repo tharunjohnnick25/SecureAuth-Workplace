@@ -23,6 +23,8 @@ export function AuthGuardWrapper({ children }: { children: React.ReactNode }) {
 
   const isPublicRoute =
     PUBLIC_ROUTES.has(pathname) ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/auth') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/favicon.ico');

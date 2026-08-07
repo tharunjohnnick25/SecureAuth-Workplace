@@ -7,6 +7,7 @@ import { Navbar } from '@/components/Navbar';
 import { Shield, Lock, Check, X, Save } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 const PERMISSIONS = [
   'users:read', 'users:write', 'users:delete',
@@ -18,6 +19,7 @@ const PERMISSIONS = [
 const ROLES = ['Admin', 'Security Analyst', 'Auditor', 'User'];
 
 export default function AccessControlMatrixPage() {
+    const { t } = useLanguage();
   const [matrix, setMatrix] = useState<Record<string, string[]>>({
     'Admin': PERMISSIONS,
     'Security Analyst': ['audit:read', 'security:read', 'security:write', 'users:read'],
@@ -48,13 +50,12 @@ export default function AccessControlMatrixPage() {
         <main className="pt-20 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Access Control Matrix</h1>
-              <p className="text-muted-foreground">Define and manage role-based permissions</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Access control matrix'}</h1>
+              <p className="text-muted-foreground">{'Define and manage'}</p>
             </div>
             <Button onClick={handleSave}>
               <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </Button>
+              {'Save changes'}</Button>
           </div>
 
           <Card>
@@ -63,7 +64,7 @@ export default function AccessControlMatrixPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="p-4 text-left font-medium text-muted-foreground bg-muted/50">Permission</th>
+                      <th className="p-4 text-left font-medium text-muted-foreground bg-muted/50">{'Permission'}</th>
                       {ROLES.map(role => (
                         <th key={role} className="p-4 text-center font-medium text-muted-foreground bg-muted/50">
                           {role}

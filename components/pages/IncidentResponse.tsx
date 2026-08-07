@@ -15,6 +15,7 @@ import {
   Users,
   FileText,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const incidents = [
   { id: 'INC-2024-089', title: 'Ransomware Attack Detected', severity: 'critical', status: 'Active', assignee: 'Sarah Chen', created: '2026-04-30 14:35', updated: '5 min ago', priority: 'P1' },
@@ -47,6 +48,7 @@ const timeline = [
 ];
 
 export function IncidentResponse() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -55,15 +57,13 @@ export function IncidentResponse() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Incident Response</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Incident respons'}</h1>
               <p className="text-muted-foreground">
-                Manage and respond to security incidents
-              </p>
+                {'Manageandrespon'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Create Incident
-            </Button>
+              {'Create incident'}</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -87,8 +87,7 @@ export function IncidentResponse() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
-                  Active Incidents
-                </CardTitle>
+                  {'Active incidents'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -120,7 +119,7 @@ export function IncidentResponse() {
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              Created {incident.created}
+                              {'Created'}{incident.created}
                             </div>
                           </div>
                         </div>
@@ -133,7 +132,7 @@ export function IncidentResponse() {
                           }`}>
                             {incident.status}
                           </span>
-                          <p className="text-xs text-muted-foreground">Updated {incident.updated}</p>
+                          <p className="text-xs text-muted-foreground">{'Updated'}{incident.updated}</p>
                         </div>
                       </div>
                     </div>
@@ -146,8 +145,7 @@ export function IncidentResponse() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Response Playbooks
-                </CardTitle>
+                  {'Response playboo'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -163,17 +161,16 @@ export function IncidentResponse() {
                         </Button>
                       </div>
                       <div className="space-y-1 text-xs text-muted-foreground">
-                        <p>{playbook.steps} steps</p>
-                        <p>Last used: {playbook.lastUsed}</p>
-                        <p>Used {playbook.usageCount} times</p>
+                        <p>{playbook.steps} {'Steps'}</p>
+                        <p>{'Lastused'}{playbook.lastUsed}</p>
+                        <p>{'Used'}{playbook.usageCount} {'Times'}</p>
                       </div>
                     </div>
                   ))}
                 </div>
                 <Button variant="outline" className="w-full mt-4">
                   <Plus className="w-4 h-4 mr-2" />
-                  New Playbook
-                </Button>
+                  {'New playbook'}</Button>
               </CardContent>
             </Card>
           </div>
@@ -183,8 +180,7 @@ export function IncidentResponse() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Incident Timeline
-                </CardTitle>
+                  {'Incident timelin'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -222,17 +218,17 @@ export function IncidentResponse() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Incident Metrics</CardTitle>
+                <CardTitle>{'Incident metrics'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-input-background/30">
-                    <h4 className="text-sm font-medium mb-3">Response Time (Last 30 Days)</h4>
+                    <h4 className="text-sm font-medium mb-3">{'Response time las'}</h4>
                     <div className="space-y-3">
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Average</span>
-                          <span className="font-semibold">12 minutes</span>
+                          <span className="text-muted-foreground">{'Average'}</span>
+                          <span className="font-semibold">{t('12minutes_957')}</span>
                         </div>
                         <div className="w-full bg-input-background rounded-full h-2">
                           <div className="bg-success h-2 rounded-full" style={{ width: '75%' }} />
@@ -240,23 +236,23 @@ export function IncidentResponse() {
                       </div>
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Fastest</span>
-                          <span className="font-semibold">3 minutes</span>
+                          <span className="text-muted-foreground">{'Fastest'}</span>
+                          <span className="font-semibold">{t('3minutes_959')}</span>
                         </div>
                       </div>
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Slowest</span>
-                          <span className="font-semibold">45 minutes</span>
+                          <span className="text-muted-foreground">{'Slowest'}</span>
+                          <span className="font-semibold">{t('45minutes_961')}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-input-background/30">
-                    <h4 className="text-sm font-medium mb-3">Resolution Rate</h4>
+                    <h4 className="text-sm font-medium mb-3">{'Resolution rate'}</h4>
                     <div className="text-center">
                       <div className="text-4xl font-bold text-success mb-1">94.5%</div>
-                      <p className="text-sm text-muted-foreground">Successfully resolved</p>
+                      <p className="text-sm text-muted-foreground">{'Successfullyres'}</p>
                     </div>
                   </div>
                 </div>

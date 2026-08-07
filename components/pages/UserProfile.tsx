@@ -25,8 +25,10 @@ import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { useBiometrics } from '@/hooks/useBiometrics';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function UserProfile() {
+    const { t } = useLanguage();
   const { user, setUser } = useAuthStore();
   const { data: dbLogins, loading: loginsLoading } = useRealtimeData('login_logs', (q) => 
     q.select('*').eq('user_id', user?.id || '').order('created_at', { ascending: false }).limit(5)
@@ -118,15 +120,15 @@ export function UserProfile() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">User Profile</h1>
-            <p className="text-muted-foreground">Manage your identity and security settings</p>
+            <h1 className="text-3xl font-semibold mb-2">{'User profile'}</h1>
+            <p className="text-muted-foreground">{'Manageyourident'}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Personal Information</CardTitle>
+                  <CardTitle>{'Personal informa'}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-6 mb-6">
@@ -151,17 +153,17 @@ export function UserProfile() {
                       <h3 className="text-xl font-semibold">{profile?.full_name || user?.first_name + ' ' + user?.last_name || 'User'}</h3>
                       <p className="text-sm text-muted-foreground">{profile?.role || user?.role || 'Employee'}</p>
                       {profile?.employee_id && (
-                        <p className="text-xs text-muted-foreground mt-1">ID: {profile.employee_id}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{'Id'}{profile.employee_id}</p>
                       )}
                       {profile?.department && (
-                        <p className="text-xs text-muted-foreground">Dept: {profile.department}</p>
+                        <p className="text-xs text-muted-foreground">{'Dept'}{profile.department}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Full Name</label>
+                      <label className="text-sm font-medium">{'Full name'}</label>
                       <Input 
                         placeholder="John Doe" 
                         defaultValue={profile?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`}
@@ -169,7 +171,7 @@ export function UserProfile() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Email Address</label>
+                      <label className="text-sm font-medium">{'Email address'}</label>
                       <Input 
                         placeholder="user@gmail.com" 
                         defaultValue={user?.email || ''} 
@@ -178,7 +180,7 @@ export function UserProfile() {
                       />
                     </div>
                   </div>
-                  <Button>Update Profile</Button>
+                  <Button>{'Update profile'}</Button>
                 </CardContent>
               </Card>
 
@@ -186,8 +188,7 @@ export function UserProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Fingerprint className="w-5 h-5 text-primary" />
-                    Biometric Authentication
-                  </CardTitle>
+                    {'Biometric authen'}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-start gap-4">
@@ -195,10 +196,9 @@ export function UserProfile() {
                       <Shield className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-foreground">Zero-Trust Biometrics</h4>
+                      <h4 className="font-medium text-foreground">{'Zero trust biomet'}</h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Register your device's biometric sensors (TouchID, FaceID, or Windows Hello) for secure passwordless verification when suspicious activity is detected.
-                      </p>
+                        {'Registeryourdev'}</p>
                     </div>
                   </div>
                   
@@ -206,7 +206,7 @@ export function UserProfile() {
                     <div className="flex items-center gap-3">
                       <Fingerprint className={`w-8 h-8 ${profile?.biometric_enabled ? 'text-primary' : 'text-muted-foreground'}`} />
                       <div>
-                        <p className="text-sm font-medium">Main Device Biometrics</p>
+                        <p className="text-sm font-medium">{'Main device biome'}</p>
                         <p className="text-xs text-muted-foreground">
                           {profile?.biometric_enabled ? 'Registered' : 'Not yet registered'}
                         </p>
@@ -223,24 +223,24 @@ export function UserProfile() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Account Security</CardTitle>
+                  <CardTitle>{'Account security'}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Account Status</span>
+                    <span className="text-muted-foreground">{'Account status'}</span>
                     <span className="text-primary font-medium">
                       {profile?.status || 'Active'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">MFA Status</span>
+                    <span className="text-muted-foreground">{'Mfastatus'}</span>
                     <span className={`font-medium flex items-center gap-1 ${profile?.is_mfa_enabled ? 'text-success' : 'text-muted-foreground'}`}>
                       {profile?.is_mfa_enabled ? <CheckCircle className="w-3 h-3" /> : null}
                       {profile?.is_mfa_enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Biometrics</span>
+                    <span className="text-muted-foreground">{'Biometrics'}</span>
                     <span className={`font-medium ${profile?.biometric_enabled ? 'text-success' : 'text-muted-foreground'}`}>
                       {profile?.biometric_enabled ? 'Registered' : 'Not Set Up'}
                     </span>
@@ -250,7 +250,7 @@ export function UserProfile() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium">Recent Login History</CardTitle>
+                  <CardTitle className="text-sm font-medium">{'Recent login hist'}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {loginsLoading ? (
@@ -258,7 +258,7 @@ export function UserProfile() {
                       <Loader2 className="w-5 h-5 animate-spin text-primary" />
                     </div>
                   ) : displayLogins.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-4">No login history yet</p>
+                    <p className="text-xs text-muted-foreground text-center py-4">{'Nologinhistoryy'}</p>
                   ) : (
                     displayLogins.map((login, i) => (
                       <div key={i} className="flex items-start gap-3">

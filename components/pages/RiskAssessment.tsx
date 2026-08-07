@@ -7,8 +7,10 @@ import { Navbar } from '@/components/Navbar';
 import { Shield, Target, AlertTriangle, CheckCircle, Activity, Globe, Smartphone, Lock } from 'lucide-react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function RiskAssessment() {
+    const { t } = useLanguage();
   const { data: logins } = useRealtimeData('login_history');
   
   const riskMetrics = useMemo(() => {
@@ -36,8 +38,8 @@ export function RiskAssessment() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Advanced Risk Assessment</h1>
-            <p className="text-muted-foreground">Automated behavioral analysis and anomaly scoring</p>
+            <h1 className="text-3xl font-semibold mb-2">{'Advanced risk ass'}</h1>
+            <p className="text-muted-foreground">{'Automatedbehavi'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -46,7 +48,7 @@ export function RiskAssessment() {
                  <div className="flex flex-col items-center">
                     <Target className="w-10 h-10 text-primary mb-2" />
                     <h3 className="text-3xl font-bold">{Math.round(riskMetrics.avgScore)}</h3>
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">Network Avg Score</p>
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">{'Network avg score'}</p>
                  </div>
                </CardContent>
              </Card>
@@ -56,7 +58,7 @@ export function RiskAssessment() {
                  <div className="flex flex-col items-center">
                     <AlertTriangle className="w-10 h-10 text-destructive mb-2" />
                     <h3 className="text-3xl font-bold">{riskMetrics.highRisk}</h3>
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">High Risk Events</p>
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">{'High risk events'}</p>
                  </div>
                </CardContent>
              </Card>
@@ -66,7 +68,7 @@ export function RiskAssessment() {
                  <div className="flex flex-col items-center">
                     <Activity className="w-10 h-10 text-warning mb-2" />
                     <h3 className="text-3xl font-bold">{riskMetrics.mediumRisk}</h3>
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">Anomalous Signals</p>
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">{'Anomalous signal'}</p>
                  </div>
                </CardContent>
              </Card>
@@ -76,7 +78,7 @@ export function RiskAssessment() {
                  <div className="flex flex-col items-center">
                     <CheckCircle className="w-10 h-10 text-success mb-2" />
                     <h3 className="text-3xl font-bold">99.8%</h3>
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">Signal Accuracy</p>
+                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-bold">{'Signal accuracy'}</p>
                  </div>
                </CardContent>
              </Card>
@@ -85,7 +87,7 @@ export function RiskAssessment() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card className="h-[500px]">
               <CardHeader>
-                <CardTitle>Risk Multi-Vector Analysis</CardTitle>
+                <CardTitle>{'Risk multi vector'}</CardTitle>
               </CardHeader>
               <CardContent className="flex items-center justify-center">
                 <ResponsiveContainer width="100%" height={400}>
@@ -107,7 +109,7 @@ export function RiskAssessment() {
 
             <Card className="h-[500px]">
               <CardHeader>
-                <CardTitle>Active Security Posture</CardTitle>
+                <CardTitle>{'Active security p'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -115,39 +117,39 @@ export function RiskAssessment() {
                       <div className="flex items-center gap-4">
                          <Globe className="w-6 h-6 text-primary" />
                          <div>
-                           <p className="font-semibold">Impossible Travel Detection</p>
-                           <p className="text-xs text-muted-foreground">Enabled via Geographic Velocity Engine</p>
+                           <p className="font-semibold">{'Impossible trave'}</p>
+                           <p className="text-xs text-muted-foreground">{'Enabledvia geogr'}</p>
                          </div>
                       </div>
-                      <div className="px-3 py-1 bg-success/20 text-success text-xs font-bold rounded-full">ACTIVE</div>
+                      <div className="px-3 py-1 bg-success/20 text-success text-xs font-bold rounded-full">{'Active'}</div>
                    </div>
 
                    <div className="p-4 rounded-xl bg-input-background/50 border border-border flex items-center justify-between">
                       <div className="flex items-center gap-4">
                          <Smartphone className="w-6 h-6 text-primary" />
                          <div>
-                           <p className="font-semibold">Device Fingerprinting</p>
-                           <p className="text-xs text-muted-foreground">Canvas, WebGL & OS Verification</p>
+                           <p className="font-semibold">{'Device fingerpri'}</p>
+                           <p className="text-xs text-muted-foreground">{'Canvas web glosve'}</p>
                          </div>
                       </div>
-                      <div className="px-3 py-1 bg-success/20 text-success text-xs font-bold rounded-full">ACTIVE</div>
+                      <div className="px-3 py-1 bg-success/20 text-success text-xs font-bold rounded-full">{'Active'}</div>
                    </div>
 
                    <div className="p-4 rounded-xl bg-input-background/50 border border-border flex items-center justify-between">
                       <div className="flex items-center gap-4">
                          <Lock className="w-6 h-6 text-primary" />
                          <div>
-                           <p className="font-semibold">Adaptive Biometric Re-Auth</p>
-                           <p className="text-xs text-muted-foreground">Automatic challenge on High Risk signals</p>
+                           <p className="font-semibold">{'Adaptive biometr'}</p>
+                           <p className="text-xs text-muted-foreground">{'Automaticchalle'}</p>
                          </div>
                       </div>
-                      <div className="px-3 py-1 bg-success/20 text-success text-xs font-bold rounded-full">ACTIVE</div>
+                      <div className="px-3 py-1 bg-success/20 text-success text-xs font-bold rounded-full">{'Active'}</div>
                    </div>
 
                    <div className="mt-8 p-6 bg-primary/10 rounded-2xl border border-primary/20 text-center">
                       <Shield className="w-12 h-12 text-primary mx-auto mb-3" />
-                      <h4 className="text-lg font-bold mb-1">Autonomous Protection</h4>
-                      <p className="text-sm text-muted-foreground">Your network risk is currently within acceptable parameters. No immediate intervention required.</p>
+                      <h4 className="text-lg font-bold mb-1">{'Autonomous prote'}</h4>
+                      <p className="text-sm text-muted-foreground">{'Yournetworkrisk'}</p>
                    </div>
                 </div>
               </CardContent>

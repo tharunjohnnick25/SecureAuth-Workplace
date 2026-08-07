@@ -3,18 +3,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { UserPlus, ShieldAlert, CheckCircle, Database, Server, Smartphone, Laptop } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const WorkflowDiagram = () => {
+    const { t } = useLanguage();
   return (
     <section className="py-20 bg-[#020617] relative border-t border-white/5">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
-            Seamless <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Access Workflow</span>
+            {'Seamless'}<span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">{'Access workflow'}</span>
           </h2>
           <p className="text-gray-400 text-lg">
-            How our AI-powered employee access management secures your enterprise resources in real-time.
-          </p>
+            {'Howour aipowered'}</p>
         </div>
 
         <div className="relative max-w-5xl mx-auto">
@@ -31,8 +32,8 @@ const WorkflowDiagram = () => {
               <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4 border border-blue-500/30">
                 <UserPlus className="w-8 h-8 text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">1. Request Access</h3>
-              <p className="text-sm text-gray-400">Employee initiates login to enterprise portal from office or remote device.</p>
+              <h3 className="text-xl font-bold text-white mb-2">{t('1RequestAccess_493')}</h3>
+              <p className="text-sm text-gray-400">{'Employeeinitiat'}</p>
               <div className="flex gap-2 mt-4 text-gray-500">
                  <Smartphone className="w-4 h-4" />
                  <Laptop className="w-4 h-4" />
@@ -56,8 +57,8 @@ const WorkflowDiagram = () => {
                 <ShieldAlert className="w-8 h-8 text-purple-400 animate-pulse" />
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="absolute -inset-2 border border-dashed border-purple-500/40 rounded-full"></motion.div>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">2. AI Risk Engine</h3>
-              <p className="text-sm text-gray-400">System evaluates location, device fingerprint, and behavioral biometrics.</p>
+              <h3 className="text-xl font-bold text-white mb-2">{t('2AIRiskEngine_495')}</h3>
+              <p className="text-sm text-gray-400">{'Systemevaluates'}</p>
             </motion.div>
 
             {/* Arrow 2 */}
@@ -76,8 +77,8 @@ const WorkflowDiagram = () => {
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 border border-green-500/30">
                 <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">3. Admin Approval</h3>
-              <p className="text-sm text-gray-400">If risk is high, admin is alerted. If safe, access is granted to internal systems.</p>
+              <h3 className="text-xl font-bold text-white mb-2">{t('3AdminApproval_497')}</h3>
+              <p className="text-sm text-gray-400">{'Ifriskishighadm'}</p>
               <div className="flex gap-2 mt-4 text-gray-500">
                  <Database className="w-4 h-4" />
                  <Server className="w-4 h-4" />

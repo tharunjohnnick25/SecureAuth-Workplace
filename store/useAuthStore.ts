@@ -9,8 +9,14 @@ export interface User {
   last_name?: string;
   full_name?: string;
   avatar_url?: string;
+  employee_id?: string;
   biometric_enabled?: boolean;
   organization_id?: string;
+  company_id?: string;
+  company_name?: string;
+  company_domain?: string;
+  company_country?: string;
+  github_username?: string;
 }
 
 interface AuthState {

@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Globe, MapPin, Shield, AlertTriangle } from 'lucide-react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { useLanguage } from "@/context/LanguageContext";
 
 /**
  * Interface representing a geographic authentication event
@@ -25,6 +26,7 @@ interface GeoLocation {
 }
 
 export default function GeoMapPage() {
+    const { t } = useLanguage();
   // Strongly type the realtime data hook with GeoLocation interface
   const { data: locations, loading } = useRealtimeData<GeoLocation>('geo_locations');
 
@@ -44,16 +46,14 @@ export default function GeoMapPage() {
         <main className="pt-20 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Geographic Threat Map</h1>
-              <p className="text-muted-foreground">Real-time visualization of global authentication events</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Geographic threats'}</h1>
+              <p className="text-muted-foreground">{'Real-time visualization'}</p>
             </div>
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 px-3 py-1 bg-success/20 text-success text-xs font-bold rounded-full border border-success/30">
-                 {stats.countries} Countries
-               </div>
+                 {stats.countries} {'Countries'}</div>
                <div className="flex items-center gap-2 px-3 py-1 bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/30">
-                 {stats.cities} Cities
-               </div>
+                 {stats.cities} {'Cities'}</div>
             </div>
           </div>
 
@@ -67,17 +67,16 @@ export default function GeoMapPage() {
                 <CardHeader className="relative z-10">
                    <CardTitle className="flex items-center gap-2">
                      <Globe className="w-5 h-5 text-primary" />
-                     Live Global Pulse
-                   </CardTitle>
+                     {'Live global pulse'}</CardTitle>
                 </CardHeader>
                 
                 <CardContent className="h-full relative z-10 flex items-center justify-center">
                    {/* Map visualization area */}
                    <div className="relative w-full h-full max-w-4xl max-h-[500px] border border-border/50 rounded-2xl bg-muted/20 backdrop-blur-md flex items-center justify-center group">
                       {loading ? (
-                        <p className="text-muted-foreground text-sm font-medium animate-pulse">Initializing Holographic Projection...</p>
+                        <p className="text-muted-foreground text-sm font-medium animate-pulse">{'Initializing holographic globe...'}</p>
                       ) : locations.length === 0 ? (
-                        <p className="text-muted-foreground text-sm font-medium">No active signals detected</p>
+                        <p className="text-muted-foreground text-sm font-medium">{'No active signals'}</p>
                       ) : null}
                       
                       {(locations as GeoLocation[]).map((loc: GeoLocation, i: number) => (
@@ -104,8 +103,7 @@ export default function GeoMapPage() {
                         >
                            <AlertTriangle className="w-5 h-5 text-destructive mb-1 animate-bounce" />
                            <div className="bg-destructive/90 text-white text-[8px] px-2 py-0.5 rounded font-bold uppercase backdrop-blur-md">
-                                Threat
-                           </div>
+                                {'Threat'}</div>
                         </div>
                       ))}
                    </div>
@@ -114,11 +112,11 @@ export default function GeoMapPage() {
                 <div className="absolute bottom-6 left-6 flex gap-4 z-10">
                    <div className="flex items-center gap-2 text-xs bg-card/80 p-2 rounded border border-border backdrop-blur-md">
                       <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span>Authorized Access</span>
+                      <span>{'Authorized access'}</span>
                    </div>
                    <div className="flex items-center gap-2 text-xs bg-card/80 p-2 rounded border border-border backdrop-blur-md">
                       <div className="w-2 h-2 rounded-full bg-destructive" />
-                      <span>Suspicious Anomaly</span>
+                      <span>{'Suspicious anomalies'}</span>
                    </div>
                 </div>
              </Card>
@@ -126,7 +124,7 @@ export default function GeoMapPage() {
              <div className="space-y-6">
                 <Card>
                    <CardHeader>
-                      <CardTitle className="text-sm">Regional Threats</CardTitle>
+                      <CardTitle className="text-sm">{'Regional threats'}</CardTitle>
                    </CardHeader>
                    <CardContent>
                       <div className="space-y-4">
@@ -139,7 +137,7 @@ export default function GeoMapPage() {
                                <span className="text-[10px] text-muted-foreground">{new Date(loc.created_at).toLocaleTimeString()}</span>
                             </div>
                          ))}
-                         {stats.suspicious === 0 && !loading && <p className="text-xs text-muted-foreground text-center py-4">No regional threats detected.</p>}
+                         {stats.suspicious === 0 && !loading && <p className="text-xs text-muted-foreground text-center py-4">{'No regional threats detected'}</p>}
                       </div>
                    </CardContent>
                 </Card>
@@ -148,10 +146,9 @@ export default function GeoMapPage() {
                    <CardContent className="pt-6 text-center">
                       <Shield className="w-10 h-10 text-destructive mx-auto mb-2" />
                       <h4 className="text-lg font-bold text-destructive">{stats.suspicious}</h4>
-                      <p className="text-xs text-muted-foreground">High-Risk Geographic Anomalies</p>
+                      <p className="text-xs text-muted-foreground">{'High risk geographic access'}</p>
                       <button className="mt-4 w-full py-2 bg-destructive text-white text-xs font-bold rounded hover:bg-destructive/90 transition-colors">
-                         LOCK DOWN REGIONS
-                      </button>
+                         {'Lockdown regions'}</button>
                    </CardContent>
                 </Card>
              </div>

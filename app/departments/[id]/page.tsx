@@ -14,8 +14,10 @@ import { Loader2, ArrowLeft, Building2, Users, UserCheck, Edit, Save, X, AlertCi
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function DepartmentDetailPage() {
+    const { t } = useLanguage();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -95,8 +97,7 @@ export default function DepartmentDetailPage() {
         <main className="pt-20 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
             <Link href="/departments" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-4 transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Back to Departments
-            </Link>
+              <ArrowLeft className="w-4 h-4" /> {'Back to Departments'}</Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -112,7 +113,7 @@ export default function DepartmentDetailPage() {
                   )}
                   <div className="mt-6 space-y-4">
                     <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Department Head</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{'Department head'}</p>
                       {department.head_details ? (
                         <div className="flex items-center gap-3 mt-2">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white">
@@ -124,23 +125,20 @@ export default function DepartmentDetailPage() {
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-400 mt-2">Unassigned</p>
+                        <p className="text-sm text-gray-400 mt-2">{'Unassigned'}</p>
                       )}
                       <div className="mt-3 flex gap-2">
                         <Button variant="outline" className="border-white/10 text-xs h-8" onClick={() => setShowHeadPicker(true)}>
-                          {department.head_details ? 'Change' : 'Assign'} Head
-                        </Button>
+                          {department.head_details ? 'Change' : 'Assign'} {'Head'}</Button>
                         {department.head_details && (
                           <Button variant="outline" className="border-red-500/20 text-red-400 text-xs h-8" onClick={handleRemoveHead} disabled={updating}>
-                            Remove
-                          </Button>
+                            {'Remove'}</Button>
                         )}
                       </div>
                     </div>
                     <Link href={`/departments`}>
                       <Button variant="outline" className="w-full border-white/10">
-                        <Edit className="w-4 h-4 mr-1" /> Edit Department
-                      </Button>
+                        <Edit className="w-4 h-4 mr-1" /> {'Edit department'}</Button>
                     </Link>
                   </div>
                 </CardContent>
@@ -150,24 +148,24 @@ export default function DepartmentDetailPage() {
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 text-center">
                   <Users className="w-6 h-6 text-blue-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">{employees.length}</p>
-                  <p className="text-xs text-gray-500">Total</p>
+                  <p className="text-xs text-gray-500">{'Total'}</p>
                 </div>
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 text-center">
                   <UserCheck className="w-6 h-6 text-green-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-green-400">{activeCount}</p>
-                  <p className="text-xs text-gray-500">Active</p>
+                  <p className="text-xs text-gray-500">{'Active'}</p>
                 </div>
               </div>
             </div>
 
             <div className="lg:col-span-2 space-y-6">
               <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
-                <CardHeader><CardTitle className="text-white text-sm">Employees in {department.name}</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-white text-sm">{'Employees in '}{department.name}</CardTitle></CardHeader>
                 <CardContent>
                   {employees.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No employees in this department</p>
+                      <p className="text-sm">{'No employees in this department'}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -208,21 +206,21 @@ export default function DepartmentDetailPage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center"><UserCheck className="w-6 h-6" /></div>
-                  <div><h3 className="text-lg font-bold text-white">Assign Department Head</h3><p className="text-xs text-gray-400">Only active employees can be assigned</p></div>
+                  <div><h3 className="text-lg font-bold text-white">{'Assign Department Head'}</h3><p className="text-xs text-gray-400">{'Only active employees are shown'}</p></div>
                 </div>
                 <button onClick={() => setShowHeadPicker(false)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
               </div>
               <select value={newHeadId} onChange={(e) => setNewHeadId(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white mb-6 focus:outline-none focus:border-blue-500">
-                <option value="">Select an employee</option>
+                <option value="">{'Select an employee'}</option>
                 {activeEmployees.map(emp => (
                   <option key={emp.id} value={emp.id}>{emp.full_name} ({emp.email})</option>
                 ))}
               </select>
               <div className="flex justify-end gap-3">
-                <Button variant="outline" className="border-white/10" onClick={() => setShowHeadPicker(false)}>Cancel</Button>
+                <Button variant="outline" className="border-white/10" onClick={() => setShowHeadPicker(false)}>{'Cancel'}</Button>
                 <Button onClick={handleSetHead} disabled={!newHeadId || updating} className="bg-blue-600 hover:bg-blue-500">
-                  {updating ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Saving...</> : 'Assign'}
+                  {updating ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> {'Saving'}</> : 'Assign'}
                 </Button>
               </div>
             </motion.div>

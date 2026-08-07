@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { isMockMode } from '@/lib/mock-employees';
 
 export async function POST(req: NextRequest) {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId, amount } = await req.json();
 
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (isMockMode()) {
+      return NextResponse.json({ success: true, message: 'Subscription activated successfully' });
+    }
+
     const supabase = await createServerSupabaseClient();
     
     // Get current user if authenticated

@@ -33,6 +33,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { getRoleLabel } from '@/lib/rbac';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface GovernanceUser {
   id: string;
@@ -80,6 +81,7 @@ interface AuditLogEntry {
 }
 
 export function Admin() {
+    const { t } = useLanguage();
   const { activeOrg, organizations, setActiveOrg, securityPolicies, updateSecurityPolicies } = useOrganization();
 
   // Navigation / Tabs State
@@ -420,23 +422,20 @@ export function Admin() {
           <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-6">
             <div>
               <h1 className="text-3xl font-semibold mb-2 flex items-center gap-3">
-                Identity Governance Panel
-                {isSandboxMode && (
+                {'Identity governa'}{isSandboxMode && (
                   <span className="text-[10px] px-2 py-0.5 rounded bg-warning/20 border border-warning/30 text-warning uppercase font-bold tracking-wider animate-pulse">
-                    Admin Sandbox Mode
-                  </span>
+                    {'Admin sandbox mod'}</span>
                 )}
               </h1>
               <p className="text-muted-foreground text-sm">
-                Control multi-tenant isolation, revoke sessions, enforce granular access policies, and audit administration activity
-              </p>
+                {'Controlmultiten'}</p>
             </div>
             
             {/* Enterprise tenant picker */}
             <div className="flex items-center gap-3 bg-[#0d1222] border border-white/10 px-4 py-2 rounded-xl">
               <Globe className="w-4 h-4 text-primary" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Active Org Workspace</span>
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{'Active org worksp'}</span>
                 <select
                   value={activeOrg?.id || ''}
                   onChange={(e) => {
@@ -463,8 +462,8 @@ export function Admin() {
                   <Users className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Tenant Users</p>
-                  <h3 className="text-2xl font-bold">{usersList.length} Accounts</h3>
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{'Tenant users'}</p>
+                  <h3 className="text-2xl font-bold">{usersList.length} {'Accounts'}</h3>
                   <p className="text-[10px] text-muted-foreground mt-0.5">{activeOrg?.name || 'Active Workspace'}</p>
                 </div>
               </CardContent>
@@ -476,11 +475,10 @@ export function Admin() {
                   <Activity className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Active Sessions</p>
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{'Active sessions'}</p>
                   <h3 className="text-2xl font-bold">
-                    {usersList.filter(u => u.status === 'ACTIVE').length} Active
-                  </h3>
-                  <p className="text-[10px] text-success font-bold mt-0.5">Zero credentials breached</p>
+                    {usersList.filter(u => u.status === 'ACTIVE').length} {'Active'}</h3>
+                  <p className="text-[10px] text-success font-bold mt-0.5">{'Zerocredentials'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -491,11 +489,10 @@ export function Admin() {
                   <AlertTriangle className="w-6 h-6 text-warning animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">High Risk Index</p>
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{'High risk index'}</p>
                   <h3 className="text-2xl font-bold">
-                    {usersList.filter(u => u.risk_score > 70).length} Breaches
-                  </h3>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Flagged for dynamic isolation</p>
+                    {usersList.filter(u => u.risk_score > 70).length} {'Breaches'}</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{'Flaggedfordynam'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -506,11 +503,10 @@ export function Admin() {
                   <Shield className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Suspended States</p>
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{'Suspended states'}</p>
                   <h3 className="text-2xl font-bold">
-                    {usersList.filter(u => u.status === 'SUSPENDED').length} Suspended
-                  </h3>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Denied route authentication</p>
+                    {usersList.filter(u => u.status === 'SUSPENDED').length} {'Suspended'}</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{'Deniedrouteauth'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -524,46 +520,41 @@ export function Admin() {
                 activeTab === 'directory' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
-              <Users className="w-4 h-4" /> User Governance Directory
-            </button>
+              <Users className="w-4 h-4" /> {'User governance d'}</button>
             <button
               onClick={() => setActiveTab('requests')}
               className={`px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'requests' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
-              <Shield className="w-4 h-4" /> Access Approvals Workflow
-            </button>
+              <Shield className="w-4 h-4" /> {'Access approvals'}</button>
             <button
               onClick={() => setActiveTab('invitations')}
               className={`px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'invitations' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
-              <UserPlus className="w-4 h-4" /> Onboarding Invitations
-            </button>
+              <UserPlus className="w-4 h-4" /> {'Onboarding invit'}</button>
             <button
               onClick={() => setActiveTab('policies')}
               className={`px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'policies' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
-              <Sliders className="w-4 h-4" /> Zero-Trust Security Policies
-            </button>
+              <Sliders className="w-4 h-4" /> {'Zero trust securi'}</button>
             <button
               onClick={() => setActiveTab('audit')}
               className={`px-4 py-2.5 font-bold text-xs uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'audit' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
-              <Clock className="w-4 h-4" /> Compliance Audit Trail
-            </button>
+              <Clock className="w-4 h-4" /> {'Compliance audit'}</button>
           </div>
 
           {isLoading ? (
             <div className="py-20 flex flex-col justify-center items-center">
               <Loader2 className="w-10 h-10 text-primary animate-spin mb-3" />
-              <p className="text-sm text-muted-foreground uppercase font-bold tracking-widest animate-pulse">Loading Identity Data...</p>
+              <p className="text-sm text-muted-foreground uppercase font-bold tracking-widest animate-pulse">{'Loading identity'}</p>
             </div>
           ) : (
             <>
@@ -573,8 +564,7 @@ export function Admin() {
                   {/* Filters Bar */}
                   <div className="bg-[#0b0f19] border border-white/5 p-4 rounded-xl flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
-                      <Filter className="w-3.5 h-3.5 text-primary" /> Filter Matrix
-                    </div>
+                      <Filter className="w-3.5 h-3.5 text-primary" /> {'Filter matrix'}</div>
                     
                     <div className="flex-1 min-w-[200px] relative">
                       <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
@@ -591,14 +581,14 @@ export function Admin() {
                       onChange={(e) => setRoleFilter(e.target.value)}
                       className="h-9 px-3 rounded-md bg-[#131924] border border-white/10 text-xs text-gray-300 focus:outline-none"
                     >
-                      <option value="">All Roles</option>
-                      <option value="SUPER_ADMIN">Super Administrator</option>
-                      <option value="ORGANIZATION_OWNER">Org Owner</option>
-                      <option value="ORGANIZATION_ADMIN">Org Admin</option>
-                      <option value="SECURITY_ANALYST">Security Analyst</option>
-                      <option value="HR_MANAGER">HR Manager</option>
-                      <option value="TEAM_MANAGER">Team Manager</option>
-                      <option value="EMPLOYEE">Employee</option>
+                      <option value="">{'All roles'}</option>
+                      <option value="SUPER_ADMIN">{'Super administra'}</option>
+                      <option value="ORGANIZATION_OWNER">{'Org owner'}</option>
+                      <option value="ORGANIZATION_ADMIN">{'Org admin'}</option>
+                      <option value="SECURITY_ANALYST">{'Security analyst'}</option>
+                      <option value="HR_MANAGER">{'Hrmanager'}</option>
+                      <option value="TEAM_MANAGER">{'Team manager'}</option>
+                      <option value="EMPLOYEE">{'Employee'}</option>
                     </select>
 
                     <select
@@ -606,11 +596,11 @@ export function Admin() {
                       onChange={(e) => setDeptFilter(e.target.value)}
                       className="h-9 px-3 rounded-md bg-[#131924] border border-white/10 text-xs text-gray-300 focus:outline-none"
                     >
-                      <option value="">All Departments</option>
-                      <option value="Engineering">Engineering</option>
-                      <option value="Security Operations">Security Operations</option>
-                      <option value="Human Resources">Human Resources</option>
-                      <option value="Nuclear Engineering">Nuclear Engineering</option>
+                      <option value="">{'All departments'}</option>
+                      <option value="Engineering">{'Engineering'}</option>
+                      <option value="Security Operations">{'Security operati'}</option>
+                      <option value="Human Resources">{'Human resources'}</option>
+                      <option value="Nuclear Engineering">{'Nuclear engineer'}</option>
                     </select>
 
                     <select
@@ -618,29 +608,29 @@ export function Admin() {
                       onChange={(e) => setRiskFilter(e.target.value)}
                       className="h-9 px-3 rounded-md bg-[#131924] border border-white/10 text-xs text-gray-300 focus:outline-none"
                     >
-                      <option value="">All Risk Tiers</option>
-                      <option value="HIGH">High Risk ({'>'}70)</option>
-                      <option value="MEDIUM">Medium Risk (30-70)</option>
-                      <option value="LOW">Low Risk ({'<'}30)</option>
+                      <option value="">{'All risk tiers'}</option>
+                      <option value="HIGH">{'High risk'}{'>'}70)</option>
+                      <option value="MEDIUM">{t('MediumRisk3070_539')}</option>
+                      <option value="LOW">{'Low risk'}{'<'}30)</option>
                     </select>
                   </div>
 
                   {/* Users Table */}
                   <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
                     <CardHeader>
-                      <CardTitle>Tenant Identity & Role Directory</CardTitle>
+                      <CardTitle>{'Tenant identity r'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
                             <tr className="border-b border-white/10 text-[10px] text-muted-foreground uppercase tracking-widest text-left">
-                              <th className="py-3 px-4 font-semibold">Employee</th>
-                              <th className="py-3 px-4 font-semibold">Department</th>
-                              <th className="py-3 px-4 font-semibold">Role Authority</th>
-                              <th className="py-3 px-4 font-semibold">Risk score</th>
-                              <th className="py-3 px-4 font-semibold">Account State</th>
-                              <th className="py-3 px-4 font-semibold text-right">Access Governance Action Controls</th>
+                              <th className="py-3 px-4 font-semibold">{'Employee'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Department'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Role authority'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Riskscore'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Account state'}</th>
+                              <th className="py-3 px-4 font-semibold text-right">{'Access governanc'}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -651,7 +641,7 @@ export function Admin() {
                                     <div className="font-semibold text-white text-sm">{user.full_name}</div>
                                     <div className="text-xs text-muted-foreground font-mono mt-0.5">{user.email}</div>
                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1 flex items-center gap-1">
-                                      <Clock className="w-3 h-3 text-primary" /> Active Seen: {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}
+                                      <Clock className="w-3 h-3 text-primary" /> {'Active seen'}{user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}
                                     </div>
                                   </div>
                                 </td>
@@ -665,13 +655,13 @@ export function Admin() {
                                     disabled={user.role === 'SUPER_ADMIN' || user.role === 'ORGANIZATION_OWNER'}
                                     className="bg-[#131924] border border-white/10 text-xs rounded px-2 py-1 text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                                   >
-                                    <option value="EMPLOYEE">Employee</option>
-                                    <option value="TEAM_MANAGER">Team Manager</option>
-                                    <option value="HR_MANAGER">HR Manager</option>
-                                    <option value="SECURITY_ANALYST">Security Analyst</option>
-                                    <option value="ORGANIZATION_ADMIN">Org Admin</option>
-                                    <option value="ORGANIZATION_OWNER">Org Owner</option>
-                                    <option value="SUPER_ADMIN">Super Admin</option>
+                                    <option value="EMPLOYEE">{'Employee'}</option>
+                                    <option value="TEAM_MANAGER">{'Team manager'}</option>
+                                    <option value="HR_MANAGER">{'Hrmanager'}</option>
+                                    <option value="SECURITY_ANALYST">{'Security analyst'}</option>
+                                    <option value="ORGANIZATION_ADMIN">{'Org admin'}</option>
+                                    <option value="ORGANIZATION_OWNER">{'Org owner'}</option>
+                                    <option value="SUPER_ADMIN">{'Super admin'}</option>
                                   </select>
                                 </td>
                                 <td className="py-4 px-4">
@@ -709,8 +699,7 @@ export function Admin() {
                                         className="h-8 border-destructive/20 text-destructive hover:bg-destructive/10 text-[10px] uppercase font-bold tracking-wider"
                                         onClick={() => handleUserStatus(user.id, 'SUSPENDED')}
                                       >
-                                        <Lock className="w-3.5 h-3.5 mr-1" /> Suspend
-                                      </Button>
+                                        <Lock className="w-3.5 h-3.5 mr-1" /> {'Suspend'}</Button>
                                     ) : (
                                       <Button
                                         variant="outline"
@@ -718,8 +707,7 @@ export function Admin() {
                                         className="h-8 border-success/20 text-success hover:bg-success/10 text-[10px] uppercase font-bold tracking-wider"
                                         onClick={() => handleUserStatus(user.id, 'ACTIVE')}
                                       >
-                                        <Unlock className="w-3.5 h-3.5 mr-1" /> Enable
-                                      </Button>
+                                        <Unlock className="w-3.5 h-3.5 mr-1" /> {'Enable'}</Button>
                                     )}
 
                                     <Button
@@ -729,8 +717,7 @@ export function Admin() {
                                       onClick={() => handleResetMFA(user.id)}
                                       title="Reset MFA"
                                     >
-                                      <Key className="w-3.5 h-3.5 mr-1" /> Reset MFA
-                                    </Button>
+                                      <Key className="w-3.5 h-3.5 mr-1" /> {'Reset mfa'}</Button>
 
                                     <Button
                                       variant="outline"
@@ -739,8 +726,7 @@ export function Admin() {
                                       onClick={() => handleRevokeSession(user.id)}
                                       title="Revoke browser sessions"
                                     >
-                                      <Trash2 className="w-3.5 h-3.5 mr-1" /> Kill Session
-                                    </Button>
+                                      <Trash2 className="w-3.5 h-3.5 mr-1" /> {'Kill session'}</Button>
                                   </div>
                                 </td>
                               </tr>
@@ -748,8 +734,7 @@ export function Admin() {
                             {filteredUsers.length === 0 && (
                               <tr>
                                 <td colSpan={6} className="py-12 text-center text-muted-foreground text-sm">
-                                  No accounts matched search filters in this organization workspace.
-                                </td>
+                                  {'Noaccountsmatch'}</td>
                               </tr>
                             )}
                           </tbody>
@@ -766,20 +751,19 @@ export function Admin() {
                   <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-primary" /> Multi-Tier Access Request Approvals
-                      </CardTitle>
+                        <Shield className="w-5 h-5 text-primary" /> {'Multi tier access'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
                             <tr className="border-b border-white/10 text-[10px] text-muted-foreground uppercase tracking-widest text-left">
-                              <th className="py-3 px-4 font-semibold">Employee</th>
-                              <th className="py-3 px-4 font-semibold">Requested System Resource</th>
-                              <th className="py-3 px-4 font-semibold">Workflow Approval Path State</th>
-                              <th className="py-3 px-4 font-semibold">Assigned Expiration</th>
-                              <th className="py-3 px-4 font-semibold">Reviewer Notes</th>
-                              <th className="py-3 px-4 font-semibold text-right">Approve / Decline Action</th>
+                              <th className="py-3 px-4 font-semibold">{'Employee'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Requested system'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Workflow approva'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Assigned expirat'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Reviewer notes'}</th>
+                              <th className="py-3 px-4 font-semibold text-right">{'Approve decline a'}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -790,7 +774,7 @@ export function Admin() {
                                     <div className="font-semibold text-white text-sm">{req.user_name}</div>
                                     <div className="text-xs text-muted-foreground font-mono mt-0.5">{req.user_email}</div>
                                     <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">
-                                      Requested: {new Date(req.requested_at).toLocaleString()}
+                                      {'Requested'}{new Date(req.requested_at).toLocaleString()}
                                     </div>
                                   </div>
                                 </td>
@@ -830,11 +814,11 @@ export function Admin() {
                                       onChange={(e) => setRequestExpirations({ ...requestExpirations, [req.id]: e.target.value })}
                                       className="bg-[#131924] border border-white/10 text-xs rounded px-2 py-1 text-gray-200 focus:outline-none"
                                     >
-                                      <option value="8 hours">8 Hours (Temporary)</option>
-                                      <option value="7 days">7 Days</option>
-                                      <option value="30 days">30 Days</option>
-                                      <option value="90 days">90 Days</option>
-                                      <option value="indefinite">Indefinite</option>
+                                      <option value="8 hours">{t('8HoursTemporary_569')}</option>
+                                      <option value="7 days">{t('7Days_570')}</option>
+                                      <option value="30 days">{t('30Days_571')}</option>
+                                      <option value="90 days">{t('90Days_572')}</option>
+                                      <option value="indefinite">{'Indefinite'}</option>
                                     </select>
                                   ) : (
                                     <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -861,19 +845,16 @@ export function Admin() {
                                         onClick={() => handleApprovalWorkflow(req.id, true)}
                                         className="h-8 bg-success/20 text-success hover:bg-success/30 hover:text-white border-success/30 px-3 text-[10px] uppercase font-bold tracking-wider"
                                       >
-                                        Approve Step
-                                      </Button>
+                                        {'Approve step'}</Button>
                                       <Button
                                         onClick={() => handleApprovalWorkflow(req.id, false)}
                                         className="h-8 bg-destructive/20 text-destructive hover:bg-destructive/30 hover:text-white border-destructive/30 px-3 text-[10px] uppercase font-bold tracking-wider"
                                       >
-                                        Reject
-                                      </Button>
+                                        {'Reject'}</Button>
                                     </div>
                                   ) : (
                                     <span className="text-xs text-muted-foreground font-semibold flex items-center justify-end gap-1.5">
-                                      {req.status === 'APPROVED' ? <CheckCircle className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-destructive" />} Workflow Finalized
-                                    </span>
+                                      {req.status === 'APPROVED' ? <CheckCircle className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-destructive" />} {'Workflow finaliz'}</span>
                                   )}
                                 </td>
                               </tr>
@@ -881,8 +862,7 @@ export function Admin() {
                             {requestsList.length === 0 && (
                               <tr>
                                 <td colSpan={6} className="py-12 text-center text-muted-foreground text-sm">
-                                  No pending or historically logged security access requests found in this organization.
-                                </td>
+                                  {'Nopendingorhist'}</td>
                               </tr>
                             )}
                           </tbody>
@@ -900,13 +880,12 @@ export function Admin() {
                   <Card className="lg:col-span-1 border-white/10 bg-white/5 backdrop-blur-sm h-fit">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <UserPlus className="w-5 h-5 text-primary" /> Onboard Employees
-                      </CardTitle>
+                        <UserPlus className="w-5 h-5 text-primary" /> {'Onboard employee'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <form onSubmit={handleSendInvite} className="space-y-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Candidate Email Address</label>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{'Candidate email a'}</label>
                           <Input
                             type="email"
                             placeholder="e.g. recruit@acme.com"
@@ -917,33 +896,32 @@ export function Admin() {
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Temporary Default Role</label>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{'Temporary defaul'}</label>
                           <select
                             value={inviteRole}
                             onChange={(e) => setInviteRole(e.target.value)}
                             className="w-full h-10 px-3 rounded-md bg-[#131924] border border-white/10 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
                           >
-                            <option value="EMPLOYEE">Employee</option>
-                            <option value="TEAM_MANAGER">Team Manager</option>
-                            <option value="SECURITY_ANALYST">Security Analyst</option>
-                            <option value="ORGANIZATION_ADMIN">Org Admin</option>
+                            <option value="EMPLOYEE">{'Employee'}</option>
+                            <option value="TEAM_MANAGER">{'Team manager'}</option>
+                            <option value="SECURITY_ANALYST">{'Security analyst'}</option>
+                            <option value="ORGANIZATION_ADMIN">{'Org admin'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Assigned Department</label>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{'Assigned departm'}</label>
                           <select
                             value={inviteDept}
                             onChange={(e) => setInviteDept(e.target.value)}
                             className="w-full h-10 px-3 rounded-md bg-[#131924] border border-white/10 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
                           >
-                            <option value="Engineering">Engineering</option>
-                            <option value="Security Operations">Security Operations</option>
-                            <option value="Human Resources">Human Resources</option>
+                            <option value="Engineering">{'Engineering'}</option>
+                            <option value="Security Operations">{'Security operati'}</option>
+                            <option value="Human Resources">{'Human resources'}</option>
                           </select>
                         </div>
                         <Button type="submit" className="w-full h-10 mt-2">
-                          <Mail className="w-4 h-4 mr-2" /> Dispatch Invitation
-                        </Button>
+                          <Mail className="w-4 h-4 mr-2" /> {'Dispatch invitat'}</Button>
                       </form>
                     </CardContent>
                   </Card>
@@ -951,18 +929,18 @@ export function Admin() {
                   {/* Active Invites List */}
                   <Card className="lg:col-span-2 border-white/10 bg-white/5 backdrop-blur-sm">
                     <CardHeader>
-                      <CardTitle>Sent Invitations Logs</CardTitle>
+                      <CardTitle>{'Sent invitations'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
                             <tr className="border-b border-white/10 text-[10px] text-muted-foreground uppercase tracking-widest text-left">
-                              <th className="py-3 px-4 font-semibold">Onboarding Target</th>
-                              <th className="py-3 px-4 font-semibold">Assigned Department</th>
-                              <th className="py-3 px-4 font-semibold">Temporary Role</th>
-                              <th className="py-3 px-4 font-semibold">Onboarding State</th>
-                              <th className="py-3 px-4 font-semibold text-right">Invitation Sent</th>
+                              <th className="py-3 px-4 font-semibold">{'Onboarding targe'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Assigned departm'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Temporary role'}</th>
+                              <th className="py-3 px-4 font-semibold">{'Onboarding state'}</th>
+                              <th className="py-3 px-4 font-semibold text-right">{'Invitation sent'}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -994,8 +972,7 @@ export function Admin() {
                             {invitationsList.length === 0 && (
                               <tr>
                                 <td colSpan={5} className="py-12 text-center text-muted-foreground text-sm">
-                                  No sent onboarding invitations found in this active workspace.
-                                </td>
+                                  {'Nosentonboardin'}</td>
                               </tr>
                             )}
                           </tbody>
@@ -1012,8 +989,7 @@ export function Admin() {
                   <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Settings className="w-5 h-5 text-primary" /> Active Organization Zero-Trust Security Policies
-                      </CardTitle>
+                        <Settings className="w-5 h-5 text-primary" /> {'Active organizat'}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       
@@ -1026,7 +1002,7 @@ export function Admin() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between gap-4">
-                              <h4 className="font-semibold text-white">Absolute MFA Enforcement</h4>
+                              <h4 className="font-semibold text-white">{'Absolute mfaenfo'}</h4>
                               <input
                                 type="checkbox"
                                 checked={securityPolicies.mfaEnforced}
@@ -1035,8 +1011,7 @@ export function Admin() {
                               />
                             </div>
                             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                              Require absolute Multi-Factor authentication (MFA/TOTP/Biometrics) for all users in this tenant. Locked status and route protection apply.
-                            </p>
+                              {'Requireabsolute'}</p>
                           </div>
                         </div>
 
@@ -1047,7 +1022,7 @@ export function Admin() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between gap-4">
-                              <h4 className="font-semibold text-white">Enforce Trusted Device Access</h4>
+                              <h4 className="font-semibold text-white">{'Enforce trusted d'}</h4>
                               <input
                                 type="checkbox"
                                 checked={securityPolicies.trustedDeviceRequired}
@@ -1056,8 +1031,7 @@ export function Admin() {
                               />
                             </div>
                             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                              Restricts general application operations to registered and verified employee hardware devices. Unknown fingerprints are instantly blocked.
-                            </p>
+                              {'Restrictsgenera'}</p>
                           </div>
                         </div>
 
@@ -1068,7 +1042,7 @@ export function Admin() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between gap-4">
-                              <h4 className="font-semibold text-white">Office Location Login Limits</h4>
+                              <h4 className="font-semibold text-white">{'Office location l'}</h4>
                               <input
                                 type="checkbox"
                                 checked={securityPolicies.officeOnlyLogin}
@@ -1077,8 +1051,7 @@ export function Admin() {
                               />
                             </div>
                             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                              Restricts employee check-in or login endpoints specifically to designated enterprise headquarters and geofenced office IPs.
-                            </p>
+                              {'Restrictsemploy'}</p>
                           </div>
                         </div>
 
@@ -1089,7 +1062,7 @@ export function Admin() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between gap-4">
-                              <h4 className="font-semibold text-white">Time-Restricted Work Access</h4>
+                              <h4 className="font-semibold text-white">{'Time restricted w'}</h4>
                               <input
                                 type="checkbox"
                                 checked={securityPolicies.timeBasedAccessOnly}
@@ -1098,15 +1071,14 @@ export function Admin() {
                               />
                             </div>
                             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                              Prohibits workplace access requests and logouts outside standard working hours (8:00 AM - 6:00 PM), except for security analytics roles.
-                            </p>
+                              {'Prohibitsworkpl'}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Allowed IPs Policy */}
                       <div className="p-5 rounded-xl bg-white/[0.01] border border-white/5">
-                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Restricted Allowed IP CIDR Ranges (One per line)</label>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{'Restricted allow'}</label>
                         <textarea
                           value={securityPolicies.allowedIpRanges?.join('\n') || '0.0.0.0/0'}
                           onChange={(e) => updateSecurityPolicies({ allowedIpRanges: e.target.value.split('\n').filter(Boolean) })}
@@ -1115,8 +1087,7 @@ export function Admin() {
                           placeholder="e.g. 192.168.1.0/24"
                         />
                         <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
-                          Adherence to these CIDR subnets is enforced on all authentication pathways. Unmatched network endpoints will trigger an impossible travel alert.
-                        </p>
+                          {'Adherencetothes'}</p>
                       </div>
 
                     </CardContent>
@@ -1139,23 +1110,20 @@ export function Admin() {
                       />
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-gray-400 mr-1">Compliance Export:</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-400 mr-1">{'Compliance expor'}</span>
                       <Button variant="outline" size="sm" onClick={() => handleExportAudits('CSV')} className="h-9 border-white/10 hover:border-success/30 text-xs">
-                        <FileSpreadsheet className="w-4 h-4 text-success mr-2" /> Export CSV
-                      </Button>
+                        <FileSpreadsheet className="w-4 h-4 text-success mr-2" /> {'Export csv'}</Button>
                       <Button variant="outline" size="sm" onClick={() => handleExportAudits('EXCEL')} className="h-9 border-white/10 hover:border-success/30 text-xs">
-                        <FileSpreadsheet className="w-4 h-4 text-success mr-2" /> Export Excel
-                      </Button>
+                        <FileSpreadsheet className="w-4 h-4 text-success mr-2" /> {'Export excel'}</Button>
                       <Button variant="outline" size="sm" onClick={() => handleExportAudits('PDF')} className="h-9 border-white/10 hover:border-destructive/30 text-xs">
-                        <FileSpreadsheet className="w-4 h-4 text-destructive mr-2" /> Export PDF
-                      </Button>
+                        <FileSpreadsheet className="w-4 h-4 text-destructive mr-2" /> {'Export pdf'}</Button>
                     </div>
                   </div>
 
                   {/* Audit Logs Trail */}
                   <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
                     <CardHeader>
-                      <CardTitle>Compliance Auditable Action Trail (SOC2 / ISO 27001 Ready)</CardTitle>
+                      <CardTitle>{'Compliance audit'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
@@ -1179,7 +1147,7 @@ export function Admin() {
                               </div>
                               <div className="text-right sm:mt-1">
                                 <span className="text-[9px] px-2 py-0.5 rounded bg-white/10 text-gray-400 uppercase font-bold tracking-wider">
-                                  Tenant: {log.organization}
+                                  {'Tenant'}{log.organization}
                                 </span>
                                 <div className="text-[10px] text-gray-500 font-bold flex items-center justify-end gap-1 mt-2">
                                   <Clock className="w-3.5 h-3.5" />
@@ -1191,8 +1159,7 @@ export function Admin() {
                         ))}
                         {filteredLogs.length === 0 && (
                           <div className="py-12 text-center text-muted-foreground text-sm">
-                            No auditable trail matching your active filters.
-                          </div>
+                            {'Noauditabletrai'}</div>
                         )}
                       </div>
                     </CardContent>

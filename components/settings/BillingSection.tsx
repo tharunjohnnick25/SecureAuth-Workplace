@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/store/useAuthStore'
 import { CreditCard, Loader2, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Subscription {
   plan_id: string
@@ -13,6 +14,7 @@ interface Subscription {
 }
 
 export function BillingSection() {
+    const { t } = useLanguage();
   const { user } = useAuthStore()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
@@ -50,12 +52,11 @@ export function BillingSection() {
     return (
       <div className="space-y-6">
         <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-          <p className="text-sm text-gray-400">No active subscription found.</p>
+          <p className="text-sm text-gray-400">{'No active subscription'}</p>
         </div>
         <Link href="/pricing">
           <button className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-sm transition-all">
-            View Plans & Subscribe
-          </button>
+            {'View plans & subscriptions'}</button>
         </Link>
       </div>
     )
@@ -71,7 +72,7 @@ export function BillingSection() {
     <div className="space-y-6">
       <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex justify-between items-center">
         <div>
-          <p className="text-sm font-semibold text-white">Current Plan</p>
+          <p className="text-sm font-semibold text-white">{'Current plan'}</p>
           <p className="text-lg font-bold text-blue-400 mt-1">
             {planLabels[subscription.plan_id] || subscription.plan_id}
           </p>
@@ -85,11 +86,11 @@ export function BillingSection() {
         </span>
       </div>
       <div className="text-sm text-gray-400">
-        Renews on {new Date(subscription.current_period_end).toLocaleDateString()}
+        {'Renews on '}{new Date(subscription.current_period_end).toLocaleDateString()}
       </div>
       <Link href="/pricing">
         <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-bold text-sm transition-all">
-          Upgrade Plan <ExternalLink className="w-4 h-4" />
+          {'Upgrade plan'}<ExternalLink className="w-4 h-4" />
         </button>
       </Link>
     </div>

@@ -8,8 +8,10 @@ import { Card } from '@/components/Card';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useBiometrics } from '@/hooks/useBiometrics';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function VerifyBiometricPage() {
+    const { t } = useLanguage();
   const router = useRouter();
   const { user, requiresBiometric, setUser, clearBiometricRequirement } = useAuthStore();
   const { authenticateBiometrics } = useBiometrics();
@@ -48,17 +50,16 @@ export default function VerifyBiometricPage() {
           <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-6 border border-primary/30 animate-pulse">
             <Fingerprint className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Biometric Verification</h1>
+          <h1 className="text-3xl font-semibold mb-2">{'Biometric verifi'}</h1>
           <p className="text-muted-foreground">
-            Identity verification required to access your account
-          </p>
+            {'Identityverific'}</p>
         </div>
 
         <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg mb-8 text-sm flex items-start gap-3 text-left">
           <Shield className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-foreground">Enhanced Security Active</p>
-            <p className="text-muted-foreground">A new device or location has been detected. Please use your registered biometric method (TouchID, FaceID, or Windows Hello) to continue.</p>
+            <p className="font-medium text-foreground">{'Enhanced securit'}</p>
+            <p className="text-muted-foreground">{'Anewdeviceorloc'}</p>
           </div>
         </div>
 
@@ -77,13 +78,12 @@ export default function VerifyBiometricPage() {
             className="w-full" 
             onClick={() => router.push('/login')}
           >
-            Use Different Account
-          </Button>
+            {'Use different acc'}</Button>
         </div>
 
         <div className="mt-8 pt-6 border-t border-border flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <Lock className="w-4 h-4" />
-          <span>Zero-Trust Architecture Protocol</span>
+          <span>{'Zero trust archit'}</span>
         </div>
       </Card>
     </div>

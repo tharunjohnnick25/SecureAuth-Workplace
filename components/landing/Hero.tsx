@@ -4,8 +4,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Fingerprint, Lock, Zap, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from "@/context/LanguageContext";
 
 const Hero = () => {
+    const { t } = useLanguage();
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
       {/* Background Orbs */}
@@ -22,7 +24,7 @@ const Hero = () => {
             className="px-4 py-2 bg-white/5 border border-white/10 rounded-full flex items-center gap-2 mb-8"
           >
             <span className="w-2 h-2 bg-blue-400 rounded-full animate-ping"></span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-300">New: AI-Powered Office Security v2.0</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-blue-300">{'New AI-powered offering'}</span>
           </motion.div>
 
           {/* Title */}
@@ -32,8 +34,7 @@ const Hero = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight"
           >
-            Intelligent <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Employee Access</span> Management
-          </motion.h1>
+            {'Intelligent '}<span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">{'Access & Workplace'}</span> {' Management'}</motion.h1>
 
           {/* Description */}
           <motion.p
@@ -42,9 +43,7 @@ const Hero = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl"
           >
-            Protect your enterprise workforce with zero-trust adaptive authentication. 
-            Leveraging real-time office login monitoring, device fingerprinting, and AI risk analysis to secure internal portals and company resources.
-          </motion.p>
+            {'Protect your entire workforce with AI-driven access security and seamless collaboration tools.'}</motion.p>
 
           {/* Buttons */}
           <motion.div
@@ -57,14 +56,13 @@ const Hero = () => {
               href="/signup" 
               className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center gap-2"
             >
-              Start Free Trial <ArrowRight className="w-5 h-5" />
+              {'Start free trial'}<ArrowRight className="w-5 h-5" />
             </Link>
             <Link 
               href="/demo" 
               className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all backdrop-blur-sm"
             >
-              Watch Live Demo
-            </Link>
+              {'Watch live demo'}</Link>
           </motion.div>
 
           {/* Dashboard Preview Overlay */}
@@ -127,8 +125,8 @@ const Hero = () => {
                 <Shield className="text-green-400 w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Auth Status</div>
-                <div className="text-sm font-bold text-white">Verified: Low Risk</div>
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{'Auth status'}</div>
+                <div className="text-sm font-bold text-white">{'Verified low risk'}</div>
               </div>
             </motion.div>
 
@@ -141,8 +139,8 @@ const Hero = () => {
                 <Fingerprint className="text-blue-400 w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Biometric Match</div>
-                <div className="text-sm font-bold text-white">Typing Profile: 98%</div>
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{'Biometric match'}</div>
+                <div className="text-sm font-bold text-white">{'Typing Profile 98%'}</div>
               </div>
             </motion.div>
           </motion.div>

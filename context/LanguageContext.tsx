@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type LanguageCode = 'en' | 'hi' | 'es' | 'fr' | 'de' | 'ta';
+export type LanguageCode = 'en' | 'hi' | 'es' | 'fr' | 'de' | 'ta' | 'zh-CN' | 'ja' | 'ko' | 'ar' | 'ru' | 'pt' | 'it' | 'nl' | 'tr';
 
 export interface Language {
   code: LanguageCode;
@@ -18,9 +18,18 @@ export const LANGUAGES: Language[] = [
   { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
   { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳' },
+  { code: 'zh-CN', name: 'Chinese', nativeName: '中文', flag: '🇨🇳' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
+  { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
+  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱' },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
 ];
 
-const translations: Record<LanguageCode, Record<string, string>> = {
+const translations: Record<string, Record<string, string>> = {
   en: {
     dashboard: 'Dashboard',
     attendance: 'Attendance & Login',
@@ -55,6 +64,66 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     settings: 'Settings',
     devices: 'Devices',
     alerts: 'Alerts',
+    'Overview': 'Overview',
+    'Workspace': 'Workspace',
+    'Employee Access': 'Employee Access',
+    'Office Security': 'Office Security',
+    'System Management': 'System Management',
+    'Dashboard': 'Dashboard',
+    'Attendance & Login': 'Attendance & Login',
+    'Notifications': 'Notifications',
+    'Focus Mode': 'Focus Mode',
+    'My Tasks': 'My Tasks',
+    'Chat with Colleagues': 'Chat with Colleagues',
+    'Calendar': 'Calendar',
+    'Leave Apply': 'Leave Apply',
+    'Secure Notes': 'Secure Notes',
+    'Company Drive': 'Company Drive',
+    'Video Meetings': 'Video Meetings',
+    'Web Bookmarks': 'Web Bookmarks',
+    'Internal Mail': 'Internal Mail',
+    'Automated Reminders': 'Automated Reminders',
+    'Employee Directory': 'Employee Directory',
+    'Access Requests': 'Access Requests',
+    'Leave Approvals': 'Leave Approvals',
+    'Departments': 'Departments',
+    'Roles & Permissions': 'Roles & Permissions',
+    'Office Logins': 'Office Logins',
+    'AI Risk Monitoring': 'AI Risk Monitoring',
+    'Device Fingerprinting': 'Device Fingerprinting',
+    'Security Center': 'Security Center',
+    'Threat Intelligence': 'Threat Intelligence',
+    'Attendance Reports': 'Attendance Reports',
+    'Audit Logs': 'Audit Logs',
+    'Analytics': 'Analytics',
+    'Code Compiler': 'Code Compiler',
+    'Subscription Plans': 'Subscription Plans',
+    'API Integrations': 'API Integrations',
+    'Settings': 'Settings',
+    dashboardTitle: 'Security Overview',
+    dashboardDesc: 'Monitor real-time security events and system health.',
+    systemLive: 'System Live',
+    totalEmployees: 'Total Employees',
+    registeredUsers: 'Registered Users',
+    activeSessions: 'Active Sessions',
+    last24Hours: 'Last 24 Hours',
+    securityAlerts: 'Security Alerts',
+    requiringReview: 'Requiring Review',
+    systemRisk: 'System Risk',
+    automatedEval: 'Automated Evaluation',
+    realtimeStream: 'Real-time Authentication Stream',
+    showingLast20: 'Showing last 20 events',
+    noAuthEvents: 'No authentication events found.',
+    event: 'Event',
+    user: 'User',
+    source: 'Source',
+    status: 'Status',
+    time: 'Time',
+    authorizedSession: 'Authorized Session',
+    blockedAttempt: 'Blocked Attempt',
+    success: 'SUCCESS',
+    failed: 'FAILED',
+    unknown: 'Unknown',
   },
   hi: {
     dashboard: 'डैशबोर्ड',
@@ -246,15 +315,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('app_language') as LanguageCode;
-    if (saved && translations[saved]) {
+    const isValidLang = LANGUAGES.some(l => l.code === saved);
+    if (saved && isValidLang) {
       setLangCode(saved);
     }
   }, []);
 
   const setLanguage = (code: LanguageCode) => {
-    if (translations[code]) {
-      setLangCode(code);
-      localStorage.setItem('app_language', code);
+    setLangCode(code);
+    localStorage.setItem('app_language', code);
+    
+    if (typeof window !== 'undefined') {
+      // Set the Google Translate cookie
+      // Format: /source-lang/target-lang (e.g., /en/es)
+      const domain = window.location.hostname;
+      document.cookie = `googtrans=/en/${code}; path=/; domain=${domain}`;
+      document.cookie = `googtrans=/en/${code}; path=/`; // Also set for current host just in case
+
+      // Reload to apply the translation natively across all text nodes
+      window.location.reload();
     }
   };
 

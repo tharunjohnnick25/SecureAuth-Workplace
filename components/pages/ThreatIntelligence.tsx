@@ -33,6 +33,7 @@ import {
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
+import { useLanguage } from "@/context/LanguageContext";
 
 // Mock data for threat intelligence
 const attackData = [
@@ -54,6 +55,7 @@ const vectorDistribution = [
 
 
 export function ThreatIntelligence() {
+    const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('overview');
   const { data: dbThreats } = useRealtimeData('threat_logs');
 
@@ -88,15 +90,15 @@ export function ThreatIntelligence() {
                 <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center border border-red-500/20">
                   <Target className="text-red-400 w-6 h-6" />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight">Threat Intelligence Center</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{'Threat intellige'}</h1>
               </div>
-              <p className="text-gray-400">Real-time global attack monitoring & AI predictive analytics</p>
+              <p className="text-gray-400">{'Realtimeglobala'}</p>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3">
                  <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
-                 <span className="text-xs font-bold text-red-400 uppercase tracking-widest">Global Threat Level: High</span>
+                 <span className="text-xs font-bold text-red-400 uppercase tracking-widest">{'Global threat lev'}</span>
               </div>
             </div>
           </div>
@@ -131,11 +133,11 @@ export function ThreatIntelligence() {
                
                <div className="flex items-center justify-between mb-8 relative z-10">
                   <div>
-                    <h3 className="text-xl font-bold">Attack Propagation Stream</h3>
-                    <p className="text-sm text-gray-400 font-medium">Real-time correlated security events</p>
+                    <h3 className="text-xl font-bold">{'Attack propagati'}</h3>
+                    <p className="text-sm text-gray-400 font-medium">{'Realtimecorrela'}</p>
                   </div>
                   <div className="flex gap-2">
-                    <div className="px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-bold text-gray-400 uppercase">24h History</div>
+                    <div className="px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-bold text-gray-400 uppercase">{t('24hHistory_1303')}</div>
                   </div>
                </div>
 
@@ -164,11 +166,11 @@ export function ThreatIntelligence() {
                <div className="mt-8 flex items-center gap-6">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span className="text-xs text-gray-400">Brute Force</span>
+                    <span className="text-xs text-gray-400">{'Brute force'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full border border-yellow-500 border-dashed"></div>
-                    <span className="text-xs text-gray-400">Credential Stuffing</span>
+                    <span className="text-xs text-gray-400">{'Credential stuff'}</span>
                   </div>
                </div>
             </Card>
@@ -180,20 +182,19 @@ export function ThreatIntelligence() {
                     <Cpu className="text-purple-400 w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold">AI Forecasting</h3>
-                    <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Predictive Defense</p>
+                    <h3 className="text-lg font-bold">{'Aiforecasting'}</h3>
+                    <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">{'Predictive defen'}</p>
                   </div>
                </div>
 
                <div className="space-y-6 flex-1">
                   <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl relative overflow-hidden group">
                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-xs font-bold text-purple-300">Botnet Activity Spike</span>
-                        <span className="text-[10px] font-black text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded uppercase">84% PROB</span>
+                        <span className="text-xs font-bold text-purple-300">{'Botnet activity s'}</span>
+                        <span className="text-[10px] font-black text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded uppercase">{t('84PROB_1309')}</span>
                      </div>
                      <p className="text-xs text-gray-400 leading-relaxed">
-                        Predicted 15% increase in automated login attempts over the next 6 hours targeting North American endpoints.
-                      </p>
+                        {t('Predicted15incr_1310')}</p>
                       <motion.div 
                         animate={{ x: ['-100%', '100%'] }} 
                         transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
@@ -203,18 +204,16 @@ export function ThreatIntelligence() {
 
                   <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-xs font-bold text-blue-300">Pattern Recognition</span>
-                        <span className="text-[10px] font-black text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded uppercase">Low Risk</span>
+                        <span className="text-xs font-bold text-blue-300">{'Pattern recognit'}</span>
+                        <span className="text-[10px] font-black text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded uppercase">{'Low risk'}</span>
                      </div>
                      <p className="text-xs text-gray-400 leading-relaxed">
-                        Current session entropy is within healthy parameters. No immediate lateral movement detected.
-                      </p>
+                        {'Currentsessione'}</p>
                   </div>
                </div>
 
                <button className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-gray-500 uppercase tracking-widest transition-all">
-                  Generate Full Threat Report
-               </button>
+                  {'Generate full thr'}</button>
             </Card>
           </div>
 
@@ -223,8 +222,7 @@ export function ThreatIntelligence() {
             <Card className="lg:col-span-3 glass-panel p-8">
                <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-bold flex items-center gap-3">
-                    <Activity className="w-5 h-5 text-red-400" /> Security Incident Stream
-                  </h3>
+                    <Activity className="w-5 h-5 text-red-400" /> {'Security inciden'}</h3>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
                     <input type="text" placeholder="Filter incidents..." className="pl-9 pr-4 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs outline-none focus:border-red-500/30 w-48" />
@@ -275,7 +273,7 @@ export function ThreatIntelligence() {
 
             {/* Vector Distribution */}
             <Card className="glass-panel p-8">
-               <h3 className="text-lg font-bold mb-8">Attack Vectors</h3>
+               <h3 className="text-lg font-bold mb-8">{'Attack vectors'}</h3>
                <div className="h-[200px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>

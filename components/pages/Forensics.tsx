@@ -14,6 +14,7 @@ import {
   Cpu,
   Network,
 } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const investigations = [
   { id: 'FOR-2024-012', title: 'Data Exfiltration Analysis', type: 'Network', status: 'Active', investigator: 'Sarah Chen', started: '2026-04-30', evidence: 127, findings: 15 },
@@ -37,6 +38,7 @@ const recentFindings = [
 ];
 
 export function Forensics() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -45,20 +47,17 @@ export function Forensics() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Digital Forensics</h1>
+              <h1 className="text-3xl font-semibold mb-2">{'Digital forensic'}</h1>
               <p className="text-muted-foreground">
-                Investigate security incidents and analyze evidence
-              </p>
+                {'Investigatesecu'}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline">
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
+                {'Filter'}</Button>
               <Button>
                 <Search className="w-4 h-4 mr-2" />
-                New Investigation
-              </Button>
+                {'New investigatio'}</Button>
             </div>
           </div>
 
@@ -84,8 +83,7 @@ export function Forensics() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Active Investigations
-                </CardTitle>
+                  {'Active investiga'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -104,8 +102,8 @@ export function Forensics() {
                           </div>
                           <p className="text-sm mb-2">{investigation.title}</p>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>Investigator: {investigation.investigator}</span>
-                            <span>Started: {investigation.started}</span>
+                            <span>{'Investigator'}{investigation.investigator}</span>
+                            <span>{'Started'}{investigation.started}</span>
                           </div>
                         </div>
                         <div className="text-right ml-4">
@@ -117,8 +115,8 @@ export function Forensics() {
                             {investigation.status}
                           </span>
                           <div className="text-xs text-muted-foreground space-y-1">
-                            <p>{investigation.evidence} evidence items</p>
-                            <p>{investigation.findings} findings</p>
+                            <p>{investigation.evidence} {'Evidenceitems'}</p>
+                            <p>{investigation.findings} {'Findings'}</p>
                           </div>
                         </div>
                       </div>
@@ -130,7 +128,7 @@ export function Forensics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Recent Findings</CardTitle>
+                <CardTitle>{'Recent findings'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -166,16 +164,15 @@ export function Forensics() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="w-5 h-5" />
-                  Evidence Chain of Custody
-                </CardTitle>
+                  {'Evidence chainof'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="p-4 rounded-lg bg-input-background/30">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <h4 className="font-medium mb-1">network_capture_20260430.pcap</h4>
-                        <p className="text-sm text-muted-foreground">Network Traffic Capture</p>
+                        <h4 className="font-medium mb-1">{t('networkcapture2_864')}</h4>
+                        <p className="text-sm text-muted-foreground">{'Network traffic c'}</p>
                       </div>
                       <Button variant="outline" size="sm">
                         <Download className="w-3 h-3" />
@@ -183,28 +180,28 @@ export function Forensics() {
                     </div>
                     <div className="space-y-2 text-xs text-muted-foreground">
                       <div className="flex items-center justify-between">
-                        <span>Collected by:</span>
-                        <span className="text-foreground">Sarah Chen</span>
+                        <span>{'Collectedby'}</span>
+                        <span className="text-foreground">{'Sarah chen'}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Date:</span>
+                        <span>{'Date'}</span>
                         <span className="text-foreground">2026-04-30 14:00</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Hash (SHA-256):</span>
-                        <span className="text-foreground font-mono">a3f5...9c2d</span>
+                        <span>{t('HashSHA256_869')}</span>
+                        <span className="text-foreground font-mono">{t('a3f59c2d_870')}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Status:</span>
-                        <span className="text-success">Verified</span>
+                        <span>{'Status'}</span>
+                        <span className="text-success">{'Verified'}</span>
                       </div>
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-input-background/30">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <h4 className="font-medium mb-1">system_memory_dump.bin</h4>
-                        <p className="text-sm text-muted-foreground">Memory Image</p>
+                        <h4 className="font-medium mb-1">{'Systemmemorydum'}</h4>
+                        <p className="text-sm text-muted-foreground">{'Memory image'}</p>
                       </div>
                       <Button variant="outline" size="sm">
                         <Download className="w-3 h-3" />
@@ -212,20 +209,20 @@ export function Forensics() {
                     </div>
                     <div className="space-y-2 text-xs text-muted-foreground">
                       <div className="flex items-center justify-between">
-                        <span>Collected by:</span>
-                        <span className="text-foreground">Michael Rodriguez</span>
+                        <span>{'Collectedby'}</span>
+                        <span className="text-foreground">{'Michael rodrigue'}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Date:</span>
+                        <span>{'Date'}</span>
                         <span className="text-foreground">2026-04-28 09:30</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Hash (SHA-256):</span>
-                        <span className="text-foreground font-mono">b8e2...4f1a</span>
+                        <span>{t('HashSHA256_878')}</span>
+                        <span className="text-foreground font-mono">{t('b8e24f1a_879')}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Status:</span>
-                        <span className="text-success">Verified</span>
+                        <span>{'Status'}</span>
+                        <span className="text-success">{'Verified'}</span>
                       </div>
                     </div>
                   </div>
@@ -235,37 +232,33 @@ export function Forensics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Forensic Tools</CardTitle>
+                <CardTitle>{'Forensic tools'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors cursor-pointer">
-                    <h4 className="font-medium mb-2">Network Packet Analyzer</h4>
-                    <p className="text-sm text-muted-foreground mb-3">Analyze network traffic captures and detect anomalies</p>
+                    <h4 className="font-medium mb-2">{'Network packet an'}</h4>
+                    <p className="text-sm text-muted-foreground mb-3">{'Analyzenetworkt'}</p>
                     <Button variant="outline" size="sm" className="w-full">
-                      Launch Tool
-                    </Button>
+                      {'Launch tool'}</Button>
                   </div>
                   <div className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors cursor-pointer">
-                    <h4 className="font-medium mb-2">Memory Forensics Suite</h4>
-                    <p className="text-sm text-muted-foreground mb-3">Extract and analyze volatile memory artifacts</p>
+                    <h4 className="font-medium mb-2">{'Memory forensics'}</h4>
+                    <p className="text-sm text-muted-foreground mb-3">{'Extractandanaly'}</p>
                     <Button variant="outline" size="sm" className="w-full">
-                      Launch Tool
-                    </Button>
+                      {'Launch tool'}</Button>
                   </div>
                   <div className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors cursor-pointer">
-                    <h4 className="font-medium mb-2">Disk Image Analyzer</h4>
-                    <p className="text-sm text-muted-foreground mb-3">Examine disk images and recover deleted files</p>
+                    <h4 className="font-medium mb-2">{'Disk image analyz'}</h4>
+                    <p className="text-sm text-muted-foreground mb-3">{'Examinediskimag'}</p>
                     <Button variant="outline" size="sm" className="w-full">
-                      Launch Tool
-                    </Button>
+                      {'Launch tool'}</Button>
                   </div>
                   <div className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors cursor-pointer">
-                    <h4 className="font-medium mb-2">Log File Correlator</h4>
-                    <p className="text-sm text-muted-foreground mb-3">Correlate events across multiple log sources</p>
+                    <h4 className="font-medium mb-2">{'Log file correlat'}</h4>
+                    <p className="text-sm text-muted-foreground mb-3">{'Correlateevents'}</p>
                     <Button variant="outline" size="sm" className="w-full">
-                      Launch Tool
-                    </Button>
+                      {'Launch tool'}</Button>
                   </div>
                 </div>
               </CardContent>

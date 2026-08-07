@@ -24,7 +24,7 @@ const CYBER_INTEL_DB = [
   },
   {
     keywords: ['recommendation', 'advice', 'protect'],
-    answer: "SecureAuth AI Recommendation: 1. Maintain global MFA enforcement on all employee accounts. 2. Establish strict geo-fencing policies for critical finance and deployment portals. 3. Periodically review the administrative audit logs to identify anomalous access request justifications."
+    answer: "SecureAuth Workplace Recommendation: 1. Maintain global MFA enforcement on all employee accounts. 2. Establish strict geo-fencing policies for critical finance and deployment portals. 3. Periodically review the administrative audit logs to identify anomalous access request justifications."
   }
 ];
 
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
     // Default fallback to show highly smart AI analytical capabilities
     if (!matchedAnswer) {
-      matchedAnswer = "SecureAuth AI Threat Intel: Your request has been analyzed by our adaptive neural gateway. No anomalies detected. Recommendation: Ensure your current session is locked with standard physical hardware security. Ask me about your 'risk score', 'suspicious login checks', or 'device trust' to review system analytics.";
+      matchedAnswer = "SecureAuth Workplace Threat Intel: Your request has been analyzed by our adaptive neural gateway. No anomalies detected. Recommendation: Ensure your current session is locked with standard physical hardware security. Ask me about your 'risk score', 'suspicious login checks', or 'device trust' to review system analytics.";
     }
 
     return NextResponse.json({

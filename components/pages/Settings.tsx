@@ -10,6 +10,7 @@ import { Shield, Bell, Lock, User, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface UserSettings {
   full_name: string;
@@ -25,6 +26,7 @@ interface UserSettings {
 }
 
 export function Settings() {
+    const { t } = useLanguage();
   const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -168,10 +170,9 @@ export function Settings() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Settings</h1>
+            <h1 className="text-3xl font-semibold mb-2">{'Settings'}</h1>
             <p className="text-muted-foreground">
-              Manage your account and security preferences
-            </p>
+              {'Manageyouraccou'}</p>
           </div>
 
           <div className="space-y-6">
@@ -181,24 +182,24 @@ export function Settings() {
                   <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
                     <User className="w-5 h-5 text-primary" />
                   </div>
-                  <CardTitle>Profile Information</CardTitle>
+                  <CardTitle>{'Profile informat'}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block mb-2 text-sm">Full Name</label>
+                    <label className="block mb-2 text-sm">{'Full name'}</label>
                     <Input
                       value={settings.full_name}
                       onChange={(e) => setSettings({ ...settings, full_name: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm">Email Address</label>
+                    <label className="block mb-2 text-sm">{'Email address'}</label>
                     <Input value={settings.email} disabled />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm">Phone Number</label>
+                    <label className="block mb-2 text-sm">{'Phone number'}</label>
                     <Input
                       value={settings.phone}
                       onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
@@ -206,7 +207,7 @@ export function Settings() {
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm">Role</label>
+                    <label className="block mb-2 text-sm">{'Role'}</label>
                     <Input value={(user?.role || 'Employee')} disabled />
                   </div>
                 </div>
@@ -224,17 +225,16 @@ export function Settings() {
                   <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center">
                     <Shield className="w-5 h-5 text-success" />
                   </div>
-                  <CardTitle>Security Settings</CardTitle>
+                  <CardTitle>{'Security setting'}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-lg bg-input-background/30">
                     <div>
-                      <h4 className="font-medium mb-1">Two-Factor Authentication</h4>
+                      <h4 className="font-medium mb-1">{'Two factor authen'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Add an extra layer of security to your account
-                      </p>
+                        {'Addanextralayer'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-sm ${settings.mfa_enabled ? 'text-success' : 'text-muted-foreground'}`}>
@@ -251,10 +251,9 @@ export function Settings() {
 
                   <div className="flex items-center justify-between p-4 rounded-lg bg-input-background/30">
                     <div>
-                      <h4 className="font-medium mb-1">Biometric Authentication</h4>
+                      <h4 className="font-medium mb-1">{'Biometric authen'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Use fingerprint or face recognition
-                      </p>
+                        {'Usefingerprinto'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-sm ${settings.biometric_enabled ? 'text-success' : 'text-muted-foreground'}`}>
@@ -271,10 +270,9 @@ export function Settings() {
 
                   <div className="flex items-center justify-between p-4 rounded-lg bg-input-background/30">
                     <div>
-                      <h4 className="font-medium mb-1">Risk-Based Authentication</h4>
+                      <h4 className="font-medium mb-1">{'Risk based authen'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Automatically adjust security based on login context
-                      </p>
+                        {'Automaticallyad'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-sm ${settings.risk_based_auth ? 'text-success' : 'text-muted-foreground'}`}>
@@ -303,17 +301,16 @@ export function Settings() {
                   <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center">
                     <Bell className="w-5 h-5 text-warning" />
                   </div>
-                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardTitle>{'Notification pre'}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-lg bg-input-background/30">
                     <div>
-                      <h4 className="font-medium mb-1">Security Alerts</h4>
+                      <h4 className="font-medium mb-1">{'Security alerts'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Get notified about suspicious activity
-                      </p>
+                        {'Getnotifiedabou'}</p>
                     </div>
                     <button
                       onClick={() => toggleSetting('security_alerts')}
@@ -325,10 +322,9 @@ export function Settings() {
 
                   <div className="flex items-center justify-between p-4 rounded-lg bg-input-background/30">
                     <div>
-                      <h4 className="font-medium mb-1">New Device Login</h4>
+                      <h4 className="font-medium mb-1">{'New device login'}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Alert when a new device accesses your account
-                      </p>
+                        {'Alertwhenanewde'}</p>
                     </div>
                     <button
                       onClick={() => toggleSetting('new_device_alerts')}
@@ -352,13 +348,13 @@ export function Settings() {
                   <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center">
                     <Lock className="w-5 h-5 text-destructive" />
                   </div>
-                  <CardTitle>Change Password</CardTitle>
+                  <CardTitle>{'Change password'}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <label className="block mb-2 text-sm">New Password</label>
+                    <label className="block mb-2 text-sm">{'New password'}</label>
                     <Input
                       type="password"
                       placeholder="Enter new password"
@@ -367,7 +363,7 @@ export function Settings() {
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm">Confirm New Password</label>
+                    <label className="block mb-2 text-sm">{'Confirm new passw'}</label>
                     <Input
                       type="password"
                       placeholder="Confirm new password"

@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { MessageSquare, Plus, Clock } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const tickets = [
   { id: 'TICK-2024-089', subject: 'Unable to access API documentation', status: 'Open', priority: 'Medium', created: '2026-04-30', updated: '2 hours ago' },
@@ -13,6 +14,7 @@ const tickets = [
 ];
 
 export function SupportTickets() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -21,21 +23,19 @@ export function SupportTickets() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Support Tickets</h1>
-              <p className="text-muted-foreground">View and manage your support requests</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Support tickets'}</h1>
+              <p className="text-muted-foreground">{'Viewandmanageyo'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              New Ticket
-            </Button>
+              {'New ticket'}</Button>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" />
-                Your Tickets
-              </CardTitle>
+                {'Your tickets'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -64,12 +64,12 @@ export function SupportTickets() {
                         <div className="flex gap-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            <span>Created: {ticket.created}</span>
+                            <span>{'Created'}{ticket.created}</span>
                           </div>
-                          <span>Updated: {ticket.updated}</span>
+                          <span>{'Updated'}{ticket.updated}</span>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">View</Button>
+                      <Button variant="outline" size="sm">{'View'}</Button>
                     </div>
                   </div>
                 ))}

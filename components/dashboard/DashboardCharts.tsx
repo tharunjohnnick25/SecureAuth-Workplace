@@ -15,6 +15,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardChartsProps {
   chartData: { day: string; success: number; failed: number }[];
@@ -22,11 +23,12 @@ interface DashboardChartsProps {
 }
 
 export default function DashboardCharts({ chartData, riskDistribution }: DashboardChartsProps) {
+    const { t } = useLanguage();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Authentication Trends (Last 7 Days)</CardTitle>
+          <CardTitle>{'Authentication trends'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[350px] w-full">
@@ -66,7 +68,7 @@ export default function DashboardCharts({ chartData, riskDistribution }: Dashboa
 
       <Card>
         <CardHeader>
-          <CardTitle>Global Risk Distribution</CardTitle>
+          <CardTitle>{'Global risk distribution'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[250px] w-full">

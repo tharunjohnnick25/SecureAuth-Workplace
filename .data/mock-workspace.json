@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {
+      "title": "TEAM TASKS",
+      "status": "TODO",
+      "assignee": "00b10cf1-aa9d-4ea7-80a1-93e2be1beb9a",
+      "priority": "MEDIUM",
+      "id": "3200b003-1a42-4039-9c0f-adc0554187f3",
+      "created_at": "2026-08-06T08:38:55.511Z"
+    }
+  ],
+  "events": [
+    {
+      "title": "MEETING",
+      "date": "2026-08-06",
+      "owner": "00b10cf1-aa9d-4ea7-80a1-93e2be1beb9a",
+      "color": "bg-purple-500",
+      "id": "21bb2df1-2d15-4573-bf6d-4917e22c552a",
+      "created_at": "2026-08-06T08:39:40.946Z"
+    }
+  ]
+}

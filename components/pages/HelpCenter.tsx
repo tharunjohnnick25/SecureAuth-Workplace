@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { HelpCircle, Search, Book, Video, MessageSquare } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const categories = [
   { name: 'Getting Started', icon: Book, articles: 12 },
@@ -22,6 +23,7 @@ const popularArticles = [
 ];
 
 export function HelpCenter() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -29,8 +31,8 @@ export function HelpCenter() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Help Center</h1>
-            <p className="text-muted-foreground">Find answers and learn how to use the platform</p>
+            <h1 className="text-3xl font-semibold mb-2">{'Help center'}</h1>
+            <p className="text-muted-foreground">{'Findanswersandl'}</p>
           </div>
 
           <Card className="mb-6">
@@ -54,7 +56,7 @@ export function HelpCenter() {
                     <category.icon className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="font-semibold mb-2">{category.name}</h3>
-                  <p className="text-sm text-muted-foreground">{category.articles} articles</p>
+                  <p className="text-sm text-muted-foreground">{category.articles} {'Articles'}</p>
                 </CardContent>
               </Card>
             ))}
@@ -62,7 +64,7 @@ export function HelpCenter() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Popular Articles</CardTitle>
+              <CardTitle>{'Popular articles'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

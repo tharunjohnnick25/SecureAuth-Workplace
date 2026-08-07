@@ -118,3 +118,107 @@ export async function exportReportToPPT(data: any[], reportTitle: string = 'Atte
     toast.error(error?.message || 'Failed to export PowerPoint report.');
   }
 }
+
+export async function exportAuditLogsToPPT(data: any[]) {
+  try {
+    if (!data || data.length === 0) {
+      toast.error('No records available to export to PowerPoint.');
+      return;
+    }
+
+    const pptx = new pptxgen();
+    pptx.layout = 'LAYOUT_16x9';
+
+    // Slide 1: Title Slide
+    const slide1 = pptx.addSlide();
+    slide1.background = { color: '020617' };
+
+    slide1.addText('SecureAuth Cybersecurity', {
+      x: 0.8,
+      y: 1.5,
+      w: 8.5,
+      h: 0.8,
+      fontSize: 32,
+      fontFace: 'Arial',
+      color: '00F0FF',
+      bold: true,
+    });
+
+    slide1.addText(`Audit Logs - ${format(new Date(), 'MMMM d, yyyy')}`, {
+      x: 0.8,
+      y: 2.3,
+      w: 8.5,
+      h: 0.6,
+      fontSize: 20,
+      fontFace: 'Arial',
+      color: '94A3B8',
+    });
+
+    slide1.addText('Immutable ledger of system events', {
+      x: 0.8,
+      y: 3.2,
+      w: 8.5,
+      h: 0.5,
+      fontSize: 14,
+      fontFace: 'Arial',
+      color: '64748B',
+    });
+
+    // Slide 2: Table Summary Slide
+    const slide2 = pptx.addSlide();
+    slide2.background = { color: '0B132B' };
+
+    slide2.addText('Audit Logs Overview', {
+      x: 0.8,
+      y: 0.5,
+      w: 8.5,
+      h: 0.6,
+      fontSize: 22,
+      fontFace: 'Arial',
+      color: 'FFFFFF',
+      bold: true,
+    });
+
+    const tableHeader = [
+      { text: 'Event Type', options: { fill: '1E293B', color: '00F0FF', bold: true, fontSize: 11 } },
+      { text: 'User / Actor', options: { fill: '1E293B', color: '00F0FF', bold: true, fontSize: 11 } },
+      { text: 'Resource', options: { fill: '1E293B', color: '00F0FF', bold: true, fontSize: 11 } },
+      { text: 'Timestamp', options: { fill: '1E293B', color: '00F0FF', bold: true, fontSize: 11 } },
+    ];
+
+    const tableRows = data.slice(0, 12).map((item) => [
+      { text: item.event || 'N/A', options: { fontSize: 10, color: 'FFFFFF' } },
+      { text: item.user || 'System', options: { fontSize: 10, color: 'CBD5E1' } },
+      { text: item.resource || 'N/A', options: { fontSize: 10, color: 'CBD5E1' } },
+      { text: item.time || 'N/A', options: { fontSize: 10, color: 'CBD5E1' } },
+    ]);
+
+    slide2.addTable([tableHeader, ...tableRows], {
+      x: 0.8,
+      y: 1.3,
+      w: 8.4,
+      colW: [2.2, 2.6, 1.8, 1.8],
+      fontSize: 10,
+      border: { pt: 1, color: '334155' },
+    });
+
+    const fileName = `Audit_Logs_${format(new Date(), 'yyyy_MM_dd')}.pptx`;
+
+    // Save for Native Mobile vs Web
+    if (Capacitor.isNativePlatform()) {
+      const base64 = (await pptx.write({ outputType: 'base64' })) as string;
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Documents,
+      });
+      toast.success(`Exported PowerPoint ${fileName} to Documents!`);
+    } else {
+      await pptx.writeFile({ fileName });
+      toast.success(`Exported PowerPoint presentation as ${fileName}!`);
+    }
+  } catch (error: any) {
+    console.error('Error exporting PPT presentation:', error);
+    toast.error(error?.message || 'Failed to export PowerPoint report.');
+  }
+}

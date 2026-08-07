@@ -5,8 +5,10 @@ import { motion } from 'framer-motion';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function MfaForm() {
+    const { t } = useLanguage();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -53,10 +55,10 @@ export default function MfaForm() {
       
       <div className="flex flex-col items-center mb-6">
         <ShieldAlert className={`w-12 h-12 mb-4 ${riskLevel === 'critical' ? 'text-red-500 animate-pulse' : 'text-[var(--color-cyber-purple)]'}`} />
-        <h2 className="text-2xl font-bold text-white">MFA Challenge</h2>
+        <h2 className="text-2xl font-bold text-white">{'Mfachallenge'}</h2>
         {riskLevel && (
           <p className="text-xs text-center mt-2 text-gray-400">
-            Risk level: <span className={`uppercase font-bold ${riskLevel === 'high' || riskLevel === 'critical' ? 'text-red-400' : 'text-yellow-400'}`}>{riskLevel}</span>
+            {'Risklevel'}<span className={`uppercase font-bold ${riskLevel === 'high' || riskLevel === 'critical' ? 'text-red-400' : 'text-yellow-400'}`}>{riskLevel}</span>
           </p>
         )}
       </div>
@@ -64,8 +66,7 @@ export default function MfaForm() {
       <form onSubmit={handleVerify} className="space-y-6">
         <div>
           <label className="block text-sm text-center text-gray-300 mb-4">
-            Enter the 6-digit code from your authenticator app
-          </label>
+            {t('Enterthe6digitc_372')}</label>
           <div className="flex justify-center">
             <input
               type="text"

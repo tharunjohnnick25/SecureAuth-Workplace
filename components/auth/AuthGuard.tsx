@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useAuth } from './AuthProvider';
 import { Shield } from 'lucide-react';
 import { restoreSession } from '@/lib/supabase/client';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -13,11 +14,12 @@ interface AuthGuardProps {
 }
 
 const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
-const SECURITY_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'SECURITY_ANALYST']);
-const AUDIT_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'SECURITY_ANALYST', 'HR_MANAGER']);
-const BILLING_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER']);
+const SECURITY_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN', 'SECURITY_ANALYST']);
+const AUDIT_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN', 'SECURITY_ANALYST', 'HR_MANAGER']);
+const BILLING_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ADMIN']);
 
 export default function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
+    const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const { session, isLoading: contextLoading, signOut } = useAuth();
@@ -97,8 +99,7 @@ export default function AuthGuard({ children, requireAdmin = false }: AuthGuardP
           <Shield className="w-6 h-6 text-primary animate-spin" style={{ animationDuration: '1.5s' }} />
         </div>
         <p className="mt-4 text-primary/70 text-sm animate-pulse tracking-widest uppercase font-bold">
-          Securing Session...
-        </p>
+          {'Securing session'}</p>
       </div>
     );
   }
@@ -110,8 +111,7 @@ export default function AuthGuard({ children, requireAdmin = false }: AuthGuardP
           <Shield className="w-6 h-6 text-primary animate-spin" style={{ animationDuration: '1.5s' }} />
         </div>
         <p className="mt-4 text-primary/70 text-sm animate-pulse tracking-widest uppercase font-bold">
-          Securing Session...
-        </p>
+          {'Securing session'}</p>
       </div>
     );
   }

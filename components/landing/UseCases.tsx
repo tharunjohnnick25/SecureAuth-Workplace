@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Building2, Landmark, Stethoscope, Briefcase, Users, Laptop } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const useCases = [
   {
@@ -44,6 +45,7 @@ const useCases = [
 ];
 
 const UseCases = () => {
+    const { t } = useLanguage();
   return (
     <section className="py-24 bg-[#020617] relative">
       <div className="container mx-auto px-6">
@@ -54,7 +56,7 @@ const UseCases = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold text-white mb-6"
           >
-            Built for <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Every Enterprise</span>
+            {'Builtfor'}<span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">{'Every enterprise'}</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -63,8 +65,7 @@ const UseCases = () => {
             transition={{ delay: 0.1 }}
             className="text-lg text-gray-400"
           >
-            Whether managing a remote workforce or securing a global corporate office, our access management platform adapts to your industry needs.
-          </motion.p>
+            {'Whethermanaging'}</motion.p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

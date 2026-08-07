@@ -18,8 +18,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatAssistant } from './ai/ChatAssistant';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+    const { t } = useLanguage();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -40,8 +42,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="font-semibold text-gray-900">Enterprise IAM</h1>
-            <p className="text-xs text-gray-500">Security Management</p>
+            <h1 className="font-semibold text-gray-900">{'Enterprise iam'}</h1>
+            <p className="text-xs text-gray-500">{'Security managem'}</p>
           </div>
         </div>
         <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden p-2 text-gray-400">
@@ -76,10 +78,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-4 h-4 text-green-600" />
-            <span className="text-xs font-bold text-green-900 uppercase">System Status</span>
+            <span className="text-xs font-bold text-green-900 uppercase">{'System status'}</span>
           </div>
           <div className="flex items-center justify-between text-xs mt-3">
-            <span className="text-green-600">Security Score</span>
+            <span className="text-green-600">{'Security score'}</span>
             <span className="font-bold text-green-700">94/100</span>
           </div>
         </div>
@@ -95,7 +97,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <Shield className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-gray-900">SecureAuth</span>
+          <span className="font-bold text-gray-900">{'Secure auth'}</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-gray-600">
           <Menu className="w-6 h-6" />
@@ -135,17 +137,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
         {/* Desktop Header */}
         <header className="hidden lg:flex h-16 bg-white border-b border-gray-200 sticky top-0 z-40 items-center justify-between px-8">
-           <div className="text-sm font-medium text-gray-500">Security Management Console</div>
+           <div className="text-sm font-medium text-gray-500">{'Security managem'}</div>
            <div className="flex items-center gap-6">
               <button className="relative p-2 text-gray-400 hover:text-gray-900 transition-colors">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
               <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
-                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white">SA</div>
+                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white">{'Sa'}</div>
                  <div>
-                    <div className="text-xs font-bold text-gray-900">Security Admin</div>
-                    <div className="text-[10px] text-gray-500">admin@enterprise.com</div>
+                    <div className="text-xs font-bold text-gray-900">{'Security admin'}</div>
+                    <div className="text-[10px] text-gray-500">{'Adminenterprise'}</div>
                  </div>
               </div>
            </div>

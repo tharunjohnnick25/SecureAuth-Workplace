@@ -20,6 +20,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Device {
   id: string;
@@ -35,6 +36,7 @@ interface Device {
 }
 
 export function Devices() {
+    const { t } = useLanguage();
   const { user } = useAuthStore();
   const { data: dbDevices, loading, refetch } = useRealtimeData<any>('devices', (q) =>
     q.select('*').eq('user_id', user?.id).order('last_active', { ascending: false })
@@ -97,10 +99,9 @@ export function Devices() {
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold mb-2">Device Management</h1>
+            <h1 className="text-3xl font-semibold mb-2">{'Device managemen'}</h1>
             <p className="text-muted-foreground">
-              Monitor and manage all devices accessing your account
-            </p>
+              {'Monitorandmanag'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -110,7 +111,7 @@ export function Devices() {
                   <Smartphone className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Devices</p>
+                  <p className="text-sm text-muted-foreground">{'Total devices'}</p>
                   <h3 className="text-2xl font-semibold">{devices.length}</h3>
                 </div>
               </CardContent>
@@ -122,7 +123,7 @@ export function Devices() {
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Trusted Devices</p>
+                  <p className="text-sm text-muted-foreground">{'Trusted devices'}</p>
                   <h3 className="text-2xl font-semibold">{trustedCount}</h3>
                 </div>
               </CardContent>
@@ -134,7 +135,7 @@ export function Devices() {
                   <AlertTriangle className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Suspicious</p>
+                  <p className="text-sm text-muted-foreground">{'Suspicious'}</p>
                   <h3 className="text-2xl font-semibold">{suspiciousCount}</h3>
                 </div>
               </CardContent>
@@ -143,7 +144,7 @@ export function Devices() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>All Devices</CardTitle>
+              <CardTitle>{'All devices'}</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -152,8 +153,7 @@ export function Devices() {
                 </div>
               ) : devices.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No devices found. Devices will appear here when you log in.
-                </div>
+                  {'Nodevicesfound d'}</div>
               ) : (
                 <div className="space-y-4">
                   {devices.map((device) => (
@@ -176,13 +176,11 @@ export function Devices() {
                             <h4 className="font-medium">{device.device_name}</h4>
                             {device.is_trusted && (
                               <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs">
-                                Trusted
-                              </span>
+                                {'Trusted'}</span>
                             )}
                             {!device.is_trusted && (
                               <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs">
-                                Unknown
-                              </span>
+                                {'Unknown'}</span>
                             )}
                           </div>
                           <div className="text-sm text-muted-foreground mt-1">
@@ -203,13 +201,11 @@ export function Devices() {
                       <div className="flex items-center gap-2">
                         {!device.is_trusted && (
                           <Button variant="outline" size="sm" onClick={() => toggleTrust(device.id, device.is_trusted)}>
-                            Trust Device
-                          </Button>
+                            {'Trust device'}</Button>
                         )}
                         {device.is_trusted && (
                           <Button variant="outline" size="sm" onClick={() => toggleTrust(device.id, device.is_trusted)}>
-                            Untrust
-                          </Button>
+                            {'Untrust'}</Button>
                         )}
                         <Button variant="ghost" size="sm" onClick={() => removeDevice(device.id)}>
                           <Trash2 className="w-4 h-4 text-destructive" />

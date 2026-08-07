@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
 import { FileText, Plus, Settings } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 const customReports = [
   { name: 'Top 10 Security Threats', metrics: ['Threat Type', 'Severity', 'Count'], filters: 'Last 30 days', created: '2026-04-15' },
@@ -13,6 +14,7 @@ const customReports = [
 ];
 
 export function CustomReports() {
+    const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -21,21 +23,19 @@ export function CustomReports() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Custom Reports</h1>
-              <p className="text-muted-foreground">Build and manage custom report templates</p>
+              <h1 className="text-3xl font-semibold mb-2">{'Custom reports'}</h1>
+              <p className="text-muted-foreground">{'Buildandmanagec'}</p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Create Custom Report
-            </Button>
+              {'Create custom rep'}</Button>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Your Custom Reports
-              </CardTitle>
+                {'Your custom repor'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -45,14 +45,14 @@ export function CustomReports() {
                       <div className="flex-1">
                         <h4 className="font-medium mb-2">{report.name}</h4>
                         <div className="text-sm text-muted-foreground space-y-1">
-                          <p>Metrics: {report.metrics.join(', ')}</p>
-                          <p>Filters: {report.filters}</p>
-                          <p>Created: {report.created}</p>
+                          <p>{'Metrics'}{report.metrics.join(', ')}</p>
+                          <p>{'Filters'}{report.filters}</p>
+                          <p>{'Created'}{report.created}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm"><Settings className="w-4 h-4" /></Button>
-                        <Button size="sm">Run Report</Button>
+                        <Button size="sm">{'Run report'}</Button>
                       </div>
                     </div>
                   </div>

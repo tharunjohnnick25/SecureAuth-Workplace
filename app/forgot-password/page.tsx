@@ -7,8 +7,10 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Card } from '@/components/Card';
 import { toast } from 'sonner';
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ForgotPasswordPage() {
+    const { t } = useLanguage();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,16 +65,15 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
             <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Reset Password</h1>
+          <h1 className="text-3xl font-semibold mb-2">{'Reset password'}</h1>
           <p className="text-muted-foreground text-center">
-            Enter your email to receive a password reset link
-          </p>
+            {'Enteryouremailt'}</p>
         </div>
 
         {!submitted ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block mb-2 text-sm">Email Address</label>
+              <label className="block mb-2 text-sm">{'Email address'}</label>
               <Input
                 type="email"
                 placeholder="john.doe@example.com"
@@ -90,11 +91,9 @@ export default function ForgotPasswordPage() {
         ) : (
           <div className="text-center space-y-4">
             <div className="p-4 bg-primary/10 rounded-lg text-sm text-primary">
-              Check your email for the reset link. If you don't see it, check your spam folder.
-            </div>
+              {'Checkyouremailf'}</div>
             <Button variant="outline" className="w-full" onClick={() => router.push('/login')}>
-              Back to Login
-            </Button>
+              {'Backto login'}</Button>
           </div>
         )}
 
@@ -104,8 +103,7 @@ export default function ForgotPasswordPage() {
             className="text-sm text-muted-foreground hover:text-primary flex items-center justify-center gap-2 mx-auto"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Login
-          </button>
+            {'Backto login'}</button>
         </div>
       </Card>
     </div>

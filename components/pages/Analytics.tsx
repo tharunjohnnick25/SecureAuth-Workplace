@@ -4,12 +4,14 @@ import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
-import { DashboardHeader } from '@/components/DashboardHeader';
+import { PageHeader } from '@/components/PageHeader';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, TrendingDown, Activity, ShieldCheck, Globe, Zap } from 'lucide-react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Analytics() {
+    const { t } = useLanguage();
   const { data: logins } = useRealtimeData('login_logs');
   const { data: alerts } = useRealtimeData('threat_logs');
 
@@ -72,7 +74,7 @@ export function Analytics() {
       <div className="lg:ml-64 transition-all duration-300">
         <Navbar />
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
-          <DashboardHeader 
+          <PageHeader 
             title="Security Analytics" 
             description="Deep behavioral insights and threat vector analysis"
           />
@@ -84,12 +86,11 @@ export function Analytics() {
                   <ShieldCheck className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Auth Success Rate</p>
+                  <p className="text-sm text-muted-foreground">{'Auth success rate'}</p>
                   <h3 className="text-2xl font-semibold">{stats.rate}%</h3>
                   <p className="text-xs text-success flex items-center gap-1 mt-1">
                     <TrendingUp className="w-3 h-3" />
-                    Live Optimization
-                  </p>
+                    {'Live optimizatio'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -100,9 +101,9 @@ export function Analytics() {
                   <Zap className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Events Processed</p>
+                  <p className="text-sm text-muted-foreground">{'Total events proc'}</p>
                   <h3 className="text-2xl font-semibold">{stats.total.toLocaleString()}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Across all vectors</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'Acrossallvector'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -113,9 +114,9 @@ export function Analytics() {
                   <Activity className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Blocked Anomalies</p>
+                  <p className="text-sm text-muted-foreground">{'Blocked anomalie'}</p>
                   <h3 className="text-2xl font-semibold">{stats.failed}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Current billing period</p>
+                  <p className="text-xs text-muted-foreground mt-1">{'Currentbillingp'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -124,7 +125,7 @@ export function Analytics() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader>
-                <CardTitle>Auth Load Distribution (24h)</CardTitle>
+                <CardTitle>{'Auth load distrib'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -149,7 +150,7 @@ export function Analytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Weekly Vector Correlation</CardTitle>
+                <CardTitle>{'Weekly vector cor'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -179,7 +180,7 @@ export function Analytics() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Global Access Heatmap</CardTitle>
+                <CardTitle>{'Global access hea'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-7 gap-2">
@@ -200,7 +201,7 @@ export function Analytics() {
                 <div className="mt-6 pt-6 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                    <div className="flex items-center gap-2">
                      <Globe className="w-3 h-3" />
-                     <span>Normalizing global traffic...</span>
+                     <span>{'Normalizingglob'}</span>
                    </div>
                    <div className="flex gap-1">
                       {[0.2, 0.4, 0.6, 0.8, 1.0].map(o => (
@@ -213,7 +214,7 @@ export function Analytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Live Threat Intelligence Feed</CardTitle>
+                <CardTitle>{'Live threat intel'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
@@ -235,8 +236,7 @@ export function Analytics() {
                    ))}
                    {alerts.length === 0 && (
                      <div className="h-40 flex items-center justify-center text-muted-foreground text-sm">
-                       No active threats detected.
-                     </div>
+                       {'Noactivethreats'}</div>
                    )}
                 </div>
               </CardContent>
@@ -247,3 +247,4 @@ export function Analytics() {
     </div>
   );
 }
+

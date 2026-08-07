@@ -14,6 +14,7 @@ import {
   Trash2,
   UserPlus,
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const users = [
   {
@@ -85,6 +86,7 @@ const users = [
 ];
 
 export function Users() {
+    const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
 
@@ -100,33 +102,31 @@ export function Users() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900">User Management</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">{'User management'}</h2>
           <p className="text-gray-600 mt-1">
-            Manage user accounts, roles, and permissions
-          </p>
+            {'Manageuseraccou'}</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <UserPlus className="w-5 h-5" />
-          Add User
-        </button>
+          {'Add user'}</button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">Total Users</p>
+          <p className="text-sm text-gray-600">{'Total users'}</p>
           <p className="text-2xl font-semibold text-gray-900 mt-1">500</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">Active Users</p>
+          <p className="text-sm text-gray-600">{'Active users'}</p>
           <p className="text-2xl font-semibold text-green-600 mt-1">476</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">Inactive Users</p>
+          <p className="text-sm text-gray-600">{'Inactive users'}</p>
           <p className="text-2xl font-semibold text-amber-600 mt-1">24</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">MFA Enabled</p>
+          <p className="text-sm text-gray-600">{'Mfaenabled'}</p>
           <p className="text-2xl font-semibold text-purple-600 mt-1">94%</p>
         </div>
       </div>
@@ -149,11 +149,11 @@ export function Users() {
             onChange={(e) => setFilterRole(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">All Roles</option>
-            <option value="Admin">Admin</option>
-            <option value="Manager">Manager</option>
-            <option value="Developer">Developer</option>
-            <option value="User">User</option>
+            <option value="all">{'All roles'}</option>
+            <option value="Admin">{'Admin'}</option>
+            <option value="Manager">{'Manager'}</option>
+            <option value="Developer">{'Developer'}</option>
+            <option value="User">{'User'}</option>
           </select>
         </div>
       </div>
@@ -165,26 +165,19 @@ export function Users() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">
-                  User
-                </th>
+                  {'User'}</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">
-                  Role
-                </th>
+                  {'Role'}</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">
-                  Department
-                </th>
+                  {'Department'}</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">
-                  Status
-                </th>
+                  {'Status'}</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">
-                  MFA
-                </th>
+                  {'Mfa'}</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">
-                  Last Login
-                </th>
+                  {'Last login'}</th>
                 <th className="text-left px-6 py-3 text-sm font-medium text-gray-700">
-                  Actions
-                </th>
+                  {'Actions'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -246,12 +239,12 @@ export function Users() {
                     {user.mfaEnabled ? (
                       <div className="flex items-center gap-2">
                         <Shield className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-green-600">Enabled</span>
+                        <span className="text-sm text-green-600">{'Enabled'}</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <Shield className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-500">Disabled</span>
+                        <span className="text-sm text-gray-500">{'Disabled'}</span>
                       </div>
                     )}
                   </td>

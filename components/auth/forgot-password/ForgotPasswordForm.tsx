@@ -10,12 +10,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Icons } from "@/components/ui/icons";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
 
 export function ForgotPasswordForm() {
+    const { t } = useLanguage();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
 
@@ -47,15 +49,13 @@ export function ForgotPasswordForm() {
     return (
       <Card className="w-full max-w-md border-white/10 bg-black/40 backdrop-blur-xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight text-white">Check your email</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight text-white">{'Checkyouremail'}</CardTitle>
           <CardDescription className="text-zinc-400">
-            We've sent a password reset link to your email address.
-          </CardDescription>
+            {'Wevesentapasswo'}</CardDescription>
         </CardHeader>
         <CardFooter>
           <Button variant="ghost" className="w-full text-zinc-400 hover:text-white" onClick={() => (window.location.href = "/login")}>
-            Back to login
-          </Button>
+            {'Backtologin'}</Button>
         </CardFooter>
       </Card>
     );
@@ -64,10 +64,9 @@ export function ForgotPasswordForm() {
   return (
     <Card className="w-full max-w-md border-white/10 bg-black/40 backdrop-blur-xl">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight text-white">Forgot password</CardTitle>
+        <CardTitle className="text-2xl font-bold tracking-tight text-white">{'Forgotpassword'}</CardTitle>
         <CardDescription className="text-zinc-400">
-          Enter your email to receive a password reset link
-        </CardDescription>
+          {'Enteryouremailt'}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -77,7 +76,7 @@ export function ForgotPasswordForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-zinc-300">Email</FormLabel>
+                  <FormLabel className="text-zinc-300">{'Email'}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="name@company.com"
@@ -91,15 +90,13 @@ export function ForgotPasswordForm() {
             />
             <Button className="w-full bg-primary hover:bg-primary/90 text-white" type="submit" disabled={isLoading}>
               {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-              Send Reset Link
-            </Button>
+              {'Send reset link'}</Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter>
         <Button variant="link" className="w-full text-zinc-400 hover:text-white" onClick={() => (window.location.href = "/login")}>
-          Back to login
-        </Button>
+          {'Backtologin'}</Button>
       </CardFooter>
     </Card>
   );

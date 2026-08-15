@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
     `, { count: 'exact' });
 
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,employee_id.ilike.%${search}%`, { referencedTable: 'users' });
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,employee_id.ilike.%${search}%`, { foreignTable: 'users' });
     }
     
     if (department) {

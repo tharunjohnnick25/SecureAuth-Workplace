@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { TelemetryAggregatorAI } from '@/ai-engine/analytics/telemetry';
 import { isMockMode } from '@/lib/mock-employees';
 import { MockDB } from '@/lib/mock-db';
 
@@ -56,14 +55,8 @@ export async function GET() {
     return NextResponse.json(mockStats);
   }
 
-  try {
-    const stats = await TelemetryAggregatorAI.getDashboardStats();
-    return NextResponse.json(stats);
-  } catch (err: any) {
-    console.error('Failed to compile dashboard AI telemetry: ', err.message);
-    return NextResponse.json(
-      { error: err.message || 'Telemetry compilation failed' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    { error: 'AI telemetry engine is not available' },
+    { status: 501 }
+  );
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Sidebar } from '@/components/Sidebar';
+import { Navbar } from '@/components/Navbar';
 import { DataGridPage } from '@/components/pages/DataGridPage';
 import { DashboardService } from '@/lib/services/dashboard';
 import { format } from 'date-fns';
@@ -126,9 +128,18 @@ export default function Page() {
 
   if (loading) {
     return (
-       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-       </div>
+      <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30">
+        <Sidebar />
+        <div className="lg:ml-64 transition-all duration-300 min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">Loading attendance records...</p>
+            </div>
+          </main>
+        </div>
+      </div>
     );
   }
 

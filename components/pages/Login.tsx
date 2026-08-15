@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, Users, Building2 } from 'lucide-react';
+import { Shield, Users, Building2, ScanFace } from 'lucide-react';
 import { Card } from '@/components/Card';
 import { AdminLogin } from '@/components/auth/AdminLogin';
 import { EmployeeLogin } from '@/components/auth/EmployeeLogin';
+import { ManagerLogin } from '@/components/auth/ManagerLogin';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from "@/context/LanguageContext";
 
-type LoginRole = 'admin' | 'employee' | null;
+type LoginRole = 'admin' | 'manager' | 'employee' | null;
 
 export function Login() {
     const { t } = useLanguage();
@@ -23,6 +24,19 @@ export function Login() {
         >
           {'Back to role selection'}</button>
         <AdminLogin />
+      </div>
+    );
+  }
+
+  if (role === 'manager') {
+    return (
+      <div className="relative z-10 w-full">
+        <button 
+          onClick={() => setRole(null)}
+          className="absolute -top-12 left-4 text-sm text-gray-400 hover:text-white transition-colors"
+        >
+          {'Back to role selection'}</button>
+        <ManagerLogin />
       </div>
     );
   }
@@ -78,6 +92,21 @@ export function Login() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => setRole('manager')}
+            className="w-full p-4 rounded-xl border border-white/10 hover:border-emerald-500/50 bg-white/5 hover:bg-emerald-500/10 transition-all flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/30 transition-colors">
+              <Users className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div className="text-left flex-1">
+              <h3 className="font-semibold text-white">{'Department Manager'}</h3>
+              <p className="text-xs text-gray-400">{'Manage department employees and access apps'}</p>
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setRole('employee')}
             className="w-full p-4 rounded-xl border border-white/10 hover:border-cyan-500/50 bg-white/5 hover:bg-cyan-500/10 transition-all flex items-center gap-4 group"
           >
@@ -92,24 +121,41 @@ export function Login() {
 
           <div className="flex items-center gap-4 py-2">
             <div className="flex-1 border-t border-white/10"></div>
-            <span className="text-xs text-slate-500 uppercase tracking-widest">Or</span>
+            <span className="text-xs text-slate-500 uppercase tracking-widest">{'Or'}</span>
             <div className="flex-1 border-t border-white/10"></div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => window.location.href = '/login/passkey'}
-            className="w-full p-4 rounded-xl border border-blue-500/30 hover:border-blue-500/80 bg-blue-500/5 hover:bg-blue-500/10 transition-all flex items-center gap-4 group"
-          >
-            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-              <Shield className="w-6 h-6 text-blue-400" />
-            </div>
-            <div className="text-left flex-1">
-              <h3 className="font-semibold text-white">Passkey Login</h3>
-              <p className="text-xs text-gray-400">Sign in instantly with device biometrics</p>
-            </div>
-          </motion.button>
+          <div className="grid grid-cols-2 gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.location.href = '/login/passkey'}
+              className="w-full p-4 rounded-xl border border-blue-500/30 hover:border-blue-500/80 bg-blue-500/5 hover:bg-blue-500/10 transition-all flex flex-col items-center justify-center gap-2 group text-center"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                <Shield className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white text-sm">Passkey</h3>
+                <p className="text-[10px] text-gray-400">Device biometrics</p>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.location.href = '/login/face'}
+              className="w-full p-4 rounded-xl border border-purple-500/30 hover:border-purple-500/80 bg-purple-500/5 hover:bg-purple-500/10 transition-all flex flex-col items-center justify-center gap-2 group text-center"
+            >
+              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                <ScanFace className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white text-sm">Face Lock</h3>
+                <p className="text-[10px] text-gray-400">Facial recognition</p>
+              </div>
+            </motion.button>
+          </div>
         </div>
       </Card>
     </div>

@@ -7,6 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sidebar } from '@/components/Sidebar';
+import { Navbar } from '@/components/Navbar';
+
 
 export default function AdminRegisterEmployeePage() {
   const [step, setStep] = useState<1 | 2>(1);
@@ -78,7 +81,12 @@ export default function AdminRegisterEmployeePage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-[#020617] text-white">
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300">
+        <Navbar />
+        <main className="pt-24 p-4 sm:p-6 lg:p-8">
+          <div className="p-8 max-w-4xl mx-auto">
       <Card className="bg-slate-900 border-slate-800 text-slate-100 shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Register Employee Face</CardTitle>
@@ -136,6 +144,9 @@ export default function AdminRegisterEmployeePage() {
           )}
         </CardContent>
       </Card>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

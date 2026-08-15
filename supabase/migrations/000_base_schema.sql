@@ -1,6 +1,6 @@
 -- Migration 000: Base Schema
 -- Foundational tables required by every subsequent migration (HRMS, auth, risk
--- scoring, subscriptions) and referenced directly by application code.
+-- scoring, auth) and referenced directly by application code.
 -- Idempotent: safe on both fresh databases and existing hosted projects.
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -281,65 +281,7 @@ CREATE TABLE IF NOT EXISTS public.user_credentials (
 );
 
 -- ==========================================
--- 15. SaaS Subscription DB
--- ==========================================
-
-CREATE TABLE IF NOT EXISTS public.plans (
-    id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    price NUMERIC NOT NULL,
-    features JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS public.subscriptions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    org_id UUID,
-    plan_id VARCHAR(50),
-    status VARCHAR(50) DEFAULT 'INACTIVE',
-    current_period_start TIMESTAMP WITH TIME ZONE,
-    current_period_end TIMESTAMP WITH TIME ZONE,
-    cancel_at_period_end BOOLEAN DEFAULT FALSE,
-    razorpay_subscription_id TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS public.payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    subscription_id UUID REFERENCES public.subscriptions(id) ON DELETE CASCADE,
-    org_id UUID,
-    razorpay_order_id VARCHAR(255),
-    razorpay_payment_id VARCHAR(255) UNIQUE NOT NULL,
-    amount NUMERIC NOT NULL,
-    currency VARCHAR(10) DEFAULT 'USD',
-    status VARCHAR(50) DEFAULT 'successful',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS public.invoices (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    payment_id UUID REFERENCES public.payments(id) ON DELETE CASCADE,
-    invoice_number VARCHAR(100) UNIQUE,
-    amount NUMERIC NOT NULL,
-    status VARCHAR(50) DEFAULT 'paid',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS public.transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    payment_id UUID REFERENCES public.payments(id) ON DELETE CASCADE,
-    type VARCHAR(50),
-    amount NUMERIC NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- ==========================================
--- 16. Admins / Employee Requests / Support
+-- 15. Admins / Employee Requests / Support
 -- ==========================================
 
 CREATE TABLE IF NOT EXISTS public.admins (
@@ -555,21 +497,6 @@ DROP POLICY IF EXISTS "Users can manage own credentials" ON public.user_credenti
 CREATE POLICY "Users can manage own credentials"
     ON public.user_credentials FOR ALL
     USING (auth.uid() = user_id);
-
--- Subscriptions / Payments / Invoices / Plans
-ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Users can view own subscriptions" ON public.subscriptions;
-CREATE POLICY "Users can view own subscriptions" ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can view own payments" ON public.payments;
-CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT USING (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Users can view own invoices" ON public.invoices;
-CREATE POLICY "Users can view own invoices" ON public.invoices FOR SELECT USING (auth.uid() = user_id);
-DROP POLICY IF EXISTS "Anyone can view plans" ON public.plans;
-CREATE POLICY "Anyone can view plans" ON public.plans FOR SELECT USING (true);
 
 -- Admins
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;

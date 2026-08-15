@@ -1,0 +1,36 @@
+name: Weekly AI Risk Model Retraining
+
+on:
+  schedule:
+    - cron: '0 2 * * 0' # Every Sunday at 2 AM UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  retrain-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ai-risk-service/requirements.txt
+          
+      - name: Run Retraining Script
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          # This script will fetch last 7 days of logs, retrain XGBoost/IsoForest,
+          # evaluate AUC, and save the model if AUC improves > 0.01
+          python ai-risk-service/scripts/train.py
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "Model retraining failed! Please check the logs."
+          # Add Slack/email notification step here

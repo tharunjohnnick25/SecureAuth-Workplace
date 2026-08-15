@@ -16,7 +16,12 @@ interface AuthGuardProps {
 const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
 const SECURITY_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN', 'SECURITY_ANALYST']);
 const AUDIT_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN', 'SECURITY_ANALYST', 'HR_MANAGER']);
-const BILLING_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ADMIN']);
+
+// Routes that must remain reachable while profile details are incomplete
+const PROFILE_ROUTES = new Set(['/onboarding/details']);
+
+// Routes that must remain reachable while the mandatory admin passkey step is pending
+const PASSKEY_ROUTES = new Set(['/mfa-setup/passkey']);
 
 export default function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     const { t } = useLanguage();
@@ -79,18 +84,27 @@ export default function AuthGuard({ children, requireAdmin = false }: AuthGuardP
         return;
       }
 
-      if ((pathname.startsWith('/billing') || pathname.startsWith('/subscription-plans')) && !BILLING_ROLES.has(userRole)) {
-        router.replace('/unauthorized');
+      // Mandatory profile completion for employees & managers (admins are exempt)
+      const isAdmin = ADMIN_ROLES.has(userRole);
+      const profileIncomplete = !isAdmin && user.profile_completed !== true;
+      if (profileIncomplete && !PROFILE_ROUTES.has(pathname) && !pathname.startsWith('/onboarding/details')) {
+        router.replace('/onboarding/details');
+        return;
+      }
+
+      // Mandatory phishing-resistant MFA (FIDO2/WebAuthn) for admins — the key
+      // must sign a fresh challenge at least once per session.
+      const isPasskeyRoute = PASSKEY_ROUTES.has(pathname) || pathname.startsWith('/mfa-setup/passkey');
+      const passkeyVerified =
+        typeof window !== 'undefined' && sessionStorage.getItem('passkey_verified') === 'true';
+      if (isAdmin && !passkeyVerified && !isPasskeyRoute) {
+        router.replace('/mfa-setup/passkey');
         return;
       }
     }
   }, [session, isAuthenticated, contextLoading, pathname, requireAdmin, user, router]);
 
-  useEffect(() => {
-    if (requiresBiometric && pathname !== '/verify-biometric' && pathname !== '/mfa-verify') {
-      router.replace('/verify-biometric');
-    }
-  }, [requiresBiometric, pathname, router]);
+  // Removed requiresBiometric redirect since we use the new Adaptive Trust Pipeline
 
   if (showLoader && !session && !isAuthenticated) {
     return (

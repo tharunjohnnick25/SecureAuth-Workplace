@@ -9,9 +9,10 @@ import AuthGuard from './AuthGuard';
 const PUBLIC_ROUTES = new Set([
   '/',
   '/login',
-  '/signup',
   '/forgot-password',
   '/verify-otp',
+  '/verify-identity',
+  '/verify-mfa',
   '/demo',
   '/pricing',
   '/unauthorized',

@@ -58,6 +58,7 @@ export default function EditEmployeePage() {
         status: emp.status || 'Active',
         gender: emp.gender || '',
         blood_group: emp.blood_group || '',
+        role: emp.role || 'EMPLOYEE',
         date_of_joining: emp.date_of_joining?.split('T')[0] || '',
         date_of_birth: emp.date_of_birth?.split('T')[0] || '',
         address: emp.address || '',
@@ -106,8 +107,17 @@ export default function EditEmployeePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30">
+        <Sidebar />
+        <div className="lg:ml-64 transition-all duration-300 min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">Loading...</p>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -201,6 +211,15 @@ export default function EditEmployeePage() {
                         <select value={form.employment_type} onChange={(e) => updateField('employment_type', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
                           {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{'Role'}</label>
+                        <select value={form.role} onChange={(e) => updateField('role', e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                          <option value="EMPLOYEE">Employee</option>
+                          <option value="MANAGER">Manager</option>
+                          <option value="ADMIN">Admin</option>
                         </select>
                       </div>
                       <div>

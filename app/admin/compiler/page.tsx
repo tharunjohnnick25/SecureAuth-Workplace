@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { Terminal, Play, Loader2 } from 'lucide-react';
+import { Terminal, Play, Loader2, Download } from 'lucide-react';
 import { useLanguage } from "@/context/LanguageContext";
 
 const CODE_TEMPLATES: Record<string, string> = {
@@ -117,6 +117,29 @@ export default function AdminCompilerPage() {
     }
   };
 
+  const handleDownloadCode = () => {
+    const extensions: Record<string, string> = {
+      python: '.py',
+      javascript: '.js',
+      typescript: '.ts',
+      java: '.java',
+      cpp: '.cpp',
+      go: '.go',
+      rust: '.rs',
+    };
+    const ext = extensions[language] || '.txt';
+    const filename = `code${ext}`;
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -134,13 +157,13 @@ export default function AdminCompilerPage() {
                 <Terminal className="text-emerald-400 w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">{'Code compiler' || 'Code Compiler'}</h2>
-                <p className="text-sm text-gray-400">{'Execute codein ma' || 'Write and run code in Python, JavaScript, Java, C++, Go, Rust and more.'}</p>
+                <h2 className="text-xl font-bold">'Code Compiler'</h2>
+                <p className="text-sm text-gray-400">'Write and run code in Python, JavaScript, Java, C++, Go, Rust and more.'</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 mb-4">
-              <label className="text-sm font-semibold text-gray-300">{'Language' || 'Language'}</label>
+              <label className="text-sm font-semibold text-gray-300">'Language'</label>
               <select
                 value={language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
@@ -161,7 +184,7 @@ export default function AdminCompilerPage() {
             />
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-400 mb-1">{'Standard input' || 'Standard Input (optional)'}</label>
+              <label className="block text-sm font-medium text-gray-400 mb-1">'Standard Input (optional)'</label>
               <input
                 value={stdin}
                 onChange={(e) => setStdin(e.target.value)}
@@ -180,9 +203,13 @@ export default function AdminCompilerPage() {
                   {runOutput.status}
                 </span>
               )}
+              <Button variant="outline" onClick={handleDownloadCode} className="border-white/10 hover:bg-white/5">
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
               <Button onClick={handleRunCode} disabled={running} className="bg-emerald-600 hover:bg-emerald-700">
                 {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-                {running ? ('Running' || 'Running...') : ('Run code' || 'Run Code')}
+                {running ? 'Running...' : 'Run code'}
               </Button>
             </div>
 

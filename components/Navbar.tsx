@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu, X, Shield, ChevronDown, User, Settings, LogOut } from 'lucide-react';
+import { Bell, Menu, X, Shield, ChevronDown, User, Settings, LogOut, Moon, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalSearch } from './SearchCommand';
@@ -19,6 +19,7 @@ export function Navbar() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const router = useRouter();
   const unreadCount = 3;
 
@@ -46,8 +47,16 @@ export function Navbar() {
         className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-[#020617] border-b border-white/10 z-[50]"
       >
         <div className="flex items-center h-full px-4 lg:px-6 gap-3">
-          {/* Left: Hamburger only */}
+          {/* Left: Hamburger and Back Button */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
+            <button 
+              onClick={() => router.back()}
+              className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors flex-shrink-0"
+              title="Go Back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+
             <button 
               onClick={() => setIsMobileNavOpen(true)}
               className="lg:hidden p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors flex-shrink-0"
@@ -58,7 +67,7 @@ export function Navbar() {
               <div className="w-8 h-8 overflow-hidden flex items-center justify-center shrink-0">
                 <img src="/new-logo.png" alt="SecureAuth Workplace Logo" className="w-full h-full object-contain drop-shadow-md" />
               </div>
-              <span className="font-semibold text-white truncate text-lg">SecureAuth Workplace</span>
+              <span className="font-semibold text-white truncate text-lg">SecureAuth</span>
             </div>
           </div>
 
@@ -127,11 +136,19 @@ export function Navbar() {
             </div>
 
             <button 
+              onClick={() => setIsFocusMode(!isFocusMode)}
+              className={`relative p-2.5 rounded-xl transition-colors group mr-1 flex items-center gap-2 ${isFocusMode ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'hover:bg-white/5 text-gray-400'}`}
+              title="Focus Mode (Hide Notifications)"
+            >
+              <Moon className={`w-5 h-5 transition-transform ${isFocusMode ? 'fill-indigo-400' : 'group-hover:text-white'}`} />
+              {isFocusMode && <span className="text-xs font-bold uppercase tracking-wider hidden sm:block">Focus</span>}
+            </button>
+            <button 
               onClick={() => setIsNotifOpen(true)}
               className="relative p-2.5 hover:bg-white/5 rounded-xl transition-colors group"
             >
-              <Bell className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:rotate-12 transition-transform" />
-              {unreadCount > 0 && (
+              <Bell className={`w-5 h-5 transition-transform ${isFocusMode ? 'text-gray-600 opacity-50' : 'text-gray-400 group-hover:text-white group-hover:rotate-12'}`} />
+              {unreadCount > 0 && !isFocusMode && (
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
               )}
             </button>

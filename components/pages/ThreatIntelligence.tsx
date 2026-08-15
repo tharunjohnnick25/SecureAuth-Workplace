@@ -57,24 +57,31 @@ const vectorDistribution = [
 export function ThreatIntelligence() {
     const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('overview');
+  const [searchTerm, setSearchTerm] = useState('');
   const { data: dbThreats } = useRealtimeData('threat_logs');
 
   const threats = useMemo(() => {
-    if (!dbThreats || dbThreats.length === 0) {
-      return [
-        { type: 'IMPOSSIBLE_TRAVEL', user: 'adm_201', risk: 'CRITICAL', origin: 'London, UK', time: '2m ago' },
-        { type: 'CREDENTIAL_STUFFING', user: 'unknown', risk: 'HIGH', origin: 'Mumbai, IN', time: '8m ago' },
-        { type: 'BRUTE_FORCE_BLOCK', user: 'usr_823', risk: 'HIGH', origin: 'Chennai, IN', time: '14m ago' },
-      ];
+    let sourceThreats = [
+      { type: 'IMPOSSIBLE_TRAVEL', user: 'adm_201', risk: 'CRITICAL', origin: 'London, UK', time: '2m ago' },
+      { type: 'CREDENTIAL_STUFFING', user: 'unknown', risk: 'HIGH', origin: 'Mumbai, IN', time: '8m ago' },
+      { type: 'BRUTE_FORCE_BLOCK', user: 'usr_823', risk: 'HIGH', origin: 'Chennai, IN', time: '14m ago' },
+    ];
+    if (dbThreats && dbThreats.length > 0) {
+      sourceThreats = dbThreats.map((t: any) => ({
+        type: t.type,
+        user: 'unknown',
+        risk: t.severity,
+        origin: t.source_ip || 'Unknown',
+        time: 'Just now'
+      }));
     }
-    return dbThreats.map((t: any) => ({
-      type: t.type,
-      user: 'unknown',
-      risk: t.severity,
-      origin: t.source_ip || 'Unknown',
-      time: 'Just now'
-    }));
-  }, [dbThreats]);
+    
+    return sourceThreats.filter((t: any) => 
+      t.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.origin.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [dbThreats, searchTerm]);
 
   return (
     <div className="min-h-screen bg-[#020617] text-white overflow-y-auto">
@@ -225,7 +232,13 @@ export function ThreatIntelligence() {
                     <Activity className="w-5 h-5 text-red-400" /> {'Security inciden'}</h3>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                    <input type="text" placeholder="Filter incidents..." className="pl-9 pr-4 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs outline-none focus:border-red-500/30 w-48" />
+                    <input 
+                      type="text" 
+                      placeholder="Filter incidents..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9 pr-4 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs outline-none focus:border-red-500/30 w-48" 
+                    />
                   </div>
                </div>
 

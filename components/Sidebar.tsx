@@ -23,6 +23,7 @@ import {
   LogOut,
   ClipboardList,
   HardDrive,
+  ScanFace,
   MessageSquare,
   Video,
   Globe,
@@ -39,61 +40,52 @@ import { createClient } from '../lib/supabase/client';
 
 const navigationSectionsConfig = [
   {
+    title: 'Team Management',
+    items: [
+      { id: 'managerTeam', name: 'My Team', href: '/manager/team', icon: Users, roles: ['MANAGER'] },
+      { id: 'employees', name: 'Employee Directory', href: '/employees', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
+      { id: 'requestsAdmin', name: 'Requests & Approvals', href: '/requests', icon: FileCheck, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'orgStructure', name: 'Organization Structure', href: '/org-structure', icon: Building2, roles: ['SUPER_ADMIN', 'ADMIN'] },
+    ],
+  },
+  {
     title: 'Overview',
     items: [
-      { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'attendance', name: 'Attendance & Login', href: '/attendance', icon: Clock, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'notifications', name: 'Notifications', href: '/notifications', icon: Bell, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'focusMode', name: 'Focus Mode', href: '/focus-mode', icon: Moon, roles: ['ADMIN', 'EMPLOYEE'] },
+      { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'attendance', name: 'Attendance & Login', href: '/attendance', icon: Clock, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
     ],
   },
   {
     title: 'Workspace',
     items: [
-      { id: 'tasks', name: 'My Tasks', href: '/tasks', icon: FileCheck, roles: ['EMPLOYEE'] },
-      { id: 'chat', name: 'Chat with Colleagues', href: '/chat', icon: MessageSquare, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'calendar', name: 'Calendar', href: '/calendar', icon: Clock, roles: ['EMPLOYEE'] },
-      { id: 'leaves', name: 'Leave Apply', href: '/leaves', icon: Clock, roles: ['EMPLOYEE'] },
-      { id: 'notes', name: 'Secure Notes', href: '/notes', icon: FileText, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'workspace', name: 'Company Drive', href: '/workspace', icon: HardDrive, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'resources', name: 'Office Resources', href: '/resources', icon: ShieldAlert, roles: ['EMPLOYEE'] },
-      { id: 'meetings', name: 'Video Meetings', href: '/meetings', icon: Video, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'bookmarks', name: 'Web Bookmarks', href: '/bookmarks', icon: Globe, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'mail', name: 'Internal Mail', href: '/mail', icon: Mail, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'reminders', name: 'Automated Reminders', href: '/reminders', icon: BellRing, roles: ['ADMIN', 'EMPLOYEE'] },
-      { id: 'employeeCompiler', name: 'Code Compiler', href: '/compiler', icon: Plug, roles: ['EMPLOYEE'] },
-    ],
-  },
-  {
-    title: 'Employee Access',
-    items: [
-      { id: 'employees', name: 'Employee Directory', href: '/employees', icon: Users, roles: ['ADMIN'] },
-      { id: 'accessRequests', name: 'Access Requests', href: '/access-requests', icon: FileCheck, roles: ['ADMIN'] },
-      { id: 'leavesAdmin', name: 'Leave Approvals', href: '/admin/leaves', icon: Clock, roles: ['ADMIN'] },
-      { id: 'departments', name: 'Departments', href: '/departments', icon: Building2, roles: ['ADMIN'] },
-      { id: 'rolesPermissions', name: 'Roles & Permissions', href: '/roles-permissions', icon: UserCog, roles: ['ADMIN'] },
+      { id: 'tasks', name: 'My Tasks', href: '/tasks', icon: FileCheck, roles: ['MANAGER', 'EMPLOYEE'] },
+      { id: 'chat', name: 'Chat with Colleagues', href: '/chat', icon: MessageSquare, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'calendar', name: 'Calendar', href: '/calendar', icon: Clock, roles: ['MANAGER', 'EMPLOYEE'] },
+      { id: 'leaves', name: 'Leave Apply', href: '/leaves', icon: Clock, roles: ['MANAGER', 'EMPLOYEE'] },
+      { id: 'vault', name: 'Personal Vault', href: '/vault', icon: FileText, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'workspace', name: 'Company Drive', href: '/workspace', icon: HardDrive, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'resources', name: 'Office Resources', href: '/resources', icon: ShieldAlert, roles: ['MANAGER', 'EMPLOYEE'] },
+      { id: 'meetings', name: 'Video Meetings', href: '/meetings', icon: Video, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'mail', name: 'Internal Mail', href: '/mail', icon: Mail, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'reminders', name: 'Automated Reminders', href: '/reminders', icon: BellRing, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'employeeCompiler', name: 'Code Compiler', href: '/compiler', icon: Plug, roles: ['MANAGER', 'EMPLOYEE'] },
     ],
   },
   {
     title: 'Office Security',
     items: [
-      { id: 'officeLogins', name: 'Office Logins', href: '/office-logins', icon: MapPin, roles: ['ADMIN'] },
-      { id: 'aiRisk', name: 'AI Risk Monitoring', href: '/dashboard/risk', icon: ShieldAlert, roles: ['ADMIN'] },
-      { id: 'deviceFingerprinting', name: 'Device Fingerprinting', href: '/devices', icon: Smartphone, roles: ['ADMIN'] },
-      { id: 'security', name: 'Security Center', href: '/security', icon: Shield, roles: ['ADMIN'] },
-      { id: 'threatIntel', name: 'Threat Intelligence', href: '/threat-intelligence', icon: Target, roles: ['ADMIN'] },
+      { id: 'unifiedSecurity', name: 'Security Hub', href: '/security', icon: Shield, roles: ['SUPER_ADMIN', 'ADMIN'] },
     ],
   },
   {
-    title: 'System Management',
+    title: 'System & RBAC Management',
     items: [
-      { id: 'attendanceReports', name: 'Attendance Reports', href: '/admin/attendance', icon: ClipboardList, roles: ['ADMIN'] },
-      { id: 'auditLogs', name: 'Audit Logs', href: '/audit-logs', icon: FileText, roles: ['ADMIN'] },
-      { id: 'analytics', name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['ADMIN'] },
-      { id: 'compiler', name: 'Code Compiler', href: '/admin/compiler', icon: Plug, roles: ['ADMIN'] },
-      { id: 'pricing', name: 'Subscription Plans', href: '/pricing', icon: CreditCard, roles: ['ADMIN'] },
-      { id: 'integrations', name: 'API Integrations', href: '/integrations', icon: Plug, roles: ['ADMIN'] },
-      { id: 'settings', name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN', 'EMPLOYEE'] },
+      { id: 'rbacUsers', name: 'Access Management', href: '/admin/users', icon: UserCog, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'enrollFace', name: 'Face Enrollment', href: '/admin/enroll-face', icon: ScanFace, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'rbacAudit', name: 'Role Audit Logs', href: '/admin/audit', icon: ClipboardList, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'systemOverview', name: 'System Overview', href: '/system-management', icon: BarChart3, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'rbacSettings', name: 'System Settings', href: '/admin/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'settings', name: 'My Settings', href: '/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
     ],
   },
 ];
@@ -124,13 +116,16 @@ export function SidebarContent() {
   return (
     <div className="flex flex-col h-full p-4">
       <div className="mb-6 px-2">
-        <Link href={userRole === 'ADMIN' ? '/admin/dashboard' : '/dashboard'} className="flex items-center gap-3">
+        <Link 
+          href={userRole === 'MANAGER' ? '/manager/dashboard' : '/dashboard'} 
+          className="flex items-center gap-3"
+        >
           <div className="w-10 h-10 overflow-hidden flex items-center justify-center shrink-0">
             <img src="/new-logo.png" alt="SecureAuth Workplace Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div className="overflow-hidden">
             <h2 className="font-semibold text-white truncate">SecureAuth Workplace</h2>
-            <p className="text-xs text-gray-400">{userRole === 'ADMIN' ? 'Admin Portal' : 'Employee Access'}</p>
+            <p className="text-xs text-gray-400">{['ADMIN', 'SUPER_ADMIN'].includes(userRole) ? 'Admin Portal' : userRole === 'MANAGER' ? 'Manager Portal' : 'Employee Access'}</p>
           </div>
         </Link>
       </div>
@@ -149,7 +144,7 @@ export function SidebarContent() {
                 </h3>
                 <div className="space-y-1">
                   {filteredItems.map((item) => {
-                    const href = item.id === 'dashboard' && userRole === 'ADMIN' ? '/admin/dashboard' : item.href;
+                    const href = item.id === 'dashboard' && userRole === 'MANAGER' ? '/manager/dashboard' : item.href;
                     const isActive = pathname === href || pathname.startsWith(href + '/');
                     return (
                       <Link

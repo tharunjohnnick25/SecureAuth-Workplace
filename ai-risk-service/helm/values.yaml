@@ -1,0 +1,36 @@
+# Helm values for AI Risk Service
+replicaCount: 2
+
+image:
+  repository: secureauth/ai-risk-service
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "100" # 100 requests per second rate limiting
+  hosts:
+    - host: risk-service.secureauth.local
+      paths:
+        - path: /api/v1/risk-score
+          pathType: ImplementationSpecific
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80

@@ -28,7 +28,6 @@ export const PERMISSIONS: Permission[] = [
   { id: 'manage_integrations', name: 'Manage Integrations', description: 'Configure active third-party LDAP and SaaS plugins', category: 'Security' },
   { id: 'approve_access_requests', name: 'Approve Access Requests', description: 'Authorize employee requests for system permissions', category: 'Governance' },
   { id: 'manage_attendance', name: 'Manage Attendance', description: 'Review check-ins, remote logs, and occupancy metrics', category: 'Governance' },
-  { id: 'manage_subscriptions', name: 'Manage Subscriptions', description: 'Modify SaaS plan parameters and review invoices', category: 'Billing & Settings' },
   { id: 'manage_devices', name: 'Manage Devices', description: 'Register, edit trust levels, or revoke team hardware tokens', category: 'Security' },
 ];
 
@@ -56,7 +55,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'manage_integrations',
     'approve_access_requests',
     'manage_attendance',
-    'manage_subscriptions',
     'manage_devices',
   ],
   ORGANIZATION_OWNER: [
@@ -68,7 +66,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'manage_integrations',
     'approve_access_requests',
     'manage_attendance',
-    'manage_subscriptions',
     'manage_devices',
   ],
   ORGANIZATION_ADMIN: [

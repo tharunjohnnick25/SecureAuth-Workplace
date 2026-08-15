@@ -26,7 +26,8 @@ import {
   UserCog, 
   ShieldAlert, 
   User, 
-  AlertTriangle 
+  AlertTriangle,
+  Building2
 } from 'lucide-react';
 import { Command } from 'cmdk';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,16 +43,14 @@ const STATIC_PAGES = [
     { name: 'Attendance & Login', href: '/attendance', icon: Clock },
     { name: 'Notifications', href: '/notifications', icon: Bell },
     { name: 'Calendar', href: '/calendar', icon: Calendar },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   ]},
   { group: 'Work & Collaboration', items: [
     { name: 'My Tasks', href: '/tasks', icon: FileCheck },
     { name: 'Chat with Colleagues', href: '/chat', icon: MessageSquare },
     { name: 'Leave Apply', href: '/leaves', icon: Clock },
-    { name: 'Secure Notes', href: '/notes', icon: FileText },
+    { name: 'Personal Vault', href: '/vault', icon: FileText },
     { name: 'Company Drive', href: '/workspace', icon: HardDrive },
     { name: 'Video Meetings', href: '/meetings', icon: Video },
-    { name: 'Web Bookmarks', href: '/bookmarks', icon: Globe },
     { name: 'Automated Reminders', href: '/reminders', icon: Bell },
   ]},
   { group: 'Security', items: [
@@ -62,14 +61,11 @@ const STATIC_PAGES = [
   ]},
   { group: 'Administration', items: [
     { name: 'Employee Directory', href: '/employees', icon: Users },
-    { name: 'Access Requests', href: '/access-requests', icon: FileCheck },
-    { name: 'Roles & Permissions', href: '/roles-permissions', icon: UserCog },
-    { name: 'Attendance Reports', href: '/admin/attendance', icon: ClipboardList },
-    { name: 'Audit Logs', href: '/audit-logs', icon: FileText },
-    { name: 'Subscription Plans', href: '/pricing', icon: CreditCard },
+    { name: 'Requests & Approvals', href: '/requests', icon: FileCheck },
+    { name: 'Organization Structure', href: '/org-structure', icon: Building2 },
+    { name: 'System Overview', href: '/system-management', icon: BarChart3 },
   ]},
   { group: 'Integration', items: [
-    { name: 'API Integrations', href: '/integrations', icon: Plug },
     { name: 'Code Compiler', href: '/admin/compiler', icon: Plug },
     { name: 'Settings', href: '/settings', icon: Settings },
   ]}

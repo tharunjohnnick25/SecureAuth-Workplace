@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
@@ -18,16 +20,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from "@/context/LanguageContext";
 
-const auditLogs = [
-  { id: '1', timestamp: '2026-04-30 14:32:15', user: 'sarah.chen@company.com', action: 'User Login', resource: 'Authentication', status: 'Success', ipAddress: '192.168.1.105', severity: 'info' },
-  { id: '2', timestamp: '2026-04-30 14:28:42', user: 'michael.r@company.com', action: 'Security Policy Updated', resource: 'Settings', status: 'Success', ipAddress: '192.168.1.112', severity: 'warning' },
-  { id: '3', timestamp: '2026-04-30 14:25:11', user: 'emily.t@company.com', action: 'Failed Login Attempt', resource: 'Authentication', status: 'Failed', ipAddress: '203.0.113.45', severity: 'critical' },
-  { id: '4', timestamp: '2026-04-30 14:20:33', user: 'david.kim@company.com', action: 'API Key Generated', resource: 'API Management', status: 'Success', ipAddress: '192.168.1.89', severity: 'info' },
-  { id: '5', timestamp: '2026-04-30 14:15:22', user: 'lisa.a@company.com', action: 'Compliance Report Exported', resource: 'Reports', status: 'Success', ipAddress: '192.168.1.67', severity: 'info' },
-  { id: '6', timestamp: '2026-04-30 14:10:45', user: 'admin@company.com', action: 'Role Permissions Changed', resource: 'Access Control', status: 'Success', ipAddress: '192.168.1.1', severity: 'warning' },
-  { id: '7', timestamp: '2026-04-30 14:05:18', user: 'james.w@company.com', action: 'Device Registered', resource: 'Device Management', status: 'Success', ipAddress: '192.168.1.234', severity: 'info' },
-  { id: '8', timestamp: '2026-04-30 14:00:09', user: 'unknown', action: 'Unauthorized Access Attempt', resource: 'System', status: 'Blocked', ipAddress: '45.33.32.156', severity: 'critical' },
-];
+const auditLogs: any[] = [];
 
 const activityStats = [
   { label: 'Total Events', value: '12,456', icon: Activity, color: 'primary' },
@@ -46,6 +39,22 @@ const topActions = [
 
 export function AuditLogs() {
     const { t } = useLanguage();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterSeverity, setFilterSeverity] = useState('all');
+    const [filterStatus, setFilterStatus] = useState('all');
+
+    const filteredLogs = auditLogs.filter(log => {
+      const matchesSearch = log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.ipAddress.includes(searchTerm);
+      const matchesSeverity = filterSeverity === 'all' || log.severity === filterSeverity;
+      const matchesStatus = filterStatus === 'all' || log.status.toLowerCase() === filterStatus.toLowerCase();
+      
+      return matchesSearch && matchesSeverity && matchesStatus;
+    });
+
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -54,14 +63,31 @@ export function AuditLogs() {
         <main className="pt-24 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">{'Audit logs'}</h1>
+              <h1 className="text-3xl font-semibold mb-2">Audit logs</h1>
               <p className="text-muted-foreground">
-                {'Trackallsystema'}</p>
+                Track all system activity and administrative actions.</p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline">
-                <Filter className="w-4 h-4 mr-2" />
-                {'Filter'}</Button>
+              <select
+                value={filterSeverity}
+                onChange={(e) => setFilterSeverity(e.target.value)}
+                className="bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary/50"
+              >
+                <option className="bg-[#0f172a]" value="all">All Severities</option>
+                <option className="bg-[#0f172a]" value="info">Info</option>
+                <option className="bg-[#0f172a]" value="warning">Warning</option>
+                <option className="bg-[#0f172a]" value="critical">Critical</option>
+              </select>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary/50"
+              >
+                <option className="bg-[#0f172a]" value="all">All Statuses</option>
+                <option className="bg-[#0f172a]" value="success">Success</option>
+                <option className="bg-[#0f172a]" value="failed">Failed</option>
+                <option className="bg-[#0f172a]" value="blocked">Blocked</option>
+              </select>
               <Button variant="outline">
                 <Calendar className="w-4 h-4 mr-2" />
                 {'Date range'}</Button>
@@ -100,6 +126,8 @@ export function AuditLogs() {
                   <input
                     type="text"
                     placeholder="Search audit logs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 bg-input-background rounded-lg border border-border focus:outline-none focus:border-primary"
                   />
                 </div>
@@ -117,7 +145,7 @@ export function AuditLogs() {
                     </tr>
                   </thead>
                   <tbody>
-                    {auditLogs.map((log) => (
+                    {filteredLogs.map((log) => (
                       <tr key={log.id} className="border-b border-border hover:bg-input-background/30">
                         <td className="p-3 text-sm">{log.timestamp}</td>
                         <td className="p-3 text-sm">
@@ -150,7 +178,7 @@ export function AuditLogs() {
                 </table>
               </div>
               <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{t('Showing8of12456_698')}</p>
+                <p className="text-sm text-muted-foreground">Showing 8 of 12,456 logs</p>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm">{'Previous'}</Button>
                   <Button variant="outline" size="sm">{'Next'}</Button>
@@ -194,25 +222,25 @@ export function AuditLogs() {
                     <h4 className="font-medium mb-2">{'Current settings'}</h4>
                     <div className="space-y-2 text-sm text-muted-foreground">
                       <div className="flex items-center justify-between">
-                        <span>{'Retention period'}</span>
-                        <span className="font-medium text-foreground">{t('90days_705')}</span>
+                        <span>Retention period</span>
+                        <span className="font-medium text-foreground">90 days</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>{'Archive location'}</span>
-                        <span className="font-medium text-foreground">{t('S3Bucket_707')}</span>
+                        <span>Archive location</span>
+                        <span className="font-medium text-foreground">S3 Bucket</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>{'Compliance stand'}</span>
-                        <span className="font-medium text-foreground">{t('SOC2_709')}</span>
+                        <span>Compliance standard</span>
+                        <span className="font-medium text-foreground">SOC 2</span>
                       </div>
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4" />
-                      {'Important notice'}</h4>
+                      Important notice</h4>
                     <p className="text-sm text-muted-foreground">
-                      {'Auditlogsoldert'}</p>
+                      Audit logs older than 90 days will be moved to cold storage.</p>
                   </div>
                   <Button className="w-full">{'Configure retent'}</Button>
                 </div>

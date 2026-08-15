@@ -28,20 +28,18 @@ interface MetricsDashboardProps {
   chartData: any[];
   barData?: any[];
   recentActivity?: { id: string; title: string; time: string; status: 'success' | 'warning' | 'danger' }[];
+  hideLayout?: boolean;
 }
 
-export function MetricsDashboard({ title, description, metrics, chartData, barData, recentActivity }: MetricsDashboardProps) {
+export function MetricsDashboard({ title, description, metrics, chartData, barData, recentActivity, hideLayout }: MetricsDashboardProps) {
     const { t } = useLanguage();
-  return (
-    <div className="min-h-screen bg-[#020617] text-white">
-      <Sidebar />
-      <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-1 p-6 lg:p-8 pt-24 overflow-x-hidden">
-          <PageHeader title={title} description={description} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {metrics.map((m, i) => (
+  const content = (
+    <div className="w-full overflow-x-hidden space-y-8">
+      <PageHeader title={title} description={description} hideSearch={hideLayout} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {metrics.map((m, i) => (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -146,6 +144,20 @@ export function MetricsDashboard({ title, description, metrics, chartData, barDa
               )}
             </Card>
           </div>
+    </div>
+  );
+
+  if (hideLayout) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-white">
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 p-6 lg:p-8 pt-24">
+          {content}
         </main>
       </div>
     </div>

@@ -53,6 +53,11 @@ export function useLocation() {
       (err) => {
         setError(err.message);
         setLoading(false);
+      },
+      {
+        enableHighAccuracy: true, // Forces precise GPS tracking
+        timeout: 10000,
+        maximumAge: 0 // Do not use a cached position
       }
     );
   }, []); // stable reference — no deps needed as it only uses setters

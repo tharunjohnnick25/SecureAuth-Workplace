@@ -16,9 +16,16 @@ export interface MockEmployee {
   designation?: string;
   phone?: string;
   employment_type?: string;
-  subscription?: string;
   password?: string;
   password_hash?: string;
+  passkey_enrolled?: boolean;
+  passkeys_count?: number;
+  face_verified?: boolean;
+  face_embedding?: number[];
+  totp_secret?: string;
+  totp_enrolled?: boolean;
+  consent_given?: boolean;
+  is_deleted?: boolean;
   created_at: string;
   updated_at?: string;
   [key: string]: unknown;
@@ -42,39 +49,96 @@ export function verifyPassword(password: string, stored: string): boolean {
   }
 }
 
+export const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
+
+export const validKeys: (keyof MockEmployee)[] = [
+  'full_name', 'phone', 'department', 'designation', 'role', 
+  'status', 'date_of_joining', 'date_of_birth', 'gender',
+  'emergency_contact_name', 'emergency_contact_phone',
+  'employment_type', 'manager_id', 'blood_group', 'marital_status',
+  'nationality', 'city', 'state', 'country', 'postal_code', 'address',
+  'totp_secret', 'totp_enrolled', 'consent_given', 'is_deleted'
+];
+
+export const REQUIRED_PROFILE_FIELDS = [
+  'full_name',
+  'phone',
+  'department',
+  'designation',
+  'employment_type',
+  'date_of_joining',
+  'date_of_birth',
+  'gender',
+  'emergency_contact_name',
+  'emergency_contact_phone',
+] as const;
+
+export function isProfileComplete(record: Record<string, unknown>): boolean {
+  return REQUIRED_PROFILE_FIELDS.every((field) => {
+    const value = record[field];
+    return value !== undefined && value !== null && String(value).trim() !== '';
+  });
+}
+
 const DATA_DIR = join(process.cwd(), '.data');
 const DATA_FILE = join(DATA_DIR, 'mock-employees.json');
 
+const departments = ['Engineering', 'Product', 'Design', 'QA', 'HR', 'Sales', 'IT Support'];
+const commonPasswordHash = hashPassword('Welcome@123');
+
 const DEFAULT_EMPLOYEES: MockEmployee[] = [
   {
-    id: 'mock-1',
-    employee_id: 'EMP-MOCK01',
-    full_name: 'Sarah Chen',
-    email: 'sarah.c@enterprise.com',
-    role: 'Security Admin',
+    id: 'admin-main',
+    employee_id: 'EMP-ADMIN',
+    full_name: 'Alice Admin',
+    email: 'admin@enterprise.com',
+    role: 'ADMIN',
     status: 'Active',
-    department: 'Security',
-    designation: 'Security Analyst',
+    department: 'Management',
+    designation: 'System Administrator',
     employment_type: 'Full-time',
-    subscription: 'Enterprise',
-    password_hash: hashPassword('Welcome@123'),
+    password_hash: commonPasswordHash,
     created_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-2',
-    employee_id: 'EMP-MOCK02',
-    full_name: 'Marcus Thorne',
-    email: 'm.thorne@enterprise.com',
-    role: 'Cloud Architect',
-    status: 'Active',
-    department: 'Engineering',
-    designation: 'Cloud Architect',
-    employment_type: 'Full-time',
-    subscription: 'Professional',
-    password_hash: hashPassword('Welcome@123'),
-    created_at: new Date().toISOString(),
-  },
+  }
 ];
+
+departments.forEach((dept, idx) => {
+  const managerId = `mgr-${idx}`;
+  const deptPrefix = dept.substring(0, 3).toUpperCase();
+  
+  // Create Manager
+  DEFAULT_EMPLOYEES.push({
+    id: managerId,
+    employee_id: `EMP-${deptPrefix}-MGR`,
+    full_name: `${dept} Manager`,
+    email: `manager.${dept.toLowerCase().replace(' ', '')}@enterprise.com`,
+    role: 'MANAGER',
+    status: 'Active',
+    department: dept,
+    designation: `${dept} Head`,
+    employment_type: 'Full-time',
+    password_hash: commonPasswordHash,
+    created_at: new Date().toISOString(),
+  });
+
+  // Create 2 Employees per department
+  for (let i = 1; i <= 2; i++) {
+    DEFAULT_EMPLOYEES.push({
+      id: `emp-${idx}-${i}`,
+      employee_id: `EMP-${deptPrefix}-00${i}`,
+      full_name: `${dept} Employee ${i}`,
+      email: `employee${i}.${dept.toLowerCase().replace(' ', '')}@enterprise.com`,
+      role: 'EMPLOYEE',
+      status: 'Active',
+      department: dept,
+      designation: `${dept} Specialist`,
+      manager_id: managerId,
+      employment_type: 'Full-time',
+      password_hash: commonPasswordHash,
+      created_at: new Date().toISOString(),
+    });
+  }
+});
 
 function loadFromDisk(): MockEmployee[] {
   try {
@@ -89,6 +153,11 @@ function loadFromDisk(): MockEmployee[] {
 }
 
 let mockEmployees: MockEmployee[] = loadFromDisk();
+
+// In development, we can force a reload to pick up out-of-band changes
+export function forceReload() {
+  mockEmployees = loadFromDisk();
+}
 
 function persist() {
   try {

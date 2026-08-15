@@ -47,3 +47,43 @@ export function getCompanyByDomain(domain?: string): Company | undefined {
     (c) => c.domain === normalized || normalized.endsWith(`.${c.domain}`)
   );
 }
+
+/**
+ * Resolves a canonical company key (preferably the registered company domain)
+ * from either an email address and/or a company name. This lets admins and
+ * employee requests be matched consistently even when one side stores the full
+ * registered company name (e.g. "Infosys Ltd") and the other derives a short
+ * name from the email domain (e.g. "Infosys").
+ */
+export function resolveCompanyKey(record: {
+  email?: string | null;
+  company_name?: string | null;
+}): string {
+  const email = String(record?.email || '').toLowerCase().trim();
+  const companyName = String(record?.company_name || '').trim();
+
+  const emailDomain = email.split('@')[1] || '';
+
+  // 1) Email domain that maps to a registered company is the most reliable signal.
+  const byEmail = getCompanyByDomain(emailDomain);
+  if (byEmail) return byEmail.domain;
+
+  // 2) Full registered company name (e.g. "Infosys Ltd").
+  const byName = REGISTERED_COMPANIES.find(
+    (c) => c.name.toLowerCase() === companyName.toLowerCase()
+  );
+  if (byName) return byName.domain;
+
+  // 3) Legacy short names produced by older fallback logic.
+  const legacy = companyName.toLowerCase();
+  if (legacy === 'infosys') return 'infosys.com';
+  if (legacy === 'tcs') return 'tcs.com';
+  if (legacy === 'wipro') return 'wipro.com';
+  if (legacy === 'saveetha' || legacy === 'saveetha university') return 'saveetha.com';
+
+  // 4) Raw email domain.
+  if (emailDomain) return emailDomain;
+
+  // 5) Fall back to the raw company name (may be a custom org name).
+  return companyName;
+}

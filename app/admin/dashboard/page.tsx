@@ -1,5 +1,5 @@
-import { AdminDashboard } from '@/components/pages/AdminDashboard';
+import { GovernanceDashboard } from '@/components/pages/GovernanceDashboard';
 
 export default function AdminDashboardPage() {
-  return <AdminDashboard />;
+  return <GovernanceDashboard />;
 }

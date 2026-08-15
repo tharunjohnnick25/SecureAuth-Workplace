@@ -7,6 +7,8 @@ import { Button } from '@/components/Button';
 import { Plus, GripVertical, Clock, Mic, MicOff } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
+import { EmployeeService } from '@/lib/services/employees';
+import { Employee } from '@/types/employees';
 
 interface Task {
   id: string;
@@ -14,6 +16,8 @@ interface Task {
   description?: string;
   status: 'TODO' | 'IN_PROGRESS' | 'DONE';
   assignee: string;
+  assignee_name?: string;
+  created_by?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   created_at: string;
 }
@@ -34,7 +38,11 @@ export default function TasksPage() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'LOW'|'MEDIUM'|'HIGH'>('MEDIUM');
+  const [newTaskAssignee, setNewTaskAssignee] = useState<string>('');
   const [isListening, setIsListening] = useState(false);
+  
+  // Employees for assignment
+  const [employees, setEmployees] = useState<Employee[]>([]);
   
   // Drag state
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -42,8 +50,23 @@ export default function TasksPage() {
   useEffect(() => {
     if (user?.id) {
       fetchTasks();
+      if (user?.role === 'MANAGER') {
+        fetchEmployees();
+      }
     }
   }, [user]);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await EmployeeService.getEmployees({
+        department: user?.department,
+        status: 'Active',
+      });
+      setEmployees(res.data);
+    } catch (err) {
+      console.error('Failed to fetch employees for assignment', err);
+    }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -62,6 +85,10 @@ export default function TasksPage() {
     if (!newTaskTitle.trim()) return;
 
     try {
+      const assigneeId = newTaskAssignee || user?.id || '';
+      const selectedEmployee = employees.find(e => e.id === assigneeId);
+      const assigneeName = selectedEmployee ? selectedEmployee.full_name : user?.full_name || 'Self';
+
       const res = await fetch('/api/workspace/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +96,9 @@ export default function TasksPage() {
           title: newTaskTitle,
           description: newTaskDescription,
           status: 'TODO',
-          assignee: user?.id,
+          assignee: assigneeId,
+          assignee_name: assigneeName,
+          created_by: user?.id,
           priority: newTaskPriority,
         }),
       });
@@ -79,6 +108,7 @@ export default function TasksPage() {
         setIsModalOpen(false);
         setNewTaskTitle('');
         setNewTaskDescription('');
+        setNewTaskAssignee('');
         toast.success('Task created');
       }
     } catch (err) {
@@ -234,6 +264,11 @@ export default function TasksPage() {
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getPriorityColor(task.priority)}`}>
                           {task.priority}
                         </span>
+                        {task.assignee !== user?.id && (
+                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 ml-2">
+                            Assigned to: {task.assignee_name || 'Unknown'}
+                          </span>
+                        )}
                         <button 
                           onClick={() => handleDeleteTask(task.id)}
                           className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -313,6 +348,25 @@ export default function TasksPage() {
                   <option value="HIGH">High Priority</option>
                 </select>
               </div>
+              
+              {user?.role === 'MANAGER' && employees.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Assign To</label>
+                  <select
+                    value={newTaskAssignee}
+                    onChange={(e) => setNewTaskAssignee(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white text-sm focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value={user?.id}>Me (Self-assign)</option>
+                    {employees.map(emp => (
+                      emp.id !== user?.id && (
+                        <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                      )
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                   Cancel

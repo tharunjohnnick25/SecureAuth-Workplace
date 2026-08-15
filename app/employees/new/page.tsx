@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { DepartmentService } from '@/lib/services/departments';
 import { Department } from '@/types/departments';
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuthStore } from '@/store/useAuthStore';
 
 const STATUS_OPTIONS: EmployeeStatus[] = ['Active', 'Inactive', 'Resigned', 'On Leave', 'Suspended', 'Retired', 'Terminated'];
 const EMPLOYMENT_TYPES: EmploymentType[] = ['Full-time', 'Part-time', 'Contract', 'Intern', 'Temporary'];
@@ -21,7 +22,8 @@ const GENDERS: Gender[] = ['Male', 'Female', 'Other'];
 const BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export default function NewEmployeePage() {
-    const { t } = useLanguage();
+  const { t } = useLanguage();
+  const { user } = useAuthStore();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -37,6 +39,8 @@ export default function NewEmployeePage() {
     status: 'Active',
     gender: '',
     blood_group: '',
+    role: 'EMPLOYEE',
+    manager_id: user?.role === 'MANAGER' ? user.id : '',
     date_of_joining: new Date().toISOString().split('T')[0],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -177,6 +181,15 @@ export default function NewEmployeePage() {
                         <select value={form.employment_type} onChange={(e) => updateField('employment_type', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
                           {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{'Role'}</label>
+                        <select value={form.role} onChange={(e) => updateField('role', e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                          <option value="EMPLOYEE">Employee</option>
+                          <option value="MANAGER">Manager</option>
+                          <option value="ADMIN">Admin</option>
                         </select>
                       </div>
                       <div>

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { EmployeeService } from '@/lib/services/employees';
 import { Employee, EmployeeStatus } from '@/types/employees';
-import { Search, Filter, Plus, Download, Upload, IdCard, MoreVertical, Eye, Edit, Trash2, X, ChevronDown, RotateCw, Loader2, AlertCircle, Users, UserPlus, FileSpreadsheet } from 'lucide-react';
+import { Search, Filter, Plus, Download, Upload, IdCard, MoreVertical, Eye, Edit, Trash2, X, ChevronDown, RotateCw, Loader2, AlertCircle, Users, UserPlus, FileSpreadsheet, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -25,15 +25,6 @@ const STATUS_STYLES: Record<string, string> = {
   Retired: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   Terminated: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
-
-const SUBSCRIPTION_STYLES: Record<string, string> = {
-  Free: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  'Basic Protection': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  Professional: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  Enterprise: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-};
-
-const SUBSCRIPTION_OPTIONS = ['Free', 'Basic Protection', 'Professional', 'Enterprise'];
 
 const STATUS_OPTIONS: EmployeeStatus[] = ['Active', 'Inactive', 'Resigned', 'On Leave', 'Suspended', 'Retired', 'Terminated'];
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern', 'Temporary'];
@@ -61,13 +52,54 @@ export default function EmployeesPage() {
   const [sortBy, setSortBy] = useState('full_name');
   const [sortOrder, setSortOrder] = useState('asc');
 
+  const handleFaceUpload = async (e: React.ChangeEvent<HTMLInputElement>, employeeId: string) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const toastId = toast.loading('Reading & encoding faces...');
+    
+    try {
+      const base64Images: string[] = [];
+      
+      // Read all files concurrently
+      const readPromises = Array.from(files).map((file) => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+      });
+      
+      const images = await Promise.all(readPromises);
+      
+      toast.loading(`Uploading ${images.length} face templates...`, { id: toastId });
+      
+      const res = await fetch('/api/admin/enroll-face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId, images })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Failed to register faces');
+      toast.success(data.message || `Successfully enrolled ${images.length} face templates!`, { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message, { id: toastId });
+    }
+  };
+
   const loadEmployees = useCallback(async () => {
     setLoading(true);
     try {
+      const isManager = user?.role === 'MANAGER';
+      const enforcedDepartment = isManager ? user?.department : undefined;
+
       const result = await EmployeeService.getEmployees({
         search: searchTerm || undefined,
-        domain: userDomain,
         ...filters,
+        department: enforcedDepartment || filters.department,
         sort_by: sortBy,
         sort_order: sortOrder,
       });
@@ -77,7 +109,7 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters, sortBy, sortOrder]);
+  }, [searchTerm, filters, sortBy, sortOrder, user]);
 
   useEffect(() => { loadEmployees(); }, [loadEmployees]);
 
@@ -137,16 +169,6 @@ export default function EmployeesPage() {
       loadEmployees();
     } catch (e: any) {
       toast.error(e.message || 'Failed to update status');
-    }
-  };
-
-  const updateSubscription = async (id: string, subscription: string) => {
-    try {
-      await EmployeeService.updateEmployee(id, { subscription } as any);
-      toast.success(`Subscription updated to ${subscription}`);
-      loadEmployees();
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to update subscription');
     }
   };
 
@@ -236,7 +258,12 @@ export default function EmployeesPage() {
                       <option value="">{'All status'}</option>
                       {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <select value={filters.department || ''} onChange={(e) => setFilters(f => ({ ...f, department: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    <select 
+                      value={user?.role === 'MANAGER' ? user?.department : (filters.department || '')} 
+                      onChange={(e) => setFilters(f => ({ ...f, department: e.target.value }))} 
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white disabled:opacity-50"
+                      disabled={user?.role === 'MANAGER'}
+                    >
                       <option value="">{'All departments'}</option>
                       {departments.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
@@ -274,7 +301,7 @@ export default function EmployeesPage() {
                     <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Department'}</th>
                     <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Designation'}</th>
                     <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Type'}</th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">Subscription</th>
+                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'AI Risk'}</th>
                     <th className="px-4 py-3 font-semibold uppercase tracking-wider text-xs">{'Status'}</th>
                     <th className="px-4 py-3 text-right font-semibold uppercase tracking-wider text-xs">{'Actions'}</th>
                   </tr>
@@ -282,13 +309,13 @@ export default function EmployeesPage() {
                 <tbody className="divide-y divide-white/5">
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-16 text-center text-gray-500">
+                      <td colSpan={7} className="px-4 py-16 text-center text-gray-500">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                         {'Loading employees...'}</td>
                     </tr>
                   ) : filteredEmployees.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-16 text-center text-gray-500">
+                      <td colSpan={7} className="px-4 py-16 text-center text-gray-500">
                         <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>{'No employees found'}</p>
                         {searchTerm || Object.keys(filters).length > 0 ? (
@@ -329,18 +356,11 @@ export default function EmployeesPage() {
                       <td className="px-4 py-3 text-sm text-gray-300">{emp.designation || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-300">{emp.employment_type || '-'}</td>
                       <td className="px-4 py-3">
-                        <div className="relative group/sub">
-                          <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-full border cursor-pointer block w-fit ${SUBSCRIPTION_STYLES[emp.subscription || 'Free'] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
-                            {emp.subscription || 'Free'}
+                        <div className="flex items-center gap-1.5">
+                          <Shield className={`w-4 h-4 ${(emp.risk_score || 0) < 30 ? 'text-green-400' : (emp.risk_score || 0) < 70 ? 'text-yellow-400' : 'text-red-400'}`} />
+                          <span className={`text-xs font-bold ${(emp.risk_score || 0) < 30 ? 'text-green-400' : (emp.risk_score || 0) < 70 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {emp.risk_score || 0}%
                           </span>
-                          <div className="absolute left-0 top-full mt-1 bg-[#0b132b] border border-white/10 rounded-xl p-1.5 shadow-2xl z-50 hidden group-hover/sub:block min-w-[130px]">
-                            {SUBSCRIPTION_OPTIONS.filter(s => s !== (emp.subscription || 'Free')).map(s => (
-                              <button key={s} onClick={() => updateSubscription(emp.id, s)}
-                                className="block w-full text-left px-3 py-1.5 text-xs rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors">
-                                {s}
-                              </button>
-                            ))}
-                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -360,6 +380,19 @@ export default function EmployeesPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <label className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer relative group/upload">
+                            <Upload className="w-4 h-4" />
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*" 
+                              multiple
+                              onChange={(e) => handleFaceUpload(e, emp.id)} 
+                            />
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs text-white opacity-0 group-hover/upload:opacity-100 pointer-events-none whitespace-nowrap">
+                              Upload Face(s)
+                            </div>
+                          </label>
                           <Link href={`/employees/${emp.id}`} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
                             <Eye className="w-4 h-4" />
                           </Link>

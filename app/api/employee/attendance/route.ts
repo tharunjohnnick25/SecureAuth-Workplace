@@ -157,7 +157,7 @@ export async function POST(req: Request) {
         if (existing.check_out) return NextResponse.json({ success: false, error: 'Already checked out today' }, { status: 400 });
         
         existing.check_out = new Date().toISOString();
-        existing.location_out = location || 'Remote';
+        (existing as any).location_out = location || 'Remote';
         saveMockDB();
         return NextResponse.json({ success: true, data: existing });
       }

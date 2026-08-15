@@ -19,6 +19,8 @@ export interface Conversation {
   is_favorite?: boolean;
   has_mention?: boolean;
   is_invite?: boolean;
+  is_group?: boolean;
+  group_name?: string;
 }
 
 export interface ChatMessage {
@@ -101,6 +103,24 @@ export const ChatStore = {
       created_at: now,
       last_message_at: now,
       last_message_preview: '',
+    };
+    store.conversations.push(conversation);
+    persist();
+    return conversation;
+  },
+
+  createGroupConversation(participants: ChatParticipant[], groupName: string): Conversation {
+    const key = `group-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const now = new Date().toISOString();
+    const conversation: Conversation = {
+      id: key,
+      key,
+      participants,
+      created_at: now,
+      last_message_at: now,
+      last_message_preview: `Group '${groupName}' created`,
+      is_group: true,
+      group_name: groupName,
     };
     store.conversations.push(conversation);
     persist();

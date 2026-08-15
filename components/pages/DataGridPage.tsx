@@ -35,9 +35,10 @@ interface DataGridPageProps {
   primaryAction?: { label: string; icon?: any; onClick: () => void };
   secondaryAction?: { label: string; icon?: any; onClick: () => void };
   filters?: DataGridFilter[];
+  hideSearch?: boolean;
 }
 
-export function DataGridPage({ title, description, columns, data, loading, onRefresh, hideLayout, onExportExcel, onExportPPT, primaryAction, secondaryAction, filters }: DataGridPageProps) {
+export function DataGridPage({ title, description, columns, data, loading, onRefresh, hideLayout, onExportExcel, onExportPPT, primaryAction, secondaryAction, filters, hideSearch }: DataGridPageProps) {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -90,13 +91,9 @@ export function DataGridPage({ title, description, columns, data, loading, onRef
     document.body.removeChild(link);
   };
 
-  return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 overflow-y-auto">
-      <Sidebar />
-      <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-1 p-6 lg:p-8 pt-24 overflow-x-hidden">
-          <PageHeader title={title} description={description}>
+  const content = (
+    <div className="w-full space-y-6">
+      <PageHeader title={title} description={description} hideSearch={hideSearch}>
             <div className="flex flex-wrap items-center gap-3">
               {onExportExcel && (
                 <Button 
@@ -138,16 +135,18 @@ export function DataGridPage({ title, description, columns, data, loading, onRef
           <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
             <div className="p-4 border-b border-white/10 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
               <div className="flex flex-wrap items-center gap-3 w-full">
-                <div className="relative w-full sm:w-72">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input 
-                    type="text" 
-                    placeholder="Search records..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors text-white placeholder-gray-500"
-                  />
-                </div>
+                {!hideSearch && (
+                  <div className="relative w-full sm:w-72">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <input 
+                      type="text" 
+                      placeholder="Search records..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors text-white placeholder-gray-500"
+                    />
+                  </div>
+                )}
                 {filters?.map(filter => {
                   const options = getFilterOptions(filter);
                   return (
@@ -174,8 +173,6 @@ export function DataGridPage({ title, description, columns, data, loading, onRef
                 )}
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Button variant="outline" className="w-full sm:w-auto border-white/10">
-                  <Filter className="w-4 h-4 mr-2" /> {'Filters'}</Button>
                 {onExportExcel && (
                   <Button 
                     variant="outline" 
@@ -258,6 +255,20 @@ export function DataGridPage({ title, description, columns, data, loading, onRef
               </div>
             </div>
           </Card>
+    </div>
+  );
+
+  if (hideLayout) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 overflow-y-auto">
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 p-6 lg:p-8 pt-24 overflow-x-hidden">
+          {content}
         </main>
       </div>
     </div>

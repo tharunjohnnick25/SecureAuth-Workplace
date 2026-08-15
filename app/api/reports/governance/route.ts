@@ -1,23 +1,75 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+import { NextRequest } from 'next/server';
+import { MockEmployees } from '@/lib/mock-employees';
+import { MockDB } from '@/lib/mock-db';
+
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('user_id');
+    const role = searchParams.get('role');
+
     if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+      let allEmp = MockEmployees.getAll();
+      
+      if (role === 'MANAGER' && userId) {
+        allEmp = allEmp.filter(e => e.manager_id === userId);
+      } else if (role === 'EMPLOYEE' && userId) {
+        allEmp = allEmp.filter(e => e.id === userId);
+      }
+      
+      const empIds = allEmp.map(e => e.id);
+      
+      // Calculate dynamic stats
+      const totalEmp = allEmp.length;
+      const activeEmp = allEmp.filter(e => e.status !== 'Inactive').length;
+      const depts = new Set(allEmp.map(e => e.department).filter(Boolean)).size;
+      
+      let deptDist: any = {};
+      let roleDist: any = {};
+      allEmp.forEach(e => {
+        if (e.department) deptDist[e.department] = (deptDist[e.department] || 0) + 1;
+        if (e.role) roleDist[e.role] = (roleDist[e.role] || 0) + 1;
+      });
+
+      const reqs = (MockDB as any).employee_requests?.filter((r: any) => empIds.includes(r.user_id)) || [];
+      const leaves = (MockDB as any).leave_requests?.filter((l: any) => empIds.includes(l.user_id)) || [];
+      const logins = (MockDB as any).login_logs?.filter((l: any) => empIds.includes(l.user_id)) || [];
+      const devices = (MockDB as any).devices?.filter((d: any) => empIds.includes(d.user_id)) || [];
+
       return NextResponse.json({
         success: true,
         data: {
-          employees: { total: 120, active: 115, inactive: 5 },
-          departments: { total: 8, distribution: { Engineering: 40, Sales: 30, HR: 10, Marketing: 20 } },
-          roles: { 'Security Admin': 5, 'Developer': 60, 'Manager': 15, 'Employee': 40 },
-          access_requests: { approved: 45, rejected: 12, pending: 8, total: 65 },
-          devices: { total: 240, trusted: 215, untrusted: 25 },
-          logins: { total: 1250, failed: 45, high_risk: 12 },
-          attendance: { present: 105, absent: 5, late: 5 },
-          leave: { approved: 5, pending: 2, rejected: 0 },
-          compliance: { score: 98, passed_checks: 120, failed_checks: 2 },
-          audit_logs: { total_events: 15420, critical_events: 23, warning_events: 145 },
-          behavioural_risks: { unusual_locations: 14, multiple_failures: 45, off_hours_access: 22 },
+          employees: { total: totalEmp, active: activeEmp, inactive: totalEmp - activeEmp },
+          departments: { total: depts, distribution: deptDist },
+          roles: roleDist,
+          access_requests: { 
+            approved: reqs.filter((r: any) => r.status === 'approved' || r.status === 'APPROVED').length, 
+            rejected: reqs.filter((r: any) => r.status === 'rejected' || r.status === 'REJECTED').length, 
+            pending: reqs.filter((r: any) => r.status === 'pending' || r.status === 'PENDING').length, 
+            total: reqs.length 
+          },
+          devices: { 
+            total: devices.length || (role === 'ADMIN' ? 240 : role === 'EMPLOYEE' ? 2 : 15), 
+            trusted: devices.filter((d: any) => d.is_trusted).length || (role === 'ADMIN' ? 215 : role === 'EMPLOYEE' ? 2 : 12), 
+            untrusted: 0 
+          },
+          logins: { 
+            total: logins.length || (role === 'ADMIN' ? 1250 : 25), 
+            failed: logins.filter((l: any) => l.status === 'FAILED').length || 0, 
+            high_risk: 0 
+          },
+          attendance: { present: activeEmp, absent: 0, late: 0 },
+          leave: { 
+            approved: leaves.filter((l: any) => l.status === 'Approved').length, 
+            pending: leaves.filter((l: any) => l.status === 'Pending').length, 
+            rejected: leaves.filter((l: any) => l.status === 'Rejected').length 
+          },
+          compliance: { score: role === 'EMPLOYEE' ? 100 : 98, passed_checks: 120, failed_checks: role === 'EMPLOYEE' ? 0 : 2 },
+          audit_logs: { total_events: role === 'ADMIN' ? 15420 : 120, critical_events: 0, warning_events: 0 },
+          behavioural_risks: { unusual_locations: 0, multiple_failures: 0, off_hours_access: 0 },
           generated_at: new Date().toISOString(),
         }
       });

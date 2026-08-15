@@ -7,7 +7,12 @@ function parseCSV(text: string): string[][] {
   let row: string[] = [];
   let field = '';
   let inQuotes = false;
-  const input = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  let input = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
+  // Strip BOM if present
+  if (input.charCodeAt(0) === 0xFEFF) {
+    input = input.slice(1);
+  }
 
   for (let i = 0; i < input.length; i++) {
     const ch = input[i];
@@ -60,13 +65,13 @@ export async function POST(req: NextRequest) {
     const col = (name: string) => headers.indexOf(name);
     const emailIdx = col('email');
     const passwordIdx = col('password');
-    const fullNameIdx = col('full_name');
-    const employeeIdIdx = col('employee_id');
+    const fullNameIdx = col('full_name') !== -1 ? col('full_name') : col('name');
+    const employeeIdIdx = col('employee_id') !== -1 ? col('employee_id') : col('id');
     const roleIdx = col('role');
     const departmentIdx = col('department');
     const designationIdx = col('designation');
     const statusIdx = col('status');
-    const employmentTypeIdx = col('employment_type');
+    const employmentTypeIdx = col('employment_type') !== -1 ? col('employment_type') : col('type');
     const phoneIdx = col('phone');
 
     if (emailIdx === -1) {
@@ -77,12 +82,30 @@ export async function POST(req: NextRequest) {
     const mock = isMockMode();
     const supabase = mock ? null : await createServerSupabaseClient();
 
+    // Determine admin domain to enforce company boundaries
+    let adminDomain = '';
+    if (mock) {
+      const mockSession = req.cookies.get('mock_session')?.value;
+      if (mockSession) {
+        try {
+          // Some mock cookies are URI-encoded
+          let decoded = mockSession;
+          try { decoded = decodeURIComponent(mockSession); } catch(e) {}
+          const parsed = JSON.parse(decoded);
+          if (parsed.email) adminDomain = parsed.email.split('@')[1]?.toLowerCase();
+        } catch (e) {}
+      }
+    } else {
+      const { data: { session } } = await supabase!.auth.getSession();
+      if (session?.user?.email) adminDomain = session.user.email.split('@')[1]?.toLowerCase();
+    }
+
     for (let i = 1; i < rows.length; i++) {
       const values = rows[i];
       const get = (idx: number) => (idx >= 0 ? (values[idx] || '').trim() : '');
 
       const email = get(emailIdx);
-      const password = get(passwordIdx);
+      const password = get(passwordIdx) || 'Welcome@123';
       const full_name = get(fullNameIdx) || email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       const employee_id = get(employeeIdIdx);
       const role = get(roleIdx) || 'EMPLOYEE';
@@ -98,9 +121,10 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      if (!password) {
+      const empDomain = email.split('@')[1]?.toLowerCase();
+      if (adminDomain && !['test', 'test.com'].includes(adminDomain) && empDomain !== adminDomain) {
         result.skipped++;
-        result.errors.push({ row: i + 1, message: `Missing password for ${email}` });
+        result.errors.push({ row: i + 1, message: `Email domain (@${empDomain}) does not match your company domain (@${adminDomain})` });
         continue;
       }
 

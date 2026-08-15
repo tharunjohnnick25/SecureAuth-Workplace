@@ -1,48 +1,5 @@
 const INITIAL_DB = {
-  tasks: [
-    {
-      id: 'task-1',
-      title: 'Complete Security Training',
-      description: 'Finish the Q3 security awareness training module.',
-      assigned_to: 'mock',
-      assigned_by: 'admin-1',
-      priority: 'High',
-      deadline: new Date(Date.now() + 86400000 * 2).toISOString(), // +2 days
-      status: 'In Progress',
-      progress: 45,
-      notes: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 'task-missed-1',
-      title: 'Submit Annual Compliance Report',
-      description: 'The report was due last week.',
-      assigned_to: 'mock',
-      assigned_by: 'admin-1',
-      priority: 'High',
-      deadline: new Date(Date.now() - 86400000 * 7).toISOString(), // -7 days
-      status: 'Pending',
-      progress: 0,
-      notes: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 'task-2',
-      title: 'Update SSH Keys',
-      description: 'Rotate your SSH keys on the production bastion hosts.',
-      assigned_to: 'mock',
-      assigned_by: 'admin-1',
-      priority: 'Medium',
-      deadline: new Date(Date.now() + 86400000 * 5).toISOString(),
-      status: 'Pending',
-      progress: 0,
-      notes: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ],
+  tasks: [],
   approvals: [
     {
       id: 'app-1',
@@ -427,7 +384,7 @@ const INITIAL_DB = {
     {
       id: 'email-1',
       owner_id: 'mock',
-      sender_id: 'admin-1',
+      sender_id: 'admin-main',
       recipient_id: 'mock',
       subject: 'Action Required: Update your Security Keys',
       body: 'Hi John,\n\nPlease ensure that your SSH keys for the production environment are rotated by the end of this week. Failure to do so will result in an automated lock-out from the bastion hosts.\n\nThanks,\nAlice Admin',
@@ -440,7 +397,7 @@ const INITIAL_DB = {
       id: 'email-2',
       owner_id: 'mock',
       sender_id: 'mock',
-      recipient_id: 'admin-1',
+      recipient_id: 'admin-main',
       subject: 'Re: Project Alpha Requirements',
       body: 'Hi Alice,\n\nI have reviewed the requirements. I will begin testing the biometric fallback mechanisms tomorrow morning.\n\nBest,\nJohn',
       folder: 'sent',
@@ -451,7 +408,7 @@ const INITIAL_DB = {
     {
       id: 'email-3',
       owner_id: 'mock',
-      sender_id: 'admin-1',
+      sender_id: 'admin-main',
       recipient_id: 'mock',
       subject: 'Company Townhall Meeting',
       body: 'A reminder that the company townhall is scheduled for this Friday at 3 PM EST. We will be discussing the new Q4 roadmap and the upcoming IAM rollout.',
@@ -470,7 +427,15 @@ const INITIAL_DB = {
     { id: 'int-2', name: 'Slack Alerts', type: 'Webhook', status: 'Active', target_url: 'https://hooks.slack.com/services/T000/B000/XXX', secret_key: '', last_sync: new Date(Date.now() - 600000).toISOString(), created_at: new Date().toISOString() },
     { id: 'int-3', name: 'Splunk SIEM', type: 'Log Forwarding', status: 'Error', target_url: 'https://splunk.corp.local:8088/services/collector', secret_key: '', last_sync: new Date(Date.now() - 7200000).toISOString(), created_at: new Date().toISOString() },
     { id: 'int-4', name: 'Workday HRIS', type: 'Directory', status: 'Active', target_url: 'https://wd5.myworkday.com/api', secret_key: '', last_sync: new Date(Date.now() - 86400000).toISOString(), created_at: new Date().toISOString() },
-  ]
+  ],
+  custom_reminders: [] as any[],
+  reminder_states: {} as Record<string, { dismissed?: boolean; snoozed_until?: string }>,
+  alerts: [] as any[],
+  devices: [] as any[],
+  risk_scores: [] as any[],
+  office_access_logs: [] as any[],
+  threat_logs: [] as any[],
+  one_on_ones: [] as any[],
 };
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';

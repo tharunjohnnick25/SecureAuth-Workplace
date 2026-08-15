@@ -18,7 +18,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Leave request not found' }, { status: 404 });
       }
       const updatedReq: any = MockDB.leave_requests[reqIdx];
-      updatedReq.status = status;
+      // Normalize to the status casing used across the app (Pending/Approved/Rejected).
+      updatedReq.status = status === 'APPROVED' ? 'Approved' : status === 'REJECTED' ? 'Rejected' : status;
       updatedReq.admin_remarks = admin_remarks || null;
       updatedReq.updated_at = new Date().toISOString();
       saveMockDB();

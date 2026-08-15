@@ -6,42 +6,15 @@
  */
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { isMockMode, MockEmployees } from '@/lib/mock-employees';
 
 // ── Role definitions ──────────────────────────────────────────────────────
 
-export const ROLES = {
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  ORGANIZATION_OWNER: 'ORGANIZATION_OWNER',
-  ORGANIZATION_ADMIN: 'ORGANIZATION_ADMIN',
-  ADMIN: 'ADMIN',
-  SECURITY_ANALYST: 'SECURITY_ANALYST',
-  HR_MANAGER: 'HR_MANAGER',
-  EMPLOYEE: 'EMPLOYEE',
-  GUEST_USER: 'GUEST_USER',
-} as const;
-
-export type Role = (typeof ROLES)[keyof typeof ROLES];
-
-export const ADMIN_ROLES: Role[] = [
-  ROLES.SUPER_ADMIN,
-  ROLES.ORGANIZATION_OWNER,
-  ROLES.ORGANIZATION_ADMIN,
-  ROLES.ADMIN,
-];
-
-// ── Role-based redirect helper ────────────────────────────────────────────
-
-/**
- * Returns the home route for a given role.
- * Used in OAuth callbacks and post-login redirects.
- */
-export function getRoleHomePath(role: string): string {
-  const r = role.toUpperCase() as Role;
-  if (ADMIN_ROLES.includes(r)) return '/admin/dashboard';
-  if (r === ROLES.SECURITY_ANALYST) return '/security';
-  if (r === ROLES.HR_MANAGER) return '/dashboard';
-  return '/dashboard';
-}
+import type { Role } from '@/lib/roles';
+export { ROLES, ADMIN_ROLES, getRoleHomePath } from '@/lib/roles';
+export type { Role } from '@/lib/roles';
 
 // ── Server-side session helpers ───────────────────────────────────────────
 
@@ -123,4 +96,85 @@ export async function getUserMfaFactors() {
 export function isTokenExpired(expiresAt: number | undefined): boolean {
   if (!expiresAt) return true;
   return Date.now() / 1000 > expiresAt;
+}
+
+// ── RBAC helpers ─────────────────────────────────────────────────────────
+
+export interface SessionUser {
+  id: string;
+  email: string;
+  role: string;
+  department?: string;
+  managerId?: string;
+}
+
+/**
+ * Retrieves the current user session (compatible with Mock Mode).
+ */
+export async function getUserSession(): Promise<{ user: SessionUser | null }> {
+  if (isMockMode()) {
+    const cookieStore = await cookies();
+    const mockCookie = cookieStore.get('mock_session')?.value;
+    if (!mockCookie) return { user: null };
+    
+    try {
+      const parsed = JSON.parse(mockCookie);
+      const user = MockEmployees.getById(parsed.id);
+      if (!user || user.is_deleted) return { user: null };
+      
+      return { 
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          role: user.role ? user.role.toLowerCase() : 'employee',
+          department: user.department,
+          managerId: (user.manager_id as string) || undefined
+        } 
+      };
+    } catch {
+      return { user: null };
+    }
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) return { user: null };
+  
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role, department, manager_id, is_deleted')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || profile.is_deleted) return { user: null };
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email || '',
+      role: profile.role ? profile.role.toLowerCase() : 'employee',
+      department: profile.department,
+      managerId: profile.manager_id
+    }
+  };
+}
+
+/**
+ * HOF for Next.js Route Handlers to enforce RBAC.
+ */
+export function requireRole(allowedRoles: string[], handler: (req: NextRequest, user: SessionUser) => Promise<NextResponse>) {
+  return async (req: NextRequest) => {
+    const { user } = await getUserSession();
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    if (!allowedRoles.includes(user.role)) {
+      return NextResponse.json({ error: 'Forbidden: Insufficient role' }, { status: 403 });
+    }
+    
+    return handler(req, user);
+  };
 }

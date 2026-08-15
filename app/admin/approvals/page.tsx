@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
@@ -18,19 +18,57 @@ type ApprovalRequest = {
   riskLevel: 'Low' | 'Medium' | 'High';
 };
 
+// Keep mock for fallback visual
 const mockApprovals: ApprovalRequest[] = [
   { id: '1', employeeName: 'Sarah Chen', type: 'Profile Update', details: 'Changed Emergency Contact', status: 'Pending', timestamp: '10 mins ago', riskLevel: 'Low' },
-  { id: '2', employeeName: 'Marcus Thorne', type: 'Document Verification', details: 'Uploaded Passport for verification', status: 'Pending', timestamp: '1 hour ago', riskLevel: 'Medium' },
-  { id: '3', employeeName: 'John Doe', type: 'Device Registration', details: 'New mobile device added from unusual location', status: 'Pending', timestamp: '2 hours ago', riskLevel: 'High' },
 ];
 
 export default function ApprovalsPage() {
     const { t } = useLanguage();
   const [approvals, setApprovals] = useState<ApprovalRequest[]>(mockApprovals);
 
-  const handleAction = (id: string, action: 'approve' | 'reject') => {
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const res = await fetch('/api/quorum');
+        const { data } = await res.json();
+        
+        if (data && Array.isArray(data)) {
+          const liveApprovals: ApprovalRequest[] = data.map((item: any) => ({
+            id: item.id,
+            employeeName: item.users?.full_name || item.users?.email || 'Unknown User',
+            type: 'Device Registration' as const, // mapping action_type in a real scenario
+            details: `Quorum request: ${item.action_type}`,
+            status: 'Pending' as const,
+            timestamp: new Date(item.created_at).toLocaleTimeString(),
+            riskLevel: 'High' as const
+          }));
+          setApprovals([...liveApprovals, ...mockApprovals]);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAction = async (id: string, action: 'approve' | 'reject') => {
+    // Optimistic UI update
     setApprovals(prev => prev.filter(a => a.id !== id));
-    toast.success(`Request ${action}d successfully`);
+    
+    try {
+      await fetch('/api/quorum', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: action === 'approve' ? 'APPROVED' : 'REJECTED' })
+      });
+      toast.success(`Request ${action}d successfully`);
+    } catch (err) {
+      toast.error('Action failed');
+    }
   };
 
   const getIcon = (type: string) => {

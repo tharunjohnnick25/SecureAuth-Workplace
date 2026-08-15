@@ -16,6 +16,14 @@ export default function AntiCopy() {
       );
     };
 
+    // Draggable UI (e.g. kanban task cards) must still work while anti-copy is active
+    const isDraggable = (el: EventTarget | null): boolean => {
+      if (!el) return false;
+      const node = el as Element;
+      if (typeof node.closest !== 'function') return false;
+      return !!node.closest('[draggable="true"], [data-drag-allowed]');
+    };
+
     const prevent = (e: Event) => {
       e.preventDefault();
       return false;
@@ -64,12 +72,18 @@ export default function AntiCopy() {
       }
     };
 
+    const preventDrag = (e: Event) => {
+      if (isEditable(e.target)) return true;
+      if (isDraggable(e.target)) return true;
+      return prevent(e);
+    };
+
     document.addEventListener('contextmenu', preventContext);
     document.addEventListener('copy', preventCopy);
     document.addEventListener('cut', preventCopy);
     document.addEventListener('paste', preventPaste);
     document.addEventListener('keydown', preventKeydown);
-    document.addEventListener('dragstart', prevent);
+    document.addEventListener('dragstart', preventDrag);
 
     return () => {
       document.removeEventListener('contextmenu', preventContext);
@@ -77,7 +91,7 @@ export default function AntiCopy() {
       document.removeEventListener('cut', preventCopy);
       document.removeEventListener('paste', preventPaste);
       document.removeEventListener('keydown', preventKeydown);
-      document.removeEventListener('dragstart', prevent);
+      document.removeEventListener('dragstart', preventDrag);
     };
   }, []);
 

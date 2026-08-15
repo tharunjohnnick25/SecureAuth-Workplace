@@ -68,7 +68,6 @@ export interface Database {
           name: string;
           domain: string;
           created_at: string;
-          subscription_id: string | null;
         };
       };
       departments: {
@@ -110,30 +109,14 @@ export interface Database {
           updated_at?: string;
         };
       };
-      subscriptions: {
-        Row: {
-          id: string;
-          org_id: string;
-          user_id: string;
-          plan_id: string;
-          status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
-          current_period_start: string;
-          current_period_end: string;
-          razorpay_subscription_id: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-      };
       payments: {
         Row: {
           id: string;
           org_id: string;
           user_id: string;
-          subscription_id: string;
           amount: number;
           currency: string;
           status: 'SUCCESS' | 'FAILED' | 'PENDING';
-          razorpay_payment_id: string | null;
           created_at: string;
         };
       };

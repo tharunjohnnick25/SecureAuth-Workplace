@@ -40,17 +40,39 @@ export default function MfaVerifyPage() {
 
     setLoading(true);
     try {
+      const pendingUserRaw = sessionStorage.getItem('pendingAuthUser');
+      const user = pendingUserRaw ? JSON.parse(pendingUserRaw) : null;
+      const tempToken = sessionStorage.getItem('pendingAuthToken') || '';
+
       const res = await fetch('/api/auth/mfa/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ factorId, code }),
+        body: JSON.stringify({ factorId, code, user, tempToken }),
       });
 
-      if (!res.ok) throw new Error('Invalid verification code');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Invalid verification code');
 
       clearBiometricRequirement();
       toast.success('Verification successful');
-      router.push('/dashboard');
+
+      if (user) {
+         // Create mock session locally or update Zustand
+         const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
+         const role = String(user.role || '').toUpperCase();
+         const isAdmin = ADMIN_ROLES.has(role);
+         const needsDetails = !isAdmin && user.profile_completed !== true;
+         const mustChangePassword = user.must_change_password === true;
+         
+         if (!mustChangePassword) {
+           sessionStorage.removeItem('pendingAuthUser');
+           sessionStorage.removeItem('pendingAuthToken');
+         }
+         
+         router.push(mustChangePassword ? '/change-password' : needsDetails ? '/onboarding/details' : '/dashboard');
+      } else {
+         router.push('/dashboard');
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {

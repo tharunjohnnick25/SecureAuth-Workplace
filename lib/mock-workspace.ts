@@ -7,6 +7,8 @@ export interface Task {
   description?: string;
   status: 'TODO' | 'IN_PROGRESS' | 'DONE';
   assignee: string; // user email or ID
+  assignee_name?: string;
+  created_by?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   created_at: string;
 }
@@ -62,9 +64,15 @@ function persist() {
 export const MockWorkspace = {
   // TASKS
   getTasksByAssignee(assignee: string): Task[] {
+    workspaceData = loadFromDisk();
     return workspaceData.tasks.filter((t) => t.assignee === assignee);
   },
+  getTasksForUser(userId: string): Task[] {
+    workspaceData = loadFromDisk();
+    return workspaceData.tasks.filter((t) => t.assignee === userId || t.created_by === userId);
+  },
   addTask(task: Omit<Task, 'id' | 'created_at'>): Task {
+    workspaceData = loadFromDisk();
     const newTask: Task = {
       ...task,
       id: crypto.randomUUID(),
@@ -75,6 +83,7 @@ export const MockWorkspace = {
     return newTask;
   },
   updateTask(id: string, updates: Partial<Task>): Task | undefined {
+    workspaceData = loadFromDisk();
     const idx = workspaceData.tasks.findIndex((t) => t.id === id);
     if (idx === -1) return undefined;
     workspaceData.tasks[idx] = { ...workspaceData.tasks[idx], ...updates };
@@ -82,6 +91,7 @@ export const MockWorkspace = {
     return workspaceData.tasks[idx];
   },
   deleteTask(id: string): boolean {
+    workspaceData = loadFromDisk();
     const before = workspaceData.tasks.length;
     workspaceData.tasks = workspaceData.tasks.filter((t) => t.id !== id);
     if (workspaceData.tasks.length < before) {
@@ -93,9 +103,11 @@ export const MockWorkspace = {
 
   // EVENTS
   getEventsByOwner(owner: string): CalendarEvent[] {
+    workspaceData = loadFromDisk();
     return workspaceData.events.filter((e) => e.owner === owner);
   },
   addEvent(event: Omit<CalendarEvent, 'id' | 'created_at'>): CalendarEvent {
+    workspaceData = loadFromDisk();
     const newEvent: CalendarEvent = {
       ...event,
       id: crypto.randomUUID(),
@@ -106,6 +118,7 @@ export const MockWorkspace = {
     return newEvent;
   },
   deleteEvent(id: string): boolean {
+    workspaceData = loadFromDisk();
     const before = workspaceData.events.length;
     workspaceData.events = workspaceData.events.filter((e) => e.id !== id);
     if (workspaceData.events.length < before) {

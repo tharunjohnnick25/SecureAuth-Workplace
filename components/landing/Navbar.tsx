@@ -62,7 +62,7 @@ const LandingNavbar = () => {
           >
             {'Sign in'}</Link>
           <Link 
-            href="/signup" 
+            href="/login" 
             className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-full transition-all flex items-center gap-2 group"
           >
             {'Get started'}<ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -97,7 +97,7 @@ const LandingNavbar = () => {
           ))}
           <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
             <Link href="/login" className="text-center text-white font-medium">{'Sign in'}</Link>
-            <Link href="/signup" className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl text-center">{'Get started'}</Link>
+            <Link href="/login" className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl text-center">{'Get started'}</Link>
           </div>
         </motion.div>
       )}

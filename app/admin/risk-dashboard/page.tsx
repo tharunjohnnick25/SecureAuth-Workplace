@@ -6,6 +6,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ShieldAlert, TrendingDown, Users, Activity, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format, subDays } from 'date-fns';
+import { Sidebar } from '@/components/Sidebar';
+import { Navbar } from '@/components/Navbar';
+
 
 type RiskLog = {
   id: string;
@@ -43,7 +46,12 @@ export default function AIRiskDashboard() {
   }, []);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#020617] text-white">
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300">
+        <Navbar />
+        <main className="pt-24 p-4 sm:p-6 lg:p-8">
+          <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -177,6 +185,9 @@ export default function AIRiskDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+          </div>
+        </main>
       </div>
     </div>
   );

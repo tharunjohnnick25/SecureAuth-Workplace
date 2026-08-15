@@ -1,0 +1,17 @@
+{
+  "challenges": [
+    {
+      "user_key": "anonymous",
+      "type": "login",
+      "challenge": "3TJqsJ_o0WapB9Ylnil1X8eBhJqOlf9uIo0BcjYmLro",
+      "expires_at": 1786525784427
+    },
+    {
+      "user_key": "tharun@infosys.com",
+      "type": "registration",
+      "challenge": "F3IBNfFzMOzk9dHlsjymfw4KM_-ok4z0htM0u0h0uxs",
+      "expires_at": 1786774096244
+    }
+  ],
+  "passkeys": []
+}

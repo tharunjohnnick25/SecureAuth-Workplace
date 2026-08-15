@@ -45,6 +45,7 @@ export default function MailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   
   const [isSending, setIsSending] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const { isListening, toggleVoiceInput } = useVoiceInput((text) => setComposeBody(prev => prev + (prev ? ' ' : '') + text));
 
@@ -72,8 +73,11 @@ export default function MailPage() {
 
   useEffect(() => {
     if (isComposing && employees.length === 0) {
-      // Fetch employees for autocomplete
-      fetch('/api/employees')
+      // Fetch employees for autocomplete, filtered by the current user's company domain
+      const domain = user?.email?.split('@')[1];
+      const url = domain ? `/api/employees?domain=${domain}&limit=1000` : '/api/employees?limit=1000';
+      
+      fetch(url)
         .then(res => res.json())
         .then(data => {
           if (data.data) {
@@ -86,7 +90,7 @@ export default function MailPage() {
           }
         });
     }
-  }, [isComposing]);
+  }, [isComposing, user]);
 
   const fetchEmails = async (folder: Folder) => {
     try {
@@ -459,9 +463,42 @@ export default function MailPage() {
                     }} className="text-gray-400 hover:text-white">
                       <Reply className="w-5 h-5" />
                     </button>
-                    <button onClick={() => toast.info('More options menu coming soon')} className="text-gray-400 hover:text-white">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
+                    <div className="relative">
+                      <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="text-gray-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors">
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+                      {showMoreMenu && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
+                          <div className="absolute right-0 mt-2 w-48 bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl py-1 z-50">
+                            <button onClick={() => {
+                              setComposeSubject(`Fwd: ${selectedEmail.subject.replace(/^Fwd: /, '')}`);
+                              setComposeBody(`\n\n---------- Forwarded message ---------\nFrom: ${selectedEmail.sender?.name} <${selectedEmail.sender?.email}>\nDate: ${format(new Date(selectedEmail.created_at), 'MMM d, yyyy, h:mm a')}\nSubject: ${selectedEmail.subject}\nTo: ${selectedEmail.recipient?.name} <${selectedEmail.recipient?.email}>\n\n${selectedEmail.body}`);
+                              setComposeTo('');
+                              setIsComposing(true);
+                              setShowMoreMenu(false);
+                            }} className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors">
+                              <Forward className="w-4 h-4" /> Forward
+                            </button>
+                            <button onClick={async () => {
+                              setShowMoreMenu(false);
+                              try {
+                                const res = await fetch(`/api/mail/${selectedEmail.id}`, { method: 'DELETE' });
+                                if (res.ok) {
+                                  toast.success('Conversation moved to trash');
+                                  setSelectedEmail(null);
+                                  fetchEmails();
+                                }
+                              } catch (e) {
+                                toast.error('Failed to delete email');
+                              }
+                            }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors">
+                              <Trash className="w-4 h-4" /> Delete this message
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 

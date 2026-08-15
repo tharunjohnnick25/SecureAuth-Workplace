@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
@@ -38,7 +39,13 @@ const recentFindings = [
 ];
 
 export function Forensics() {
-    const { t } = useLanguage();
+  const { t } = useLanguage();
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  const filteredInvestigations = investigations.filter(inv => 
+    filterStatus === 'all' || inv.status.toLowerCase() === filterStatus.toLowerCase()
+  );
+
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -52,9 +59,16 @@ export function Forensics() {
                 {'Investigatesecu'}</p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline">
-                <Filter className="w-4 h-4 mr-2" />
-                {'Filter'}</Button>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary/50"
+              >
+                <option className="bg-[#0f172a]" value="all">All Statuses</option>
+                <option className="bg-[#0f172a]" value="active">Active</option>
+                <option className="bg-[#0f172a]" value="completed">Completed</option>
+                <option className="bg-[#0f172a]" value="on hold">On Hold</option>
+              </select>
               <Button>
                 <Search className="w-4 h-4 mr-2" />
                 {'New investigatio'}</Button>
@@ -87,7 +101,7 @@ export function Forensics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {investigations.map((investigation) => (
+                  {filteredInvestigations.map((investigation) => (
                     <div
                       key={investigation.id}
                       className="p-4 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors cursor-pointer"

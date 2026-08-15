@@ -19,9 +19,10 @@ interface PageHeaderProps {
   breadcrumbs?: Array<{ label: string; href?: string }>;
   showDate?: boolean;
   children?: React.ReactNode;
+  hideSearch?: boolean;
 }
 
-export function PageHeader({ title, description, breadcrumbs, showDate = true, children }: PageHeaderProps) {
+export function PageHeader({ title, description, breadcrumbs, showDate = true, hideSearch = false, children }: PageHeaderProps) {
   const [isSticky, setIsSticky] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -110,28 +111,30 @@ export function PageHeader({ title, description, breadcrumbs, showDate = true, c
       <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />
 
       {/* Sticky Search Bar Wrapper */}
-      <div
-        className={[
-          'sticky top-16 z-[35] w-full',
-          'transition-all duration-300 ease-in-out',
-          'rounded-xl',
-          isSticky
-            ? [
-                'bg-[#020617]/95',
-                'border border-white/10',
-                'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6)]',
-                'py-2.5 px-4',
-                '-mx-4 sm:-mx-6 lg:-mx-8',
-                'w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)] lg:w-[calc(100%+4rem)]',
-                'rounded-none',
-              ].join(' ')
-            : 'bg-transparent border-transparent py-0',
-        ].join(' ')}
-      >
-        <div className="max-w-2xl mx-auto lg:mx-0">
-          <GlobalSearch />
+      {!hideSearch && (
+        <div
+          className={[
+            'sticky top-16 z-[35] w-full',
+            'transition-all duration-300 ease-in-out',
+            'rounded-xl',
+            isSticky
+              ? [
+                  'bg-[#020617]/95',
+                  'border border-white/10',
+                  'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6)]',
+                  'py-2.5 px-4',
+                  '-mx-4 sm:-mx-6 lg:-mx-8',
+                  'w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)] lg:w-[calc(100%+4rem)]',
+                  'rounded-none',
+                ].join(' ')
+              : 'bg-transparent border-transparent py-0',
+          ].join(' ')}
+        >
+          <div className="max-w-2xl mx-auto lg:mx-0">
+            <GlobalSearch />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

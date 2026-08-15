@@ -23,7 +23,7 @@ const Pricing = () => {
         'Community Support',
       ],
       buttonText: 'Get Started',
-      href: '/signup',
+      href: '/login',
       popular: false,
     },
     {
@@ -39,7 +39,7 @@ const Pricing = () => {
         'Priority Email Support',
       ],
       buttonText: 'Try Pro Free',
-      href: '/signup',
+      href: '/login',
       popular: true,
     },
     {

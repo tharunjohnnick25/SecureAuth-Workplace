@@ -1,18 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { generateAuthenticationOptions } from '@simplewebauthn/server';
-import { isMockMode } from '@/lib/mock-employees';
+import { isMockMode } from '@/lib/mock-mode';
+import { PasskeyService } from '@/lib/services/passkeyService';
 
 const rpID = process.env.NEXT_PUBLIC_RP_ID || process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost';
 
 export async function POST(req: NextRequest) {
   try {
+    let body: { email?: string } = {};
+    try { body = await req.json(); } catch {}
+
+    const email = body.email ? String(body.email).toLowerCase() : '';
+
     if (isMockMode()) {
+      const userKey = email || 'anonymous';
+      const passkeys = email ? PasskeyService.listPasskeys(userKey) : [];
+
       const options = await generateAuthenticationOptions({
         rpID,
-        allowCredentials: [],
+        allowCredentials: passkeys.length > 0
+          ? passkeys.map((pk) => ({
+              id: pk.credential_id,
+              type: 'public-key' as const,
+              ...(pk.transports && pk.transports.length
+                ? { transports: pk.transports as AuthenticatorTransport[] }
+                : {}),
+            }))
+          : undefined,
         userVerification: 'preferred',
       });
+
+      PasskeyService.saveChallenge(userKey, 'login', options.challenge);
       return NextResponse.json(options);
     }
 
@@ -20,10 +39,6 @@ export async function POST(req: NextRequest) {
     
     // Optional: if the user typed their email, we can limit allowed credentials.
     // If not, we allow discoverable credentials.
-    let body = {};
-    try { body = await req.json(); } catch(e) {}
-    
-    const email = (body as any).email;
     let allowCredentials: any[] = [];
     let userIdForChallenge = 'anonymous';
 

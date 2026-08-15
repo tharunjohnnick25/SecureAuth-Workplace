@@ -7,7 +7,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     const body = await req.json();
     const { status } = body;
 
-    if (!['Approved', 'Rejected'].includes(status)) {
+    if (!['Approved', 'Rejected', 'Manager Approved'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status', success: false }, { status: 400 });
     }
 

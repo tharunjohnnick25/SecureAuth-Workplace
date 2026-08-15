@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
@@ -48,21 +48,31 @@ const eventStats = [
 ];
 
 export function SecurityEvents() {
-    const { t } = useLanguage();
+  const { t } = useLanguage();
   const { data: dbEvents } = useRealtimeData('threat_logs');
+  const [filterSeverity, setFilterSeverity] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const events = useMemo(() => {
-    if (!dbEvents || dbEvents.length === 0) return securityEvents;
-    return dbEvents.map((e: any) => ({
-      id: e.id.substring(0, 8),
-      type: e.type,
-      severity: e.severity?.toLowerCase() || 'medium',
-      source: e.source_ip || 'Internal',
-      target: 'System',
-      status: 'Active',
-      timestamp: new Date(e.created_at).toLocaleString()
-    }));
-  }, [dbEvents]);
+    let sourceEvents = securityEvents;
+    if (dbEvents && dbEvents.length > 0) {
+      sourceEvents = dbEvents.map((e: any) => ({
+        id: e.id.substring(0, 8),
+        type: e.type,
+        severity: e.severity?.toLowerCase() || 'medium',
+        source: e.source_ip || 'Internal',
+        target: 'System',
+        status: 'Active',
+        timestamp: new Date(e.created_at).toLocaleString()
+      }));
+    }
+    
+    return sourceEvents.filter((event) => {
+      const matchesSeverity = filterSeverity === 'all' || event.severity === filterSeverity;
+      const matchesStatus = filterStatus === 'all' || event.status.toLowerCase() === filterStatus.toLowerCase();
+      return matchesSeverity && matchesStatus;
+    });
+  }, [dbEvents, filterSeverity, filterStatus]);
 
   return (
     <div className="min-h-screen bg-[#020617] text-white">
@@ -74,9 +84,30 @@ export function SecurityEvents() {
             title="Security Events" 
             description="Monitor and respond to security events in real-time"
           >
-            <Button variant="outline">
-              <Filter className="w-4 h-4 mr-2" />
-              {'Filter'}</Button>
+            <select
+              value={filterSeverity}
+              onChange={(e) => setFilterSeverity(e.target.value)}
+              className="bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary/50"
+            >
+              <option className="bg-[#0f172a]" value="all">All Severities</option>
+              <option className="bg-[#0f172a]" value="critical">Critical</option>
+              <option className="bg-[#0f172a]" value="high">High</option>
+              <option className="bg-[#0f172a]" value="medium">Medium</option>
+              <option className="bg-[#0f172a]" value="low">Low</option>
+            </select>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary/50"
+            >
+              <option className="bg-[#0f172a]" value="all">All Statuses</option>
+              <option className="bg-[#0f172a]" value="blocked">Blocked</option>
+              <option className="bg-[#0f172a]" value="investigating">Investigating</option>
+              <option className="bg-[#0f172a]" value="quarantined">Quarantined</option>
+              <option className="bg-[#0f172a]" value="mitigated">Mitigated</option>
+              <option className="bg-[#0f172a]" value="resolved">Resolved</option>
+              <option className="bg-[#0f172a]" value="active">Active</option>
+            </select>
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               {'Export'}</Button>

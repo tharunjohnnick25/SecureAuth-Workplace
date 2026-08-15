@@ -1,13 +1,15 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { isMockMode } from '@/lib/mock-employees';
+import { passwordSchema } from '@/lib/validations/auth';
 
 export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json();
 
-    if (!password || String(password).length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    const validation = passwordSchema.safeParse(password);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
     if (isMockMode()) {

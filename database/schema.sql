@@ -39,30 +39,6 @@ CREATE TABLE employee_requests (
     processed_by UUID REFERENCES users(id)
 );
 
--- Subscriptions Table (Razorpay Integration Prep)
-CREATE TABLE subscriptions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    org_id UUID REFERENCES organizations(id),
-    plan_id TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'INACTIVE',
-    razorpay_subscription_id TEXT,
-    current_period_start TIMESTAMP WITH TIME ZONE,
-    current_period_end TIMESTAMP WITH TIME ZONE,
-    cancel_at_period_end BOOLEAN DEFAULT FALSE
-);
-
--- Payments Table
-CREATE TABLE payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    org_id UUID REFERENCES organizations(id),
-    subscription_id UUID REFERENCES subscriptions(id),
-    amount INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    razorpay_payment_id TEXT,
-    razorpay_order_id TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Login Logs (Security Audit)
 CREATE TABLE login_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -143,4 +119,61 @@ CREATE POLICY "Users can view their own profile" ON users FOR SELECT USING (auth
 ALTER TABLE login_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can view all login logs" ON login_logs FOR SELECT USING (
     EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN ('ADMIN', 'SUPER_ADMIN'))
+);
+
+-- ==========================================
+-- ADAPTIVE TRUST ENGINE SCHEMA
+-- ==========================================
+
+-- Behavioral Baselines (Historical patterns for anomaly detection)
+CREATE TABLE behavioral_features (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) UNIQUE,
+    avg_typing_speed INTEGER DEFAULT 50, -- WPM baseline
+    typing_variance FLOAT DEFAULT 0.1,
+    usual_locations JSONB DEFAULT '[]', -- Array of {city, country, ip_prefix}
+    usual_devices JSONB DEFAULT '[]', -- Array of trusted device fingerprints
+    usual_login_time_start TIME, -- e.g. 08:30:00
+    usual_login_time_end TIME,   -- e.g. 09:30:00
+    total_sessions INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Security Events (Audit log for Trust Engine inputs)
+CREATE TABLE security_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id),
+    session_id UUID REFERENCES sessions(id),
+    event_type TEXT NOT NULL, -- e.g., FACE_VERIFICATION_FAILED, NEW_DEVICE, TRUST_SCORE_CHANGED
+    metadata JSONB, -- Contextual data (e.g., face match confidence, IP)
+    previous_score INTEGER,
+    new_score INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Trust Scores (Live tracking of session trust)
+CREATE TABLE trust_scores (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id UUID REFERENCES sessions(id) UNIQUE,
+    user_id UUID REFERENCES users(id),
+    score INTEGER NOT NULL DEFAULT 100, -- 0-100 scale
+    risk_level TEXT NOT NULL, -- LOW_TRUST, MEDIUM_TRUST, HIGH_TRUST
+    factors JSONB, -- Breakdown of what contributed to the score (e.g. { location: "anomalous", typing: "normal" })
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Attendance (Tied securely to backend authentication completion)
+CREATE TABLE attendance (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id),
+    session_id UUID REFERENCES sessions(id),
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    clock_in TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    clock_out TIMESTAMP WITH TIME ZONE,
+    device_id UUID REFERENCES devices(id),
+    location JSONB,
+    trust_score_at_login INTEGER,
+    final_trust_score INTEGER,
+    status TEXT DEFAULT 'PRESENT'
 );

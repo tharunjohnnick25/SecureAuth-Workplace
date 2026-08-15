@@ -77,13 +77,56 @@ export default function AdminEmployeesPage() {
       label: 'Status',
       render: (val: string) => (
         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-          val === 'active' ? 'bg-emerald-500/100/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+          val === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
         }`}>
           {val?.toUpperCase() || 'UNKNOWN'}
         </span>
       )
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_: any, row: any) => (
+        <div className="flex gap-2">
+          <label className="cursor-pointer px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-md text-xs font-semibold transition-colors flex items-center gap-1">
+            <span className="truncate">Upload Face</span>
+            <input 
+              type="file" 
+              className="hidden" 
+              accept="image/*" 
+              onChange={(e) => handleFaceUpload(e, row.id)} 
+            />
+          </label>
+        </div>
+      )
     }
   ];
+
+  const handleFaceUpload = async (e: React.ChangeEvent<HTMLInputElement>, employeeId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Image = event.target?.result as string;
+      
+      const toastId = toast.loading('Uploading & encoding face...');
+      try {
+        const res = await fetch('/api/admin/enroll-face', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId, image: base64Image })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Failed to register face');
+        toast.success('Face successfully enrolled for verification!', { id: toastId });
+      } catch (err: any) {
+        toast.error(err.message, { id: toastId });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <DataGridPage 

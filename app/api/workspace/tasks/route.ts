@@ -1,15 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MockWorkspace } from '@/lib/mock-workspace';
 
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const assignee = searchParams.get('assignee');
+  const role = searchParams.get('role');
   
+  if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+    const DATA_FILE = join(process.cwd(), '.data', 'mock-workspace.json');
+    if (existsSync(DATA_FILE)) {
+      const parsed = JSON.parse(readFileSync(DATA_FILE, 'utf-8'));
+      return NextResponse.json({ tasks: parsed.tasks || [] });
+    }
+    return NextResponse.json({ tasks: [] });
+  }
+
   if (!assignee) {
     return NextResponse.json({ error: 'Assignee is required' }, { status: 400 });
   }
 
-  const tasks = MockWorkspace.getTasksByAssignee(assignee);
+  const tasks = MockWorkspace.getTasksForUser(assignee);
   return NextResponse.json({ tasks });
 }
 
@@ -25,6 +38,8 @@ export async function POST(req: NextRequest) {
       description: data.description,
       status: data.status,
       assignee: data.assignee,
+      assignee_name: data.assignee_name,
+      created_by: data.created_by,
       priority: data.priority,
     });
 

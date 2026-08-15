@@ -23,7 +23,6 @@ export interface Employee {
   blood_group?: string;
   manager_id?: string;
   salary?: number;
-  subscription?: string;
   status: string;
   avatar_url?: string;
   role: string;
@@ -33,6 +32,7 @@ export interface Employee {
   leave_balance?: LeaveBalance[];
   attendance_summary?: AttendanceSummary;
   face_enrolled?: boolean;
+  risk_score?: number;
 }
 
 export interface EmployeeDocument {
@@ -86,6 +86,7 @@ export interface EmployeeFormData {
   salary?: number;
   status?: string;
   password?: string;
+  role?: string;
 }
 
 export interface ImportResult {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { MockEmployees } from '@/lib/mock-employees';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,47 +10,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
-  let user = MockDB.employees.find((e: any) => e.id === userId);
+  const authUser = MockEmployees.getById(userId);
+  if (!authUser) {
+    return NextResponse.json({ error: 'User not found in authentication system' }, { status: 404 });
+  }
+
+  let dbUser = MockDB.employees.find((e: any) => e.id === userId);
   
-  if (!user) {
-    // Fallback: Create a default profile for real Supabase users so the UI doesn't crash
-    user = {
+  if (!dbUser) {
+    // Fallback: Create a default preferences profile for users so the UI doesn't crash
+    dbUser = ({
       id: userId,
-      email: 'user@example.com',
-      full_name: 'SecureAuth User',
-      role: 'USER',
-      department: 'General',
-      designation: 'Employee',
-      manager_id: 'admin-1',
-      date_of_joining: new Date().toISOString().split('T')[0],
-      status: 'active',
-      phone: '+1 555-0000',
-      address: '123 Main St',
-      city: 'Unknown',
-      state: 'Unknown',
-      country: 'United States',
-      postal_code: '00000',
-      blood_group: 'O+',
-      emergency_contact: '+1 555-9999',
-      emergency_contact_name: 'Emergency Contact',
-      profile_picture: '',
-      company_name: 'SecureTech',
-      gender: 'Prefer Not to Say',
-      work_location: 'Remote',
-      office_branch: 'HQ',
-      employment_status: 'Active',
-      employee_type: 'Full-Time',
-      dob: '1990-01-01',
-      language_preference: 'English',
       theme_preference: 'Dark',
+      language_preference: 'English',
       timezone: 'UTC',
-      two_factor_enabled: false,
-      github_username: '',
-      marital_status: 'Single',
-      nationality: 'American',
-      shift_timing: '09:00 AM - 05:00 PM',
-      working_hours: '8 Hours',
-      reporting_manager: 'Admin',
       appearance_preferences: { theme: 'Dark', accent_color: 'Blue', font_size: 'Medium', sidebar: 'Expanded', language: 'English' },
       notification_preferences: { leave_approval: true, new_tasks: true, meetings: true, chat_messages: true, file_access: true, security_alerts: true, weekly_reports: false, notification_type: 'In-App Notification' },
       privacy_preferences: { profile_visibility: 'Everyone', contact_visibility: 'Team', status_visibility: 'Online' },
@@ -58,10 +32,25 @@ export async function GET(request: Request) {
       drive_integration: { connected: false, account: '', storage_used: '0 GB', total_storage: '15 GB', last_sync: null },
       ai_risk_history: [ { date: 'Mon', score: 10 }, { date: 'Tue', score: 10 }, { date: 'Wed', score: 10 }, { date: 'Thu', score: 10 }, { date: 'Fri', score: 10 }, { date: 'Sat', score: 10 } ],
       security_info: { risk_score: 10, last_login: new Date().toISOString(), last_location: 'Unknown', registered_devices: ['Current Device'], password_last_changed: new Date().toISOString(), face_verified: false }
-    };
-    MockDB.employees.push(user);
+    }) as any;
+    MockDB.employees.push(dbUser);
     saveMockDB();
   }
+
+  let manager_name = 'Admin (Default)';
+  if (authUser.manager_id) {
+    const manager = MockEmployees.getById(authUser.manager_id);
+    if (manager) {
+      manager_name = manager.full_name || manager.email || 'Manager';
+    }
+  }
+
+  // Merge authentication identity (source of truth) with local DB preferences
+  const user = {
+     ...dbUser,
+     ...authUser,
+     manager_name
+  };
 
   return NextResponse.json({ success: true, data: user });
 }
@@ -120,9 +109,32 @@ export async function PUT(request: Request) {
     if (privacy_preferences !== undefined) MockDB.employees[index].privacy_preferences = privacy_preferences;
     if (drive_integration !== undefined) MockDB.employees[index].drive_integration = drive_integration;
 
+    // Update MockEmployees (Core Identity)
+    const authUpdatePayload: any = {};
+    const coreFields = ['phone', 'department', 'designation', 'date_of_joining', 'dob', 'gender', 'emergency_contact_name', 'emergency_contact_phone', 'employment_type', 'blood_group', 'marital_status', 'nationality', 'city', 'state', 'country', 'postal_code', 'address', 'full_name'];
+    
+    // Check request payload to see if core identity fields are updated
+    for (const f of coreFields) {
+       if (data[f] !== undefined) authUpdatePayload[f] = data[f];
+    }
+    
+    // Also accept emergency_contact aliases
+    if (emergency_contact !== undefined) authUpdatePayload['emergency_contact_phone'] = emergency_contact;
+    if (emergency_contact_name !== undefined) authUpdatePayload['emergency_contact_name'] = emergency_contact_name;
+    if (dob !== undefined) authUpdatePayload['date_of_birth'] = dob;
+
+    if (Object.keys(authUpdatePayload).length > 0) {
+       MockEmployees.update(user_id, authUpdatePayload);
+    }
+
     saveMockDB();
 
-    return NextResponse.json({ success: true, data: MockDB.employees[index] });
+    const mergedUser = {
+      ...MockDB.employees[index],
+      ...MockEmployees.getById(user_id)
+    };
+
+    return NextResponse.json({ success: true, data: mergedUser });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

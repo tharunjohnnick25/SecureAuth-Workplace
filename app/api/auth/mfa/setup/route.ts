@@ -1,17 +1,44 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { isMockMode } from '@/lib/mock-employees';
+import { isMockMode, MockEmployees } from '@/lib/mock-employees';
+import { generateSecret, generateURI } from 'otplib';
+import QRCode from 'qrcode';
 
 export async function POST(req: NextRequest) {
   try {
     if (isMockMode()) {
+      // For mock mode, get the user from the mock session cookie
+      const sessionCookie = req.cookies.get('mock_session')?.value;
+      let userId = 'mock-user-id';
+      let email = 'user@example.com';
+      
+      if (sessionCookie) {
+         try {
+            const session = JSON.parse(sessionCookie);
+            if (session.id) userId = session.id;
+            if (session.email) email = session.email;
+         } catch(e) {}
+      }
+
+      // Generate a real secret using otplib
+      const secret = generateSecret();
+      
+      // Generate the otpauth URI
+      const uri = generateURI({ label: email, issuer: 'SecureAuth', secret });
+      
+      // Generate QR Code as Data URL
+      const qr_code = await QRCode.toDataURL(uri);
+
+      // Temporarily store it in MockEmployees (we'll mark it enrolled upon verification)
+      MockEmployees.update(userId, { totp_secret: secret, totp_enrolled: false });
+
       return NextResponse.json({
         id: 'mock-totp-factor',
         type: 'totp',
         totp: {
-          qr_code: 'https://api.qrserver.com/v1/create-qr-code/?data=otpauth%3A%2F%2Ftotp%2FSecureAuth%3Amock%3Fsecret%3DMOCKTOTPSECRET&size=200x200',
-          secret: 'MOCKTOTPSECRET',
-          uri: 'otpauth://totp/SecureAuth:mock?secret=MOCKTOTPSECRET',
+          qr_code,
+          secret,
+          uri,
         },
       });
     }

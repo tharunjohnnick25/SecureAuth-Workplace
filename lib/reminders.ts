@@ -1,7 +1,7 @@
 import { MockDB } from '@/lib/mock-db';
 
-export type ReminderType = 'CERTIFICATION' | 'SHIFT_CHANGE' | 'DEADLINE';
-export type ReminderChannel = 'push' | 'email' | 'both';
+export type ReminderType = 'CERTIFICATION' | 'SHIFT_CHANGE' | 'DEADLINE' | 'CUSTOM';
+export type ReminderChannel = 'push' | 'email' | 'sms' | 'webhook' | 'both';
 
 export interface Reminder {
   id: string;
@@ -21,12 +21,22 @@ export interface ReminderSummary {
   certifications: Reminder[];
   shifts: Reminder[];
   missed_deadlines: Reminder[];
+  custom: Reminder[];
 }
 
 export function computeReminders(userId: string): ReminderSummary {
   const now = Date.now();
 
   const isMock = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+  const states = MockDB.reminder_states || {};
+
+  const isVisible = (id: string) => {
+    const state = states[id];
+    if (!state) return true;
+    if (state.dismissed) return false;
+    if (state.snoozed_until && new Date(state.snoozed_until).getTime() > now) return false;
+    return true;
+  };
 
   let rawCertifications = MockDB.certifications || [];
   if (isMock && rawCertifications.length === 0) {
@@ -55,7 +65,7 @@ export function computeReminders(userId: string): ReminderSummary {
         action_url: '/profile',
       };
     })
-    .filter((r: Reminder) => daysUntil(r.due_date) <= 30);
+    .filter((r: Reminder) => daysUntil(r.due_date) <= 30 && isVisible(r.id));
 
   let rawShifts = MockDB.shifts || [];
   if (isMock && rawShifts.length === 0) {
@@ -81,6 +91,7 @@ export function computeReminders(userId: string): ReminderSummary {
       action_url: '/attendance',
     }))
     .filter((r: Reminder) => {
+      if (!isVisible(r.id)) return false;
       const d = daysUntil(r.due_date);
       return d >= -1 && d <= 7;
     });
@@ -113,11 +124,25 @@ export function computeReminders(userId: string): ReminderSummary {
       due_date: t.deadline,
       priority: (t.priority === 'High' ? 'high' : t.priority === 'Medium' ? 'medium' : 'low') as Reminder['priority'],
       action_url: '/tasks',
-    }));
+    }))
+    .filter((r: Reminder) => isVisible(r.id));
 
-  return { certifications, shifts, missed_deadlines };
+  const custom: Reminder[] = (MockDB.custom_reminders || [])
+    .filter((c: any) => c.user_id === userId)
+    .map((c: any) => ({
+      id: c.id,
+      type: 'CUSTOM' as const,
+      title: c.title,
+      message: c.message,
+      due_date: c.due_date,
+      priority: c.priority,
+      action_url: c.action_url || '#',
+    }))
+    .filter((r: Reminder) => isVisible(r.id));
+
+  return { certifications, shifts, missed_deadlines, custom };
 }
 
 export function totalReminders(summary: ReminderSummary): number {
-  return summary.certifications.length + summary.shifts.length + summary.missed_deadlines.length;
+  return summary.certifications.length + summary.shifts.length + summary.missed_deadlines.length + summary.custom.length;
 }

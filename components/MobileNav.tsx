@@ -17,7 +17,6 @@ const mobileNavItems = [
   { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Security', href: '/security', icon: Shield },
   { name: 'Devices', href: '/devices', icon: Smartphone },
-  { name: 'Alerts', href: '/notifications', icon: Bell },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

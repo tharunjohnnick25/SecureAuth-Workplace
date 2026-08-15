@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { ProfilePictureModal } from '@/components/ProfilePictureModal';
 import { supabase } from '@/lib/supabase/client';
 
+
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const [profile, setProfile] = useState<any>(null);
@@ -208,20 +209,14 @@ export default function SettingsPage() {
   }, [formData.appearance.theme]);
 
   const TABS = [
-    { id: 'profile', label: '1. Profile Info', icon: User },
-    { id: 'employment', label: '2. Employment', icon: Briefcase },
-    { id: 'security', label: '3. Security', icon: Shield },
-    { id: 'appearance', label: '4. Appearance', icon: Palette },
-    { id: 'notifications', label: '5. Notifications', icon: Bell },
-    { id: 'privacy', label: '6. Privacy', icon: Eye },
-    { id: 'attendance', label: '7. Attendance', icon: Clock },
-    { id: 'leave', label: '8. Leaves', icon: Calendar },
-    { id: 'tasks', label: '9. Tasks', icon: CheckSquare },
-    { id: 'calendar', label: '10. Calendar', icon: Calendar },
-    { id: 'devices', label: '11. Devices', icon: Smartphone },
-    { id: 'drive', label: '12. Google Drive', icon: HardDrive },
-    { id: 'ai_risk', label: '13. AI Risk', icon: BarChart3 },
-    { id: 'help', label: '14. Help & Support', icon: LifeBuoy }
+    { id: 'profile', label: 'Profile Info', icon: User },
+    { id: 'employment', label: 'Employment', icon: Briefcase },
+    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'privacy', label: 'Privacy', icon: Eye },
+    { id: 'devices', label: 'Devices', icon: Smartphone },
+    { id: 'help', label: 'Help & Support', icon: LifeBuoy }
   ];
 
   // ==========================

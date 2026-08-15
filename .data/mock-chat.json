@@ -81,8 +81,150 @@
         }
       ],
       "created_at": "2026-08-07T08:17:52.577Z",
-      "last_message_at": "2026-08-07T08:17:58.454Z",
+      "last_message_at": "2026-08-08T04:17:39.500Z",
+      "last_message_preview": "vaa maame"
+    },
+    {
+      "id": "conv-1786439481570-gam4yp",
+      "key": "EMP00457::EMP00476",
+      "participants": [
+        {
+          "id": "1060582a-5f99-4fcd-9c10-af3382a5d52e",
+          "employee_id": "EMP00457",
+          "full_name": "Noah User",
+          "role": "ADMIN"
+        },
+        {
+          "id": "135fc4cd-c3e8-45fe-96b6-3aa041fcd832",
+          "employee_id": "EMP00476",
+          "full_name": "Alexander Clark",
+          "role": "EMPLOYEE"
+        }
+      ],
+      "created_at": "2026-08-11T09:11:21.570Z",
+      "last_message_at": "2026-08-11T09:11:43.496Z",
+      "last_message_preview": "Got it, looking into this now."
+    },
+    {
+      "id": "conv-1786440827722-utzvuh",
+      "key": "EM456::EMP00004",
+      "participants": [
+        {
+          "id": "fe2c53f1-9839-4031-a37c-99dc54e6285f",
+          "employee_id": "EM456",
+          "full_name": "Praveen User",
+          "role": "Employee"
+        },
+        {
+          "id": "4108f1ac-8c31-4233-8f2b-6be36b807e46",
+          "employee_id": "EMP00004",
+          "full_name": "john",
+          "role": "EMPLOYEE"
+        }
+      ],
+      "created_at": "2026-08-11T09:33:47.722Z",
+      "last_message_at": "2026-08-11T09:33:51.741Z",
       "last_message_preview": "Can we schedule a quick meeting?"
+    },
+    {
+      "id": "conv-1786800435550-r8oai4",
+      "key": "EMP-THARUN01::EMP222",
+      "participants": [
+        {
+          "id": "51fcfb9a-6546-45e6-81ef-dfeca05e1ac4",
+          "employee_id": "EMP-THARUN01",
+          "full_name": "Tharun Infosys",
+          "role": "ADMIN"
+        },
+        {
+          "id": "21414d73-8da7-4f48-aa85-87eb02e6749a",
+          "employee_id": "EMP222",
+          "full_name": "vigneshwaran",
+          "role": "Employee"
+        }
+      ],
+      "created_at": "2026-08-15T13:27:15.550Z",
+      "last_message_at": "2026-08-15T13:27:21.182Z",
+      "last_message_preview": "Got it, looking into this now."
+    },
+    {
+      "id": "conv-1786801319225-r4mpmp",
+      "key": "EMP123::EMP222",
+      "participants": [
+        {
+          "id": "21414d73-8da7-4f48-aa85-87eb02e6749a",
+          "employee_id": "EMP222",
+          "full_name": "vigneshwaran User",
+          "role": "Employee"
+        },
+        {
+          "id": "fc49aadc-e7c2-42b1-a636-31a949c28b86",
+          "employee_id": "EMP123",
+          "full_name": "Rajesh",
+          "role": "Employee"
+        }
+      ],
+      "created_at": "2026-08-15T13:41:59.225Z",
+      "last_message_at": "2026-08-15T13:42:03.573Z",
+      "last_message_preview": "Can we schedule a quick meeting?"
+    },
+    {
+      "id": "group-1786804842300-5yol0l",
+      "key": "group-1786804842300-5yol0l",
+      "participants": [
+        {
+          "id": "ff559da5-dea6-462a-a321-7a0f77f1d552",
+          "employee_id": "MAN111",
+          "full_name": "Hella User",
+          "role": "MANAGER"
+        },
+        {
+          "id": "fc49aadc-e7c2-42b1-a636-31a949c28b86",
+          "employee_id": "EMP123",
+          "full_name": "Rajesh",
+          "role": "Employee"
+        },
+        {
+          "id": "21414d73-8da7-4f48-aa85-87eb02e6749a",
+          "employee_id": "EMP222",
+          "full_name": "vigneshwaran User",
+          "role": "Employee"
+        }
+      ],
+      "created_at": "2026-08-15T14:40:42.300Z",
+      "last_message_at": "2026-08-15T14:40:58.819Z",
+      "last_message_preview": "Can we schedule a quick meeting?",
+      "is_group": true,
+      "group_name": "Cybersecurity & SOC Team"
+    },
+    {
+      "id": "group-1786804876766-jpa7ze",
+      "key": "group-1786804876766-jpa7ze",
+      "participants": [
+        {
+          "id": "ff559da5-dea6-462a-a321-7a0f77f1d552",
+          "employee_id": "MAN111",
+          "full_name": "Hella User",
+          "role": "MANAGER"
+        },
+        {
+          "id": "fc49aadc-e7c2-42b1-a636-31a949c28b86",
+          "employee_id": "EMP123",
+          "full_name": "Rajesh",
+          "role": "Employee"
+        },
+        {
+          "id": "21414d73-8da7-4f48-aa85-87eb02e6749a",
+          "employee_id": "EMP222",
+          "full_name": "vigneshwaran User",
+          "role": "Employee"
+        }
+      ],
+      "created_at": "2026-08-15T14:41:16.766Z",
+      "last_message_at": "2026-08-15T14:41:16.766Z",
+      "last_message_preview": "Group 'Cybersecurity & SOC Team' created",
+      "is_group": true,
+      "group_name": "Cybersecurity & SOC Team"
     }
   ],
   "messages": [
@@ -117,6 +259,62 @@
       "sender_name": "john User",
       "content": "Can we schedule a quick meeting?",
       "created_at": "2026-08-07T08:17:58.454Z"
+    },
+    {
+      "id": "msg-1786162659500-zrhin2",
+      "conversation_id": "conv-1786090672577-dbk9lz",
+      "sender_employee_id": "EMP00004",
+      "sender_name": "john User",
+      "content": "vaa maame",
+      "created_at": "2026-08-08T04:17:39.500Z"
+    },
+    {
+      "id": "msg-1786439503496-48m2ai",
+      "conversation_id": "conv-1786439481570-gam4yp",
+      "sender_employee_id": "EMP00457",
+      "sender_name": "Noah User",
+      "content": "Got it, looking into this now.",
+      "created_at": "2026-08-11T09:11:43.496Z"
+    },
+    {
+      "id": "msg-1786440831741-upg91i",
+      "conversation_id": "conv-1786440827722-utzvuh",
+      "sender_employee_id": "EM456",
+      "sender_name": "Praveen User",
+      "content": "Can we schedule a quick meeting?",
+      "created_at": "2026-08-11T09:33:51.741Z"
+    },
+    {
+      "id": "msg-1786800441182-kli7k3",
+      "conversation_id": "conv-1786800435550-r8oai4",
+      "sender_employee_id": "EMP-THARUN01",
+      "sender_name": "Tharun Infosys",
+      "content": "Got it, looking into this now.",
+      "created_at": "2026-08-15T13:27:21.182Z"
+    },
+    {
+      "id": "msg-1786801323573-qk2ce2",
+      "conversation_id": "conv-1786801319225-r4mpmp",
+      "sender_employee_id": "EMP222",
+      "sender_name": "vigneshwaran User",
+      "content": "Can we schedule a quick meeting?",
+      "created_at": "2026-08-15T13:42:03.573Z"
+    },
+    {
+      "id": "msg-1786804855280-6hnxsu",
+      "conversation_id": "group-1786804842300-5yol0l",
+      "sender_employee_id": "MAN111",
+      "sender_name": "Hella User",
+      "content": "I'll update you by EOD.",
+      "created_at": "2026-08-15T14:40:55.280Z"
+    },
+    {
+      "id": "msg-1786804858819-nhn1nk",
+      "conversation_id": "group-1786804842300-5yol0l",
+      "sender_employee_id": "MAN111",
+      "sender_name": "Hella User",
+      "content": "Can we schedule a quick meeting?",
+      "created_at": "2026-08-15T14:40:58.819Z"
     }
   ]
 }

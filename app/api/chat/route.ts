@@ -79,6 +79,36 @@ export async function POST(req: NextRequest) {
     if (!self) {
       return NextResponse.json({ error: 'A valid self identity with employee_id is required', success: false }, { status: 400 });
     }
+
+    if (body.create_department_group) {
+      if (isMockMode()) {
+        const allEmployees = MockEmployees.getAll();
+        const myDetails = MockEmployees.getById(self.id);
+        const department = myDetails?.department || 'Department';
+        
+        // Find direct reports first, fallback to same department
+        let team = allEmployees.filter(e => e.manager_id === self.id);
+        if (team.length === 0) {
+           team = allEmployees.filter(e => e.department === department && e.id !== self.id);
+        }
+        
+        const participants: ChatParticipant[] = [self];
+        for (const record of team) {
+           participants.push({
+             id: record.id,
+             employee_id: record.employee_id || record.id,
+             full_name: record.full_name || record.email,
+             role: record.role || 'Employee'
+           });
+        }
+        
+        const conversation = ChatStore.createGroupConversation(participants, `${department} Team`);
+        return NextResponse.json({ data: conversation, success: true });
+      } else {
+        return NextResponse.json({ error: 'Group chat creation is currently only supported in Mock Mode.', success: false }, { status: 400 });
+      }
+    }
+
     if (!body.other_employee_id) {
       return NextResponse.json({ error: 'other_employee_id is required', success: false }, { status: 400 });
     }

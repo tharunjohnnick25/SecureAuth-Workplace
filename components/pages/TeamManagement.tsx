@@ -27,13 +27,17 @@ export function TeamManagement() {
     const { t } = useLanguage();
   const { data: users, loading } = useRealtimeData('users');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const filteredUsers = useMemo(() => {
-    return (users as any[]).filter((user: any) => 
-      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [users, searchTerm]);
+    return (users as any[]).filter((user: any) => {
+      const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = filterRole === 'all' || user.role === filterRole;
+      const matchesStatus = filterStatus === 'all' || 'active' === filterStatus; // Assuming all real-time users are active for now, or match user.status
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, searchTerm, filterRole, filterStatus]);
 
   const handleExport = () => {
     const csv = [
@@ -80,9 +84,15 @@ export function TeamManagement() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Filter className="w-4 h-4" />
-                </Button>
+                <select
+                  value={filterRole}
+                  onChange={(e) => setFilterRole(e.target.value)}
+                  className="bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary/50"
+                >
+                  <option className="bg-[#0f172a]" value="all">All Roles</option>
+                  <option className="bg-[#0f172a]" value="admin">Admin</option>
+                  <option className="bg-[#0f172a]" value="employee">Employee</option>
+                </select>
                 <div className="h-8 w-[1px] bg-border mx-2" />
                 <span className="text-sm text-muted-foreground whitespace-nowrap">
                   {'Showing'}{(filteredUsers as any[]).length} {'Of'}{(users as any[]).length} {'Users'}</span>

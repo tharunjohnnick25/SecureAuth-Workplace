@@ -17,6 +17,7 @@ export interface User {
   avatar_url?: string;
   role: string; // Keep as string for dynamic DB roles compatibility
   organization_id?: string;
+  department?: string;
   created_at: string;
   last_login?: string;
   mfa_enabled: boolean;

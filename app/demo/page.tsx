@@ -278,7 +278,7 @@ export default function DemoPage() {
               <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 font-bold px-8">
                 {'Start free trial'}</Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/login">
               <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/20 hover:bg-white/5 font-bold px-8">
                 {'Request custom demo'}</Button>
             </Link>

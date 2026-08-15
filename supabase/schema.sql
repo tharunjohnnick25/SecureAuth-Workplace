@@ -296,75 +296,133 @@ CREATE POLICY "Users can manage own credentials"
     ON public.user_credentials FOR ALL 
     USING (auth.uid() = user_id);
 
--- ==========================================
--- SAAS SUBSCRIPTION DB
--- ==========================================
 
--- 15. Plans
-CREATE TABLE IF NOT EXISTS public.plans (
-    id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    price NUMERIC NOT NULL,
-    features JSONB,
+
+
+-- 20. Admins
+CREATE TABLE IF NOT EXISTS public.admins (
+    id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
+    email VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 16. Subscriptions
-CREATE TABLE IF NOT EXISTS public.subscriptions (
+-- 21. Employee Requests
+CREATE TABLE IF NOT EXISTS public.employee_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    plan_id VARCHAR(50) REFERENCES public.plans(id),
-    status VARCHAR(50) DEFAULT 'active', -- active, past_due, canceled
-    current_period_start TIMESTAMP WITH TIME ZONE,
-    current_period_end TIMESTAMP WITH TIME ZONE,
+    email VARCHAR(255) NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, rejected
+    reason TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 17. Payments
-CREATE TABLE IF NOT EXISTS public.payments (
+-- 22. Login Logs (Alias to login_history or specific table)
+CREATE TABLE IF NOT EXISTS public.login_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    subscription_id UUID REFERENCES public.subscriptions(id) ON DELETE CASCADE,
-    razorpay_order_id VARCHAR(255),
-    razorpay_payment_id VARCHAR(255) UNIQUE NOT NULL,
-    amount NUMERIC NOT NULL,
-    currency VARCHAR(10) DEFAULT 'USD',
-    status VARCHAR(50) DEFAULT 'successful',
+    ip_address INET,
+    browser TEXT,
+    os TEXT,
+    status VARCHAR(50) DEFAULT 'success',
+    risk_score NUMERIC,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 18. Invoices
-CREATE TABLE IF NOT EXISTS public.invoices (
+-- 23. Support Queries
+CREATE TABLE IF NOT EXISTS public.support_queries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    name VARCHAR(255),
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255),
+    message TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'open', -- open, resolved, closed
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for new tables
+ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employee_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.login_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.support_queries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can view admins" ON public.admins FOR SELECT USING (true);
+CREATE POLICY "Users can view own requests" ON public.employee_requests FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own requests" ON public.employee_requests FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can view own logs" ON public.login_logs FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own support queries" ON public.support_queries FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert support queries" ON public.support_queries FOR INSERT WITH CHECK (true);
+
+-- 24. Departments
+CREATE TABLE IF NOT EXISTS public.departments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+    head UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    employee_count INTEGER DEFAULT 0,
+    avg_risk_score NUMERIC DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view departments" ON public.departments FOR SELECT USING (true);
+CREATE POLICY "Admins can manage departments" ON public.departments FOR ALL USING (true); -- Requires auth.uid() in admins in real scenario
+
+-- 25. API Integrations
+CREATE TABLE IF NOT EXISTS public.integrations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- Webhook, Identity, Log Forwarding, Directory
+    USING (auth.uid() = user_id);
+
+-- Read-only for personal history, alerts, notifications
+CREATE POLICY "Users can view own login history" ON public.login_history FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own risk scores" ON public.risk_scores FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own alerts" ON public.alerts FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own alerts" ON public.alerts FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own focus mode" ON public.focus_mode FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own focus mode" ON public.focus_mode FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Service can insert focus mode" ON public.focus_mode FOR INSERT WITH CHECK (true);
+
+-- Functions & Triggers
+
+-- Auto-create user profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email)
+  VALUES (new.id, new.email);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+-- WebAuthn Credentials
+CREATE TABLE IF NOT EXISTS public.user_credentials (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    payment_id UUID REFERENCES public.payments(id) ON DELETE CASCADE,
-    invoice_number VARCHAR(100) UNIQUE,
-    amount NUMERIC NOT NULL,
-    status VARCHAR(50) DEFAULT 'paid',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    credential_id TEXT NOT NULL UNIQUE,
+    public_key TEXT NOT NULL,
+    counter INTEGER DEFAULT 0,
+    transports JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 19. Transactions
-CREATE TABLE IF NOT EXISTS public.transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    payment_id UUID REFERENCES public.payments(id) ON DELETE CASCADE,
-    type VARCHAR(50), -- charge, refund
-    amount NUMERIC NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+ALTER TABLE public.user_credentials ENABLE ROW LEVEL SECURITY;
 
--- RLS for Subscriptions
-ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own credentials" 
+    ON public.user_credentials FOR SELECT 
+    USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view own subscriptions" ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can view own invoices" ON public.invoices FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Anyone can view plans" ON public.plans FOR SELECT USING (true);
+CREATE POLICY "Users can manage own credentials" 
+    ON public.user_credentials FOR ALL 
+    USING (auth.uid() = user_id);
+
 
 
 -- 20. Admins
@@ -454,3 +512,18 @@ CREATE TABLE IF NOT EXISTS public.integrations (
 ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can view integrations" ON public.integrations FOR SELECT USING (true);
 CREATE POLICY "Admins can manage integrations" ON public.integrations FOR ALL USING (true);
+
+-- 26. Quorum Requests
+CREATE TABLE IF NOT EXISTS public.quorum_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requester_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    action_type TEXT,
+    status TEXT DEFAULT 'PENDING',
+    approver_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.quorum_requests ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own quorum requests" ON public.quorum_requests FOR SELECT USING (auth.uid() = requester_id);
+CREATE POLICY "Users can insert own quorum requests" ON public.quorum_requests FOR INSERT WITH CHECK (auth.uid() = requester_id);
+CREATE POLICY "Admins can view and manage all quorum requests" ON public.quorum_requests FOR ALL USING (true);

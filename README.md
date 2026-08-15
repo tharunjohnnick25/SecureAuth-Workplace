@@ -1,5 +1,43 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Role-Based Access Control (RBAC) System
+
+This application includes a complete, enterprise-grade RBAC system with hierarchical permissions.
+
+### Role Hierarchy
+1. **`super_admin`** (Level 4): Full system access, including deleting users and viewing all audit logs.
+2. **`admin`** (Level 3): Can manage users and change roles.
+3. **`manager`** (Level 2): Can access manager-specific routes and team insights.
+4. **`employee`** (Level 1): Default role. Can access personal dashboard and settings.
+
+### Admin Dashboard
+To manage users, navigate to `/admin/users` (requires `admin` or `super_admin` role):
+- **Change Roles:** Click "Edit Role" on any user to update their role, department, and manager.
+- **Audit Logs:** View all role changes, complete with timestamps and admin reasons, at `/admin/audit`.
+
+### API Usage Example (TypeScript SDK style)
+```ts
+// Update a user's role (Admin only)
+await fetch('/api/v1/users/USER_UUID/role', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    role: 'manager', 
+    department: 'Engineering',
+    reason: 'Promotion to team lead' 
+  })
+});
+```
+
+### Identity Provider (IdP) Sync
+You can synchronize roles automatically from Google Workspace or Azure AD:
+1. Navigate to `/admin/settings`
+2. Enable **Automatic Role Sync**
+3. Configure the `CRON_SECRET` environment variable to secure the `/api/v1/cron/sync-roles` endpoint.
+4. Set up an external Cron job (e.g., Vercel Cron or GitHub Actions) to hit the endpoint periodically.
+
+---
+
 ## Getting Started
 
 First, run the development server:

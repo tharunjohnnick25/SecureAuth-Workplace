@@ -2,59 +2,70 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaceScanner } from '@/components/FaceScanner';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldCheck } from 'lucide-react';
+import { toast } from 'sonner';
+import { ShieldCheck, Loader2, KeyRound, ScanFace } from 'lucide-react';
+import { FaceCapturePanel, type FaceCaptureResult } from '@/components/face/FaceCapturePanel';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function FaceLoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  const { setUser } = useAuthStore();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [capture, setCapture] = useState<FaceCaptureResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [prompt, setPrompt] = useState("Position your face to verify");
+  const [step, setStep] = useState<'email' | 'face'>('email');
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please enter email and password");
+  const handleFaceComplete = async (result: FaceCaptureResult) => {
+    setCapture(result);
+    if (!email) {
+      toast.error('Please enter your work email first');
+      setStep('email');
       return;
     }
-    setStep(2);
-  };
 
-  const handleFaceCapture = async (base64Image: string) => {
     setIsProcessing(true);
-    setPrompt("Verifying face match and liveness...");
-    
     try {
-      const response = await fetch('/api/auth/face-login', {
+      const res = await fetch('/api/auth/face-login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, image: base64Image }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          embedding: result.embeddings[0],
+          liveness: result.liveness,
+          deviceFingerprint: typeof window !== 'undefined' ? window.localStorage.getItem('device_fingerprint') : null,
+        }),
       });
+      const data = await res.json();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(data.message || 'Face verified successfully!');
-        // Ideally we set some auth context here, then redirect
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
-      } else {
-        toast.error(data.error || 'Verification failed');
-        setPrompt("Verification failed. Please try again.");
+      if (!res.ok) {
+        const message =
+          data.error ||
+          'Face login failed';
+        toast.error(message);
+        if (res.status === 401 || res.status === 403 || res.status === 429) {
+          // Retryable — keep the user on the face step.
+          setStep('face');
+          setCapture(null);
+        }
+        return;
       }
-    } catch (error) {
-      toast.error('An error occurred during verification');
-      setPrompt("Error connecting to verification service.");
+
+      toast.success(data.message || 'Face verified successfully!');
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role,
+        first_name: data.user.first_name,
+        last_name: data.user.last_name,
+      });
+      router.push('/dashboard');
+    } catch (err) {
+      toast.error('An error occurred during face verification');
     } finally {
       setIsProcessing(false);
     }
@@ -69,32 +80,34 @@ export default function FaceLoginPage() {
               <ShieldCheck className="w-12 h-12 text-blue-500" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold tracking-tight">Biometric Login</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight">Face Login</CardTitle>
           <CardDescription className="text-slate-400">
-            Enterprise-grade face detection and verification
+            Anti-spoofing liveness check + FaceNet match (≥0.6 similarity)
           </CardDescription>
         </CardHeader>
+
         <CardContent>
-          {step === 1 ? (
-            <form onSubmit={handleCredentialsSubmit} className="space-y-4 max-w-sm mx-auto">
+          {step === 'email' ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!email) {
+                  toast.error('Please enter your work email');
+                  return;
+                }
+                setStep('face');
+                setCapture(null);
+              }}
+              className="space-y-4 max-w-sm mx-auto"
+            >
               <div className="space-y-2">
-                <Label htmlFor="email">Work Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="john.doe@company.com" 
+                <Label htmlFor="face-email">Work Email</Label>
+                <Input
+                  id="face-email"
+                  type="email"
+                  placeholder="john.doe@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-slate-950 border-slate-700 focus:border-blue-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   className="bg-slate-950 border-slate-700 focus:border-blue-500"
                 />
               </div>
@@ -103,16 +116,32 @@ export default function FaceLoginPage() {
               </Button>
             </form>
           ) : (
-            <div className="animate-in fade-in zoom-in duration-300">
-              <FaceScanner 
-                onCapture={handleFaceCapture}
-                promptText={prompt}
-                isProcessing={isProcessing}
-              />
-              <div className="mt-4 text-center">
-                <Button variant="link" onClick={() => setStep(1)} className="text-slate-400 hover:text-white">
-                  Back to credentials
+            <div className="space-y-4">
+              <div className="flex items-center justify-between max-w-sm mx-auto w-full">
+                <span className="text-sm text-slate-400">Signed in as <span className="text-white font-medium">{email}</span></span>
+                <Button variant="ghost" size="sm" onClick={() => setStep('email')} className="text-slate-400 hover:text-white">
+                  Change
                 </Button>
+              </div>
+
+              <FaceCapturePanel
+                mode="login"
+                onComplete={handleFaceComplete}
+                disabled={isProcessing}
+              />
+
+              {isProcessing && (
+                <div className="flex items-center justify-center gap-2 text-blue-400 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Matching face against encrypted enrollment…
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-slate-800 flex items-center justify-center">
+                <Link href="/login/passkey" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                  <KeyRound className="w-4 h-4" />
+                  Can’t use face? Sign in with passkey
+                </Link>
               </div>
             </div>
           )}

@@ -1,15 +1,42 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { isMockMode } from '@/lib/mock-employees';
+import { isMockMode, MockEmployees } from '@/lib/mock-employees';
+import { verify } from 'otplib';
 
 export async function POST(req: NextRequest) {
   try {
     const { factorId, code } = await req.json();
 
     if (isMockMode()) {
+      // For mock mode, get the user from the mock session cookie
+      const sessionCookie = req.cookies.get('mock_session')?.value;
+      let userId = 'mock-user-id';
+      
+      if (sessionCookie) {
+         try {
+            const session = JSON.parse(sessionCookie);
+            if (session.id) userId = session.id;
+         } catch(e) {}
+      }
+
+      const user = MockEmployees.getById(userId);
+      if (!user || !user.totp_secret) {
+         return NextResponse.json({ error: 'MFA setup not initiated' }, { status: 400 });
+      }
+
       if (!code || String(code).replace(/\D/g, '').length !== 6) {
         return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
       }
+
+      const isValid = verify({ token: code, secret: user.totp_secret });
+
+      if (!isValid) {
+         return NextResponse.json({ error: 'Incorrect verification code. Please try again.' }, { status: 400 });
+      }
+
+      // Mark enrolled
+      MockEmployees.update(userId, { totp_enrolled: true });
+
       return NextResponse.json({
         success: true,
         recoveryCodes: generateRecoveryCodes(),

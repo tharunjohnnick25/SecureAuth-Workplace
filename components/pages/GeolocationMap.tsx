@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from 'sonner';
 
 const loginLocations = [
   { city: 'New York', country: 'United States', lat: 40.7128, lng: -74.0060, logins: 1245, status: 'normal', risk: 'low' },
@@ -67,6 +68,31 @@ export function GeolocationMap() {
     });
     return Object.values(counts);
   }, [dbLogins]);
+
+  const [filterRisk, setFilterRisk] = useState('all');
+
+  const filteredLocations = useMemo(() => {
+    return locations.filter((loc: any) => filterRisk === 'all' || loc.risk === filterRisk);
+  }, [locations, filterRisk]);
+
+  const filteredRecentLogins = useMemo(() => {
+    return recentLogins.filter((login) => filterRisk === 'all' || login.risk === filterRisk);
+  }, [filterRisk]);
+
+  const handleExport = () => {
+    const csv = [
+      ['City', 'Country', 'Logins', 'Status', 'Risk'],
+      ...filteredLocations.map((l: any) => [l.city, l.country, l.logins, l.status, l.risk])
+    ].map(e => e.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'geolocation_export.csv';
+    a.click();
+    toast.success('Exported geolocation data');
+  };
+
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Sidebar />
@@ -80,10 +106,16 @@ export function GeolocationMap() {
                 {'Trackandvisuali'}</p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline">
-                <Filter className="w-4 h-4 mr-2" />
-                {'Filter'}</Button>
-              <Button variant="outline">
+              <select
+                value={filterRisk}
+                onChange={(e) => setFilterRisk(e.target.value)}
+                className="bg-transparent border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary/50"
+              >
+                <option className="bg-[#0f172a]" value="all">All Risks</option>
+                <option className="bg-[#0f172a]" value="low">Low Risk</option>
+                <option className="bg-[#0f172a]" value="high">High Risk</option>
+              </select>
+              <Button variant="outline" onClick={handleExport}>
                 <Download className="w-4 h-4 mr-2" />
                 {'Export'}</Button>
             </div>
@@ -156,7 +188,7 @@ export function GeolocationMap() {
                   <p className="text-muted-foreground">
                     {'Interactiveworl'}</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    {'Showing'}{loginLocations.length} {'Activelocations'}</p>
+                    {'Showing'} {filteredLocations.length} {'Activelocations'}</p>
                 </div>
               </div>
             </CardContent>
@@ -229,7 +261,7 @@ export function GeolocationMap() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentLogins.map((login, index) => (
+                  {filteredRecentLogins.map((login, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-3 rounded-lg bg-input-background/30 hover:bg-input-background/50 transition-colors"

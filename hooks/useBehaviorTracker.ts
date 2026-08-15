@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useTypingBehavior } from './useTypingBehavior';
 
-// Collects typing speed, mouse activity, and navigation frequency
+// Collects typing speed, mouse activity, cadence, and navigation frequency
 export function useBehaviorTracker(userId: string | null, sessionId: string) {
+  const { handleKeyDown: cadenceKeyDown, handleKeyUp: cadenceKeyUp, averageDwellTime, averageFlightTime } = useTypingBehavior();
+  
   const dataRef = useRef({
     keystrokes: 0,
     mouseDistance: 0,
@@ -15,8 +18,13 @@ export function useBehaviorTracker(userId: string | null, sessionId: string) {
   useEffect(() => {
     if (!userId) return;
 
-    const handleKeyDown = () => {
+    const handleKeyDown = (e: any) => {
       dataRef.current.keystrokes += 1;
+      cadenceKeyDown(e);
+    };
+
+    const handleKeyUp = (e: any) => {
+      cadenceKeyUp(e);
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -39,21 +47,23 @@ export function useBehaviorTracker(userId: string | null, sessionId: string) {
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('click', handleClick);
 
-    // Send batch telemetry every 60 seconds
+    // Send batch telemetry every 10 seconds for continuous auth
     const intervalId = setInterval(() => {
       sendTelemetry();
-    }, 60000);
+    }, 10000);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('click', handleClick);
       clearInterval(intervalId);
     };
-  }, [userId, sessionId]);
+  }, [userId, sessionId, cadenceKeyDown, cadenceKeyUp]);
 
   const sendTelemetry = async () => {
     if (!userId) return;
@@ -67,6 +77,8 @@ export function useBehaviorTracker(userId: string | null, sessionId: string) {
     const telemetry = {
       typing_wpm: wpm,
       typing_variance: 5.0, // Mock variance
+      average_dwell_time: averageDwellTime,
+      average_flight_time: averageFlightTime,
       mouse_distance: dataRef.current.mouseDistance,
       clicks: dataRef.current.clicks,
       time_anomaly: 0 // Mock normal time
@@ -88,6 +100,8 @@ export function useBehaviorTracker(userId: string | null, sessionId: string) {
       if (data.recommended_action === 'BLOCK' || data.recommended_action === 'REQUIRE_MFA') {
         // Dispatch custom event for UI to react (e.g. show MFA modal)
         window.dispatchEvent(new CustomEvent('AI_RISK_ALERT', { detail: data.recommended_action }));
+      } else if (data.recommended_action === 'REQUIRE_APPROVAL') {
+        window.dispatchEvent(new CustomEvent('AI_QUORUM_REQUIRED'));
       }
       
     } catch (e) {

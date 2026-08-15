@@ -213,6 +213,13 @@ export default function ResourcesPage() {
                 />
               </div>
 
+              <div className="mb-6 p-3 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between text-sm">
+                <span className="text-gray-400">Approval routing to:</span>
+                <span className="font-semibold text-white bg-white/10 px-2 py-1 rounded">
+                  {user?.manager_name || 'Admin / IT'}
+                </span>
+              </div>
+
               <div className="flex gap-3 justify-end">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors">
                   Cancel

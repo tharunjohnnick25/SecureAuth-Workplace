@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
-import { isMockMode } from '@/lib/mock-employees';
+import { isMockMode } from '@/lib/mock-mode';
+import { PasskeyService } from '@/lib/services/passkeyService';
+import { MockEmployees, forceReload, isProfileComplete } from '@/lib/mock-employees';
 
 const rpID = process.env.NEXT_PUBLIC_RP_ID || process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost';
 const origin = process.env.NEXT_PUBLIC_SITE_URL || `http://${rpID}:3000`;
@@ -15,18 +17,68 @@ export async function POST(req: NextRequest) {
     }
 
     if (isMockMode()) {
-      return NextResponse.json({
-        verified: true,
-        user: {
-          id: 'mock',
-          email: 'employee@test.com',
-          role: 'USER',
-          first_name: 'John',
-          last_name: 'Employee',
-          employee_id: 'EMP-MOCK01',
-        },
-        message: 'Passkey verified successfully.',
-      });
+      const passkey = PasskeyService.getPasskey(body.id);
+      if (!passkey) {
+        return NextResponse.json({ error: 'Passkey not found' }, { status: 404 });
+      }
+
+      const expectedChallenge =
+        PasskeyService.consumeChallenge(passkey.user_key, 'login') ||
+        PasskeyService.consumeChallenge('anonymous', 'login');
+
+      if (!expectedChallenge) {
+        return NextResponse.json({ error: 'No active challenge found' }, { status: 400 });
+      }
+
+      let verification;
+      try {
+        verification = await verifyAuthenticationResponse({
+          response: body,
+          expectedChallenge,
+          expectedOrigin: origin,
+          expectedRPID: rpID,
+          credential: {
+            id: passkey.credential_id,
+            publicKey: Buffer.from(passkey.public_key_hex, 'hex'),
+            counter: passkey.counter,
+            ...(passkey.transports && passkey.transports.length
+              ? { transports: passkey.transports as AuthenticatorTransport[] }
+              : {}),
+          },
+        });
+      } catch (error) {
+        console.error(error);
+        const msg = error instanceof Error ? error.message : 'Passkey verification failed';
+        return NextResponse.json({ error: msg }, { status: 400 });
+      }
+
+      const { verified, authenticationInfo } = verification;
+
+      if (verified && authenticationInfo) {
+        PasskeyService.touchPasskey(passkey.user_key, passkey.credential_id, authenticationInfo.newCounter);
+
+        forceReload();
+        const record =
+          MockEmployees.findByEmail(passkey.user_key) ||
+          MockEmployees.findByEmployeeId(passkey.user_key);
+
+        return NextResponse.json({
+          verified: true,
+          user: {
+            id: record?.id || passkey.user_key,
+            email: record?.email || passkey.user_key,
+            role: record?.role || 'ADMIN',
+            first_name: record?.full_name?.split(' ')[0] || 'Admin',
+            last_name: record?.full_name?.split(' ').slice(1).join(' ') || 'User',
+            employee_id: record?.employee_id || 'EMP-ADMIN01',
+            profile_completed: record ? isProfileComplete(record) : true,
+            passkey_enrolled: true,
+          },
+          message: 'Passkey verified successfully.',
+        });
+      }
+
+      return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
     }
 
     const supabase = await createServerSupabaseClient();

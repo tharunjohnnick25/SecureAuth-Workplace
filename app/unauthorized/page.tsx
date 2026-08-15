@@ -1,29 +1,32 @@
 'use client';
 
 import Link from 'next/link';
-import { ShieldAlert, Home } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
+import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { useLanguage } from "@/context/LanguageContext";
 
 export default function UnauthorizedPage() {
-    const { t } = useLanguage();
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-          <ShieldAlert className="w-10 h-10 text-destructive" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a16]">
+      <Card className="w-full max-w-md p-8 flex flex-col items-center text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-red-500" />
+        
+        <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/20">
+          <ShieldAlert className="w-10 h-10 text-red-500" />
         </div>
-        <h1 className="text-3xl font-bold">{'Unauthorized acc'}</h1>
-        <p className="text-muted-foreground">
-          {'Youdonothavethe'}</p>
-        <div className="pt-6">
-          <Link href="/dashboard">
-            <Button className="w-full">
-              <Home className="w-4 h-4 mr-2" />
-              {'Returnto dashboa'}</Button>
-          </Link>
-        </div>
-      </div>
+        
+        <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+        <p className="text-gray-400 text-sm mb-8">
+          You do not have the required permissions to access this resource. 
+          If you believe this is an error, please contact your system administrator.
+        </p>
+        
+        <Link href="/dashboard" className="w-full">
+          <Button className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10">
+            Return to Dashboard
+          </Button>
+        </Link>
+      </Card>
     </div>
   );
 }

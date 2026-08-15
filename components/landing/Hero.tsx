@@ -53,7 +53,7 @@ const Hero = () => {
             className="flex flex-col sm:flex-row items-center gap-4 mb-16"
           >
             <Link 
-              href="/signup" 
+              href="/login" 
               className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center gap-2"
             >
               {'Start free trial'}<ArrowRight className="w-5 h-5" />

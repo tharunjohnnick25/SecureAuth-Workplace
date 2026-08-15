@@ -51,6 +51,8 @@ export function DeviceManagement() {
     const { t } = useLanguage();
   const { data: dbDevices } = useRealtimeData('devices');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterOs, setFilterOs] = useState('all');
 
   const devices = useMemo(() => {
     if (!dbDevices || dbDevices.length === 0) return initialDevices;
@@ -72,11 +74,14 @@ export function DeviceManagement() {
 
   const filteredDevices = useMemo(() => {
     return devices.filter(
-      (d) =>
-        d.deviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.os.toLowerCase().includes(searchQuery.toLowerCase())
+      (d) => {
+        const matchesSearch = d.deviceName.toLowerCase().includes(searchQuery.toLowerCase()) || d.os.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = filterStatus === 'all' || (filterStatus === 'trusted' ? d.isTrusted : !d.isTrusted);
+        const matchesOs = filterOs === 'all' || d.os.toLowerCase().includes(filterOs.toLowerCase());
+        return matchesSearch && matchesStatus && matchesOs;
+      }
     );
-  }, [devices, searchQuery]);
+  }, [devices, searchQuery, filterStatus, filterOs]);
 
   const toggleTrust = async (id: string) => {
     const device = devices.find((item) => item.id === id);
@@ -172,8 +177,44 @@ export function DeviceManagement() {
 
           {/* Device Fleet List */}
           <div className="space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-              <Shield className="w-5 h-5 text-blue-400" /> {'Device fleet'}</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-400" /> {'Device fleet'}
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input 
+                    type="text" 
+                    placeholder="Search devices..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm outline-none focus:border-blue-500/50 w-64"
+                  />
+                </div>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="bg-transparent border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500/50"
+                >
+                  <option className="bg-[#0f172a]" value="all">All Statuses</option>
+                  <option className="bg-[#0f172a]" value="trusted">Trusted</option>
+                  <option className="bg-[#0f172a]" value="unverified">Unverified</option>
+                </select>
+                <select
+                  value={filterOs}
+                  onChange={(e) => setFilterOs(e.target.value)}
+                  className="bg-transparent border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500/50"
+                >
+                  <option className="bg-[#0f172a]" value="all">All OS</option>
+                  <option className="bg-[#0f172a]" value="macos">macOS</option>
+                  <option className="bg-[#0f172a]" value="windows">Windows</option>
+                  <option className="bg-[#0f172a]" value="linux">Linux</option>
+                  <option className="bg-[#0f172a]" value="ios">iOS</option>
+                  <option className="bg-[#0f172a]" value="android">Android</option>
+                </select>
+              </div>
+            </div>
             
             <AnimatePresence>
               {filteredDevices.map((device, i) => (

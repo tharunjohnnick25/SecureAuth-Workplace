@@ -222,11 +222,6 @@ export function MultiStepLogin() {
                     {isLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Initialize Session'}
                   </Button>
                </form>
-
-               <div className="mt-8 text-center">
-                  <span className="text-xs text-gray-500">{'Unrecognizeduse'}</span>
-                  <button onClick={() => router.push('/signup')} className="ml-2 text-xs font-bold text-blue-400 hover:underline">{'Enroll now'}</button>
-               </div>
             </motion.div>
           )}
 

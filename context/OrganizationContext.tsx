@@ -10,7 +10,6 @@ export interface Organization {
   name: string;
   domain: string;
   created_at: string;
-  subscription_id?: string | null;
 }
 
 export interface SecurityPolicy {

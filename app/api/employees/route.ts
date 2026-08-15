@@ -2,6 +2,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { MockEmployees, isMockMode } from '@/lib/mock-employees';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { MockDB } from '@/lib/mock-db';
+
 export async function GET(req: NextRequest) {
   try {
     if (isMockMode()) {
@@ -14,6 +16,7 @@ export async function GET(req: NextRequest) {
       const domain = searchParams.get('domain') || '';
       const page = parseInt(searchParams.get('page') || '1');
       const limit = parseInt(searchParams.get('limit') || '50');
+      const managerId = searchParams.get('manager_id') || '';
 
       let data = MockEmployees.getAll();
       if (search) {
@@ -26,6 +29,7 @@ export async function GET(req: NextRequest) {
       if (department) data = data.filter(e => e.department === department);
       if (status) data = data.filter(e => e.status === status);
       if (domain) data = data.filter(e => e.email.toLowerCase().endsWith(`@${domain.toLowerCase()}`));
+      if (managerId) data = data.filter(e => e.manager_id === managerId);
 
       data.sort((a, b) => {
         const av = String(a[sortBy] ?? '');
@@ -35,10 +39,13 @@ export async function GET(req: NextRequest) {
 
       const total = data.length;
       const from = (page - 1) * limit;
-      const pageData = data.slice(from, from + limit).map(e => ({
-        ...e,
-        subscription: e.subscription || 'Free',
-      }));
+      const pageData = data.slice(from, from + limit).map(e => {
+        const dbEmp = MockDB.employees.find(x => x.id === e.id);
+        return { 
+          ...e,
+          risk_score: dbEmp?.security_info?.risk_score || 0
+        };
+      });
 
       return NextResponse.json({ data: pageData, total, success: true });
     }
@@ -110,6 +117,7 @@ export async function POST(req: NextRequest) {
         ...body,
         status: body.status || 'Active',
         employment_type: body.employment_type || 'Full-time',
+        password: body.password || 'Welcome@123',
       });
       return NextResponse.json({ data: record, success: true }, { status: 201 });
     }

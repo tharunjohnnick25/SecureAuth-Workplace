@@ -180,10 +180,16 @@ export default function EmployeeProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">{'Loadingemployee'}</p>
+      <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30">
+        <Sidebar />
+        <div className="lg:ml-64 transition-all duration-300 min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">Loading employee profile...</p>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -191,12 +197,18 @@ export default function EmployeeProfilePage() {
 
   if (!employee) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-          <p className="text-white font-semibold mb-1">{'Employee not foun'}</p>
-          <p className="text-gray-400 text-sm mb-4">{'Therequestedemp'}</p>
-          <Button onClick={() => router.push('/employees')}>{'Backto directory'}</Button>
+      <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30">
+        <Sidebar />
+        <div className="lg:ml-64 transition-all duration-300 min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+              <p className="text-white font-semibold mb-1">Employee not found</p>
+              <p className="text-gray-400 text-sm mb-4">The requested employee could not be located.</p>
+              <Button onClick={() => router.push('/employees')}>Back to directory</Button>
+            </div>
+          </main>
         </div>
       </div>
     );

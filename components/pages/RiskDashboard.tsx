@@ -38,18 +38,18 @@ import { useLanguage } from "@/context/LanguageContext";
 
 // Standard threat taxonomy vectors
 const defaultThreatRadar = [
-  { subject: 'Brute Force', A: 45, fullMark: 100 },
-  { subject: 'Impossible Travel', A: 75, fullMark: 100 },
-  { subject: 'Credential Stuffing', A: 30, fullMark: 100 },
-  { subject: 'Session Hijack', A: 10, fullMark: 100 },
-  { subject: 'OS Mismatch', A: 20, fullMark: 100 },
-  { subject: 'Behavior Drift', A: 35, fullMark: 100 },
+  { subject: 'Brute Force', A: 0, fullMark: 100 },
+  { subject: 'Impossible Travel', A: 0, fullMark: 100 },
+  { subject: 'Credential Stuffing', A: 0, fullMark: 100 },
+  { subject: 'Session Hijack', A: 0, fullMark: 100 },
+  { subject: 'OS Mismatch', A: 0, fullMark: 100 },
+  { subject: 'Behavior Drift', A: 0, fullMark: 100 },
 ];
 
 const defaultDeviceDistribution = [
-  { name: 'Trusted', value: 85, color: '#3b82f6' },
-  { name: 'Untrusted', value: 10, color: '#f43f5e' },
-  { name: 'Unknown', value: 5, color: '#a855f7' },
+  { name: 'Trusted', value: 0, color: '#3b82f6' },
+  { name: 'Untrusted', value: 0, color: '#f43f5e' },
+  { name: 'Unknown', value: 0, color: '#a855f7' },
 ];
 
 interface DashboardData {
@@ -63,7 +63,7 @@ interface DashboardData {
   recentAnomalies: Array<{ id: string; type: string; severity: string; userEmail: string; time: string }>;
 }
 
-export function RiskDashboard() {
+export function RiskDashboard({ hideLayout }: { hideLayout?: boolean }) {
     const { t } = useLanguage();
   const [isLive, setIsLive] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -95,38 +95,27 @@ export function RiskDashboard() {
 
   const stats = data || {
     totalThreatsDetected: 0,
-    averageRiskScore: 12,
+    averageRiskScore: 0,
     criticalAnomaliesCount: 0,
     highRiskUsersCount: 0,
-    compromiseProbabilityAvg: 1.5,
-    threatTrends: [
-      { date: 'Mon', risk: 10, threats: 1 },
-      { date: 'Tue', risk: 15, threats: 2 },
-      { date: 'Wed', risk: 12, threats: 0 },
-      { date: 'Thu', risk: 18, threats: 3 },
-      { date: 'Fri', risk: 14, threats: 1 },
-    ],
+    compromiseProbabilityAvg: 0,
+    threatTrends: [],
     highRiskUsers: [],
     recentAnomalies: []
   };
 
-  return (
-    <div className="min-h-screen bg-[#020617] text-white overflow-y-auto">
-      <Sidebar />
-      <div className="lg:ml-64 transition-all duration-300">
-        <Navbar />
-        
-        <main className="pt-24 p-4 sm:p-6 lg:p-8">
-          {/* Header */}
+  const content = (
+    <div className="w-full space-y-8">
+      {/* Header */}
           <div className="flex items-center justify-between mb-10">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
                   <ShieldAlert className="text-blue-400 w-6 h-6" />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight">{'Airisk monitorin'}</h1>
+                <h1 className="text-3xl font-bold tracking-tight">AI Risk Monitoring</h1>
               </div>
-              <p className="text-gray-400">{'Deepneuralbehav'}</p>
+              <p className="text-gray-400">Deep neural behavioral analysis</p>
             </div>
             
             <div className="flex items-center gap-4">
@@ -156,7 +145,7 @@ export function RiskDashboard() {
           {loading && !data ? (
             <div className="flex flex-col items-center justify-center py-40">
               <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
-              <p className="text-sm text-gray-400">{'Compilingmachin'}</p>
+              <p className="text-sm text-gray-400">Compiling machine learning insights...</p>
             </div>
           ) : (
             <>
@@ -169,9 +158,9 @@ export function RiskDashboard() {
                         <div className="p-2 bg-blue-500/10 rounded-lg">
                           <Zap className="text-blue-400 w-5 h-5" />
                         </div>
-                        <span className="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-1 rounded">{'Healthy'}</span>
+                        <span className="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-1 rounded">Healthy</span>
                       </div>
-                      <p className="text-sm text-gray-400 font-medium">{'Avg system risk'}</p>
+                      <p className="text-sm text-gray-400 font-medium">Avg system risk</p>
                       <h3 className="text-3xl font-bold text-white mt-1">
                         {stats.averageRiskScore}
                         <span className="text-sm font-medium text-gray-500">/100</span>
@@ -194,9 +183,9 @@ export function RiskDashboard() {
                         <div className="p-2 bg-purple-500/10 rounded-lg">
                           <Fingerprint className="text-purple-400 w-5 h-5" />
                         </div>
-                        <span className="text-[10px] font-bold text-purple-400 bg-purple-400/10 px-2 py-1 rounded">{'Stable'}</span>
+                        <span className="text-[10px] font-bold text-purple-400 bg-purple-400/10 px-2 py-1 rounded">Stable</span>
                       </div>
-                      <p className="text-sm text-gray-400 font-medium">{'Bayesian comprom'}</p>
+                      <p className="text-sm text-gray-400 font-medium">Bayesian compromise probability</p>
                       <h3 className="text-3xl font-bold text-white mt-1">
                         {stats.compromiseProbabilityAvg}%
                       </h3>
@@ -222,15 +211,15 @@ export function RiskDashboard() {
                           <AlertTriangle className="text-red-400 w-5 h-5" />
                         </div>
                         <span className="text-[10px] font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded">
-                          {stats.criticalAnomaliesCount} {'Critical'}</span>
+                          {stats.criticalAnomaliesCount} Critical</span>
                       </div>
-                      <p className="text-sm text-gray-400 font-medium">{'Active threat ano'}</p>
+                      <p className="text-sm text-gray-400 font-medium">Active threat anomalies</p>
                       <h3 className="text-3xl font-bold text-white mt-1">
                         {stats.totalThreatsDetected}
                       </h3>
                       <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
                         <TrendingUp className="w-3 h-3 text-red-400" />
-                        {'Surveillance led'}</p>
+                        Surveillance led</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -242,14 +231,14 @@ export function RiskDashboard() {
                         <div className="p-2 bg-green-500/10 rounded-lg">
                           <ShieldCheck className="text-green-400 w-5 h-5" />
                         </div>
-                        <span className="text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded">{'Healthy'}</span>
+                        <span className="text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded">Healthy</span>
                       </div>
-                      <p className="text-sm text-gray-400 font-medium">{'High risk identit'}</p>
+                      <p className="text-sm text-gray-400 font-medium">High risk identities</p>
                       <h3 className="text-3xl font-bold text-white mt-1">
                         {stats.highRiskUsersCount}
                       </h3>
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-[10px] text-gray-500">{'Adaptivestepupe'}</span>
+                        <span className="text-[10px] text-gray-500">Adaptive step-up enabled</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -262,17 +251,17 @@ export function RiskDashboard() {
                 <Card className="lg:col-span-2 glass-panel p-6">
                   <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h3 className="text-xl font-bold">{'Authentication r'}</h3>
-                      <p className="text-sm text-gray-400">{'Correlatedrealt'}</p>
+                      <h3 className="text-xl font-bold">Authentication risks</h3>
+                      <p className="text-sm text-gray-400">Correlated realtime risk signals</p>
                     </div>
                     <div className="flex gap-4">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <span className="text-xs text-gray-400">{'Total anomalies'}</span>
+                        <span className="text-xs text-gray-400">Total anomalies</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                        <span className="text-xs text-gray-400">{'Risk score'}</span>
+                        <span className="text-xs text-gray-400">Risk score</span>
                       </div>
                     </div>
                   </div>
@@ -305,8 +294,8 @@ export function RiskDashboard() {
 
                 {/* Threat Radar */}
                 <Card className="glass-panel p-6">
-                  <h3 className="text-xl font-bold mb-2">{'Threat intellige'}</h3>
-                  <p className="text-sm text-gray-400 mb-8">{'Attackvectordis'}</p>
+                  <h3 className="text-xl font-bold mb-2">Threat intelligence</h3>
+                  <p className="text-sm text-gray-400 mb-8">Attack vector distribution</p>
                   <div className="h-[350px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart cx="50%" cy="50%" outerRadius="80%" data={defaultThreatRadar}>
@@ -324,13 +313,13 @@ export function RiskDashboard() {
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-red-500/5 rounded-lg border border-red-500/10">
+                     <div className="p-3 bg-red-500/5 rounded-lg border border-red-500/10">
                        <div className="text-[10px] text-red-400 font-bold uppercase tracking-wider">{'Top vector'}</div>
-                       <div className="text-sm font-bold text-white mt-1">{'Impossible trave'}</div>
+                       <div className="text-sm font-bold text-white mt-1">{'None'}</div>
                     </div>
                     <div className="p-3 bg-blue-500/5 rounded-lg border border-blue-500/10">
                        <div className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">{'Detection rate'}</div>
-                       <div className="text-sm font-bold text-white mt-1">99.8%</div>
+                       <div className="text-sm font-bold text-white mt-1">0%</div>
                     </div>
                   </div>
                 </Card>
@@ -342,7 +331,7 @@ export function RiskDashboard() {
                 <div className="lg:col-span-1 space-y-6">
                    <Card className="glass-panel p-6">
                       <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                        <Smartphone className="w-4 h-4 text-blue-400" /> {'Device integrity'}</h4>
+                        <Smartphone className="w-4 h-4 text-blue-400" /> Device integrity</h4>
                       <div className="h-[200px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
@@ -378,18 +367,18 @@ export function RiskDashboard() {
                       <div className="absolute top-0 right-0 p-4">
                         <Keyboard className="w-12 h-12 text-purple-500/10 group-hover:text-purple-500/20 transition-colors" />
                       </div>
-                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">{'Typing biometric'}</h4>
+                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Typing biometrics</h4>
                       <div className="flex items-center gap-4 mb-4">
                         <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center">
                            <Fingerprint className="text-purple-400 w-6 h-6" />
                         </div>
                         <div>
-                          <div className="text-2xl font-bold">98.2%</div>
+                          <div className="text-2xl font-bold">0%</div>
                           <div className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">{'Confidence score'}</div>
                         </div>
                       </div>
                       <div className="flex gap-0.5 h-12 items-end">
-                        {[40, 70, 45, 90, 65, 30, 80, 55, 95, 40].map((h, i) => (
+                        {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((h, i) => (
                           <motion.div 
                             key={i} 
                             initial={{ height: 0 }}
@@ -406,8 +395,8 @@ export function RiskDashboard() {
                 <Card className="lg:col-span-3 glass-panel p-6 h-fit">
                   <div className="flex items-center justify-between mb-8">
                      <h3 className="text-xl font-bold flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-blue-400" /> {'Neural security s'}</h3>
-                     <div className="text-xs text-gray-500 font-mono">{t('ENCRYPTEDFEEDV4_1120')}</div>
+                        <Activity className="w-5 h-5 text-blue-400" /> Neural security stream</h3>
+                     <div className="text-xs text-gray-500 font-mono">ENCRYPTED FEED V4.1120</div>
                   </div>
                   
                   <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
@@ -448,7 +437,7 @@ export function RiskDashboard() {
                     ) : (
                       <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                         <HistoryIcon className="w-12 h-12 mb-4 opacity-20" />
-                        <p className="text-sm">{'Nounresolvedano'}</p>
+                        <p className="text-sm">No unresolved anomalies</p>
                       </div>
                     )}
                   </div>
@@ -460,17 +449,31 @@ export function RiskDashboard() {
                       {isLive ? (
                         <>
                           <HistoryIcon className="w-4 h-4" />
-                          {'Historical archi'}</>
+                          Historical archive</>
                       ) : (
                         <>
                           <Zap className="w-4 h-4 text-blue-400" />
-                          {'Resume live surve'}</>
+                          Resume live surveillance</>
                       )}
                   </button>
                 </Card>
               </div>
             </>
           )}
+    </div>
+  );
+
+  if (hideLayout) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-white overflow-y-auto">
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300">
+        <Navbar />
+        <main className="pt-24 p-4 sm:p-6 lg:p-8">
+          {content}
         </main>
       </div>
     </div>

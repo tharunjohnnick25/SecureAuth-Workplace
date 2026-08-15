@@ -76,8 +76,8 @@
   }
 
   /* Prevent overlapping fixed Navbar with page content / titles */
-  main.pt-24 {
-    padding-top: 7.5rem !important; /* Increased from 6rem (pt-24) to 7.5rem to give beautiful breathing room below the fixed 64px Navbar */
+  main[class*="pt-"] {
+    padding-top: 7.5rem !important; /* Increased to give beautiful breathing room below the fixed 64px Navbar */
   }
 
   /* Smooth touch scrolling on iOS */

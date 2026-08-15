@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 
 export interface TypingPattern {
   key: string;
@@ -45,12 +45,27 @@ export function useTypingBehavior() {
     lastKeyUpTime.current = null;
   };
 
+  const averageDwellTime = useMemo(() => {
+    if (patterns.length === 0) return 0;
+    const sum = patterns.reduce((acc, curr) => acc + curr.dwellTime, 0);
+    return sum / patterns.length;
+  }, [patterns]);
+
+  const averageFlightTime = useMemo(() => {
+    if (patterns.length === 0) return 0;
+    const sum = patterns.reduce((acc, curr) => acc + curr.flightTime, 0);
+    return sum / patterns.length;
+  }, [patterns]);
+
   return { 
     patterns, 
     handleKeyDown, 
     handleKeyUp, 
     resetMetrics,
+    averageDwellTime,
+    averageFlightTime,
     // Add compatibility with old names if needed, but patterns is cleaner
     metrics: patterns 
   };
 }
+

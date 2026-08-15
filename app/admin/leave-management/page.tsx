@@ -11,6 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Sidebar } from '@/components/Sidebar';
+import { Navbar } from '@/components/Navbar';
+
 
 type LeaveRequest = {
   id: string;
@@ -19,7 +22,7 @@ type LeaveRequest = {
   start_date: string;
   end_date: string;
   total_days: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INFO_REQUESTED';
+  status: string;
   reason: string;
   admin_remarks: string | null;
   created_at: string;
@@ -105,20 +108,33 @@ export default function AdminLeaveManagementPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'approved':
         return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"><CheckCircle2 className="w-3 h-3 mr-1" /> Approved</Badge>;
-      case 'REJECTED':
+      case 'rejected':
         return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
-      case 'INFO_REQUESTED':
+      case 'info_requested':
         return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20"><AlertCircle className="w-3 h-3 mr-1" /> Info Requested</Badge>;
+      case 'manager approved':
+        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><Clock className="w-3 h-3 mr-1" /> Manager Approved</Badge>;
       default:
         return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
     }
   };
 
+  const isActionable = (status: string) => {
+    const s = (status || '').toLowerCase();
+    return s === 'pending' || s === 'manager approved';
+  };
+
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#020617] text-white">
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300">
+        <Navbar />
+        <main className="pt-24 p-4 sm:p-6 lg:p-8">
+          <div className="p-8 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Leave Management</h1>
@@ -182,13 +198,13 @@ export default function AdminLeaveManagementPage() {
                         <div className="text-slate-300">
                           {format(new Date(req.start_date), 'MMM d')} - {format(new Date(req.end_date), 'MMM d, yyyy')}
                         </div>
-                        <div className="text-xs font-medium text-slate-500 mt-1">{req.total_days} day(s)</div>
+                        <div className="text-xs font-medium text-slate-500 mt-1">{req.total_days ?? '—'} day(s)</div>
                       </td>
                       <td className="px-6 py-4">
                         {getStatusBadge(req.status)}
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
-                        {req.status === 'PENDING' ? (
+                        {isActionable(req.status) ? (
                           <>
                             <Button size="sm" onClick={() => openActionDialog(req, 'APPROVED')} className="bg-emerald-600 hover:bg-emerald-700 text-white">Approve</Button>
                             <Button size="sm" variant="destructive" onClick={() => openActionDialog(req, 'REJECTED')}>Reject</Button>
@@ -242,7 +258,9 @@ export default function AdminLeaveManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
+import { isMockMode } from '@/lib/mock-mode';
+import { PasskeyService } from '@/lib/services/passkeyService';
 
 const rpName = 'SecureAuth Workplace';
 const rpID = process.env.NEXT_PUBLIC_RP_ID || process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost';
@@ -8,6 +10,35 @@ const origin = process.env.NEXT_PUBLIC_SITE_URL || `http://${rpID}:3000`;
 
 export async function GET(req: NextRequest) {
   try {
+    if (isMockMode()) {
+      const email = req.nextUrl.searchParams.get('email') || 'admin@test';
+      const userKey = String(email).toLowerCase();
+      const existingPasskeys = PasskeyService.listPasskeys(userKey);
+
+      const options = await generateRegistrationOptions({
+        rpName,
+        rpID,
+        userID: new TextEncoder().encode(userKey),
+        userName: userKey,
+        userDisplayName: userKey,
+        attestationType: 'none',
+        excludeCredentials: existingPasskeys.map((pk) => ({
+          id: pk.credential_id,
+          type: 'public-key' as const,
+          ...(pk.transports && pk.transports.length
+            ? { transports: pk.transports as AuthenticatorTransport[] }
+            : {}),
+        })),
+        authenticatorSelection: {
+          residentKey: 'required',
+          userVerification: 'preferred',
+        },
+      });
+
+      PasskeyService.saveChallenge(userKey, 'registration', options.challenge);
+      return NextResponse.json(options);
+    }
+
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 

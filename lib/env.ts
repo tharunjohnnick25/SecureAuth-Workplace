@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  RAZORPAY_KEY_ID: z.string().optional(),
-  RAZORPAY_KEY_SECRET: z.string().optional(),
-  NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().default('https://placeholder.supabase.co'),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).default('placeholder-key'),
@@ -15,9 +12,6 @@ const envSchema = z.object({
 
 function getEnv() {
   const result = envSchema.safeParse({
-    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
-    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -32,9 +26,6 @@ function getEnv() {
   }
 
   return result.data || {
-    RAZORPAY_KEY_ID: undefined,
-    RAZORPAY_KEY_SECRET: undefined,
-    NEXT_PUBLIC_RAZORPAY_KEY_ID: undefined,
     NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
     NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-key',

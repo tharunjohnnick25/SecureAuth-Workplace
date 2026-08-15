@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Play, Terminal, Database, AlertCircle, CheckCircle2, Loader2, Table2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Sidebar } from '@/components/Sidebar';
+import { Navbar } from '@/components/Navbar';
+
 
 export default function SQLEditorPage() {
   const [query, setQuery] = useState('SELECT * FROM users LIMIT 10;');
@@ -81,7 +84,12 @@ export default function SQLEditorPage() {
   const columns = getColumns();
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen bg-[#020617] text-white">
+      <Sidebar />
+      <div className="lg:ml-64 transition-all duration-300">
+        <Navbar />
+        <main className="pt-24 p-4 sm:p-6 lg:p-8">
+          <div className="p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
@@ -203,6 +211,9 @@ export default function SQLEditorPage() {
           </div>
         </Card>
       )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

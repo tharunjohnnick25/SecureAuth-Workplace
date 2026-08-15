@@ -45,7 +45,7 @@ def gen_selenium():
         ("SEL-LAND","Landing Page",[
             ["Landing page loads with title SecureAuth AI","Browser opened to BASE_URL","Navigate to /, check title, verify hero section","BASE_URL","Title contains SecureAuth AI, hero visible"],
             ["Nav bar shows Home, Features, Pricing, Login, Sign Up","Landing page loaded","Locate nav, get link texts, verify all present","Menu items array","5 nav links visible and clickable"],
-            ["Get Started CTA navigates to /signup","Landing page loaded","Click CTA, wait for route, verify URL","CTA click","Redirected to /signup"],
+            ["Get Started CTA navigates to /login","Landing page loaded","Click CTA, wait for route, verify URL","CTA click","Redirected to /login"],
             ["Features section renders 6 cards with icons","Features section visible","Scroll to features, count cards, check icon+title","Feature cards","6 cards with icon, title, description"],
             ["Pricing shows 3 tiers: Free, Pro, Enterprise","Pricing section visible","Count cards, verify tier names and prices","Pricing section","3 tiers with prices and feature lists"],
             ["Footer has links, social icons, copyright","Landing page loaded","Scroll to footer, check links and copyright","Footer element","Footer with all expected links"],
@@ -87,7 +87,7 @@ def gen_selenium():
             ["Empty email shows required error","At login page","Leave email empty, submit, check","No email","'Email is required'"],
             ["Empty password shows required error","At login page","Fill email, empty password, submit","No password","'Password is required'"],
             ["Forgot Password link navigates correctly","At login page","Click Forgot Password, verify URL","Forgot link","Navigated to /forgot-password"],
-            ["Sign Up link navigates to /signup","At login page","Click signup link, verify URL","Signup link","Navigated to /signup"],
+            ["Login page has no signup link","At login page","Check for signup/enroll link, verify absent","Signup link","No signup link present"],
             ["Password show/hide toggle works","At login page","Enter password, toggle eye icon","Visibility toggle","Password toggles visible/hidden"],
             ["Autocomplete attributes correct","At login page","Check autocomplete on email and password fields","HTML attributes","email: autocomplete=email, password: current-password"],
             ["Remember Me persists email","At login page","Check remember, login, logout, verify pre-filled","Remember checkbox","Email pre-filled on return"],

@@ -179,7 +179,12 @@ export default function ChatPage() {
     }
     setSearching(true);
     try {
-      const res = await fetch(`/api/employees?search=${encodeURIComponent(q.trim())}&limit=20`);
+      const domain = user?.email?.split('@')[1];
+      const url = domain 
+        ? `/api/employees?search=${encodeURIComponent(q.trim())}&limit=20&domain=${domain}`
+        : `/api/employees?search=${encodeURIComponent(q.trim())}&limit=20`;
+        
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         const mine = self?.employee_id || '';
@@ -243,11 +248,45 @@ export default function ChatPage() {
       <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1 p-6 lg:p-8 pt-24 overflow-x-hidden">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-1 tracking-tight flex items-center gap-3">
-              <MessageSquare className="w-8 h-8 text-blue-500" /> Chat with Colleagues
-            </h1>
-            <p className="text-gray-400">Search your company directory by employee ID and start a conversation.</p>
+          <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-1 tracking-tight flex items-center gap-3">
+                <MessageSquare className="w-8 h-8 text-blue-500" /> Chat with Colleagues
+              </h1>
+              <p className="text-gray-400">Search your company directory by employee ID and start a conversation.</p>
+            </div>
+            
+            {user?.role === 'MANAGER' && (
+              <Button 
+                onClick={async () => {
+                  if (!self || sending) return;
+                  setSending(true);
+                  try {
+                    const res = await fetch('/api/chat', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ self, create_department_group: true }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      await refreshConversations();
+                      setActiveConversationId(data.data.id);
+                      await refreshMessages(data.data.id);
+                    } else {
+                      toast.error(data.error || 'Failed to create group');
+                    }
+                  } catch {
+                    toast.error('Network error');
+                  }
+                  setSending(false);
+                }}
+                disabled={sending}
+                className="bg-blue-600 hover:bg-blue-500 flex items-center gap-2 px-4 py-2"
+              >
+                <Users className="w-4 h-4" />
+                Create Team Group
+              </Button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-220px)] min-h-[480px]">
@@ -345,19 +384,19 @@ export default function ChatPage() {
                           active ? 'bg-blue-600/20 border border-blue-600/30' : 'hover:bg-white/5 border border-transparent'
                         }`}
                       >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                          {other ? displayName(other).split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase() : '?'}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${c.is_group ? 'bg-gradient-to-br from-indigo-600 to-blue-600' : 'bg-gradient-to-br from-emerald-600 to-teal-600'}`}>
+                          {c.is_group ? <Users className="w-5 h-5 text-white" /> : (other ? displayName(other).split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase() : '?')}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-sm font-semibold truncate flex items-center gap-1">
-                              {other ? displayName(other) : 'Colleague'}
+                              {c.is_group ? c.group_name : (other ? displayName(other) : 'Colleague')}
                               {c.is_favorite && <span className="text-yellow-400 text-xs">★</span>}
                             </p>
                             <span className="text-[10px] text-gray-500 flex-shrink-0">{formatTime(c.last_message_at)}</span>
                           </div>
                           <p className="text-xs text-gray-400 truncate pr-6">
-                            {other && <span className="font-mono text-gray-500">{other.employee_id}</span>} · {c.last_message_preview || 'Say hello!'}
+                            {!c.is_group && other && <span className="font-mono text-gray-500">{other.employee_id}</span>} {!c.is_group && '·'} {c.last_message_preview || 'Say hello!'}
                           </p>
                           {(c.unread_count || 0) > 0 && (
                             <span className="absolute right-3 bottom-3 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
@@ -386,13 +425,15 @@ export default function ChatPage() {
               ) : (
                 <>
                   <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-xs font-bold">
-                      {otherParticipant ? displayName(otherParticipant).split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase() : '?'}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${activeConversation?.is_group ? 'bg-gradient-to-br from-indigo-600 to-blue-600' : 'bg-gradient-to-br from-emerald-600 to-teal-600'}`}>
+                      {activeConversation?.is_group ? <Users className="w-5 h-5 text-white" /> : (otherParticipant ? displayName(otherParticipant).split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase() : '?')}
                     </div>
                     <div>
-                      <p className="text-sm font-bold">{otherParticipant ? displayName(otherParticipant) : 'Colleague'}</p>
+                      <p className="text-sm font-bold">{activeConversation?.is_group ? activeConversation.group_name : (otherParticipant ? displayName(otherParticipant) : 'Colleague')}</p>
                       <p className="text-xs text-gray-400">
-                        {otherParticipant ? (
+                        {activeConversation?.is_group ? (
+                          `${activeConversation.participants.length} participants`
+                        ) : otherParticipant ? (
                           <>
                             <span className="font-mono">{otherParticipant.employee_id}</span> · {otherParticipant.role || 'Employee'}
                           </>

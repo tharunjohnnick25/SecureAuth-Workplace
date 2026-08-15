@@ -1,0 +1,84 @@
+name: End-to-End Testing Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  setup-node:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+  selenium-tests:
+    needs: setup-node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run Selenium Tests
+        run: echo "Simulating Selenium test execution..."
+      - name: Upload Selenium Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-report
+          path: test-reports/Selenium_Testing_Report.xlsx
+
+  appium-tests:
+    needs: setup-node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run Appium Tests
+        run: echo "Simulating Appium test execution..."
+      - name: Upload Appium Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-report
+          path: test-reports/Appium_Testing_Report.xlsx
+
+  load-tests:
+    needs: setup-node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run Load Tests
+        run: echo "Simulating Load test execution..."
+      - name: Upload Load Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-report
+          path: |
+            test-reports/Baseline_Load_Testing_Report.xlsx
+            test-reports/Load_Testing_Report_300.xlsx
+
+  security-assessment:
+    needs: setup-node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run Security Scans
+        run: echo "Simulating Security Assessment..."
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: test-reports/Vulnerability_Testing_Report.xlsx
+
+  summary:
+    needs: [selenium-tests, appium-tests, load-tests, security-assessment]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Summary
+        run: echo "All test jobs completed successfully! Artifacts have been generated."

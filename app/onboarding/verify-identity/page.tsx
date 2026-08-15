@@ -143,7 +143,7 @@ export default function VerifyIdentityPage() {
 
         </CardContent>
       </Card>
-      <style jsx>{`
+      <style>{`
         .scanner-overlay {
           animation: scan 2s linear infinite;
         }

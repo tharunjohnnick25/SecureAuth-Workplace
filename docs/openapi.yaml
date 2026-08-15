@@ -1,0 +1,185 @@
+openapi: 3.0.3
+info:
+  title: IAM Workspace RBAC API
+  description: Role-Based Access Control and User Management APIs
+  version: 1.0.0
+servers:
+  - url: https://api.workspace.internal/v1
+paths:
+  /api/v1/users:
+    get:
+      summary: Get all users
+      description: Retrieve a paginated, filterable list of users. Requires ADMIN or SUPER_ADMIN role.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [super_admin, admin, manager, employee]
+        - name: department
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paginated list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+  /api/v1/users/{id}:
+    patch:
+      summary: Update user role
+      description: Update a user's role, department, and manager. Requires ADMIN or SUPER_ADMIN role.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [super_admin, admin, manager, employee]
+                department:
+                  type: string
+                managerId:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Successfully updated
+    delete:
+      summary: Soft delete user
+      description: Marks a user as deleted. Requires SUPER_ADMIN role.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully deleted
+  /api/v1/invite:
+    post:
+      summary: Invite users
+      description: Sends magic link invites to an array of emails. Requires ADMIN or SUPER_ADMIN role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invites:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                      role:
+                        type: string
+                      department:
+                        type: string
+                      managerId:
+                        type: string
+      responses:
+        '200':
+          description: Invites processed successfully
+  /api/v1/audit/role-changes:
+    get:
+      summary: Get role change audit logs
+      description: Retrieve a paginated list of role change logs. Requires ADMIN or SUPER_ADMIN role.
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: changedBy
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Audit logs list
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [super_admin, admin, manager, employee]
+        department:
+          type: string
+        managerId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        lastLoginAt:
+          type: string
+          format: date-time

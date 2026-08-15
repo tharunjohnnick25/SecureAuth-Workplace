@@ -17,9 +17,23 @@ export interface User {
   company_domain?: string;
   company_country?: string;
   github_username?: string;
+  phone?: string;
+  department?: string;
+  designation?: string;
+  employment_type?: string;
+  date_of_joining?: string;
+  date_of_birth?: string;
+  gender?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  profile_completed?: boolean;
+  passkey_enrolled?: boolean;
+  profile_picture?: string;
+  risk_score?: number;
+  mfa_enabled?: boolean;
 }
 
-interface AuthState {
+export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   requiresBiometric: boolean;

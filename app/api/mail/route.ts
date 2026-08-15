@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { MockEmployees } from '@/lib/mock-employees';
 
 export async function GET(request: Request) {
   try {
@@ -24,8 +25,8 @@ export async function GET(request: Request) {
 
     // Populate sender and recipient info
     const populatedEmails = emails.map(email => {
-      const sender = MockDB.employees.find(e => e.id === email.sender_id);
-      const recipient = MockDB.employees.find(e => e.id === email.recipient_id);
+      const sender = MockEmployees.getAll().find(e => e.id === email.sender_id);
+      const recipient = MockEmployees.getAll().find(e => e.id === email.recipient_id);
       return {
         ...email,
         sender: sender ? { id: sender.id, name: sender.full_name, email: sender.email, avatar: sender.profile_picture } : null,
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const recipient = MockDB.employees.find(e => e.id === recipient_id);
+    const recipient = MockEmployees.getAll().find(e => e.id === recipient_id);
     if (!recipient) {
       return NextResponse.json({ error: 'Recipient not found' }, { status: 404 });
     }

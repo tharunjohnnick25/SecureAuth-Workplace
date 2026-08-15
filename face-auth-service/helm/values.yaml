@@ -1,0 +1,35 @@
+replicaCount: 2
+
+image:
+  repository: secureauth/face-auth-service
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+service:
+  type: ClusterIP
+  port: 8001
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+  hosts:
+    - host: face-auth.secureauth.local
+      paths:
+        - path: /api/v1/face
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4096Mi
+  requests:
+    cpu: 500m
+    memory: 1024Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75

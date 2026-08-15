@@ -7,8 +7,8 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Shield, CreditCard, Activity, Laptop, Eye, Check, AlertTriangle, ShieldCheck, Trash2, Camera, Loader2, FileText } from 'lucide-react';
-import { BillingSection } from '@/components/settings/BillingSection';
+import { User, Shield, Activity, Laptop, Eye, Check, AlertTriangle, ShieldCheck, Trash2, Camera, Loader2, FileText } from 'lucide-react';
+
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ import { useRealtimeData } from '@/hooks/useRealtimeData';
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'personal' | 'security' | 'subscription' | 'activity' | 'devices' | 'privacy'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'security' | 'activity' | 'devices' | 'privacy'>('personal');
   const [fetching, setFetching] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -168,7 +168,6 @@ export default function ProfilePage() {
   const menuItems = [
     { id: 'personal', label: 'Personal Information', icon: User },
     { id: 'security', label: 'Security Settings', icon: Shield },
-    { id: 'subscription', label: 'Subscription', icon: CreditCard },
     { id: 'activity', label: 'Activity Dashboard', icon: Activity },
     { id: 'devices', label: 'Connected Devices', icon: Laptop },
     { id: 'privacy', label: 'Privacy & Permissions', icon: Eye }
@@ -239,6 +238,9 @@ export default function ProfilePage() {
                               <div>
                                 <h3 className="text-lg font-semibold">{personalInfo.name}</h3>
                                 <p className="text-sm text-gray-400">{personalInfo.role} • {personalInfo.employeeId}</p>
+                                {user?.manager_name && (
+                                  <p className="text-xs text-blue-400 mt-1">Reports to: {user.manager_name}</p>
+                                )}
                               </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -363,13 +365,6 @@ export default function ProfilePage() {
                               </div>
                             )}
                           </div>
-                        </Card>
-                      )}
-
-                      {activeTab === 'subscription' && (
-                        <Card className="p-6 md:p-8 bg-black/40 backdrop-blur-xl border-white/10">
-                          <h3 className="text-xl font-bold mb-6 border-b border-white/10 pb-4">Subscription</h3>
-                          <BillingSection />
                         </Card>
                       )}
 

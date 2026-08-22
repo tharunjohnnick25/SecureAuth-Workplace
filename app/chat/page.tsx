@@ -5,9 +5,10 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { Search, Send, Loader2, MessageSquare, Users, GitBranch, Mic, MicOff } from 'lucide-react';
+import { Search, Send, Loader2, MessageSquare, Users, GitBranch, Mic, MicOff, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { toast } from 'sonner';
 
 interface ChatParticipant {
   id: string;
@@ -27,6 +28,8 @@ interface Conversation {
   is_favorite?: boolean;
   has_mention?: boolean;
   is_invite?: boolean;
+  is_group?: boolean;
+  group_name?: string;
 }
 
 interface ChatMessage {
@@ -90,8 +93,6 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [loadingConv, setLoadingConv] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
-  const [githubEvents, setGithubEvents] = useState<any[]>([]);
-  const [loadingGithub, setLoadingGithub] = useState(true);
 
   const { isListening, toggleVoiceInput } = useVoiceInput((text) => setDraft(prev => prev + (prev ? ' ' : '') + text));
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -154,21 +155,7 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    const fetchGithub = async () => {
-      try {
-        setLoadingGithub(true);
-        const res = await fetch('/api/github');
-        const data = await res.json();
-        if (data.success) setGithubEvents(data.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingGithub(false);
-      }
-    };
-    fetchGithub();
-  }, []);
+
 
   const handleSearch = async (q: string) => {
     setSearchQuery(q);
@@ -290,7 +277,7 @@ export default function ChatPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-220px)] min-h-[480px]">
-            <Card className="lg:col-span-1 bg-black/40 backdrop-blur-xl border-white/10 flex flex-col overflow-hidden p-0">
+            <Card className={`lg:col-span-1 bg-black/40 backdrop-blur-xl border-white/10 flex-col overflow-hidden p-0 ${activeConversation ? 'hidden lg:flex' : 'flex'}`}>
               <div className="p-4 border-b border-white/10 relative">
                 <div className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-xl px-3 py-2">
                   <Search className="w-4 h-4 text-gray-500" />
@@ -411,7 +398,7 @@ export default function ChatPage() {
               </div>
             </Card>
 
-            <Card className="lg:col-span-2 bg-black/40 backdrop-blur-xl border-white/10 flex flex-col overflow-hidden p-0">
+            <Card className={`lg:col-span-3 bg-black/40 backdrop-blur-xl border-white/10 flex-col overflow-hidden p-0 ${!activeConversation ? 'hidden lg:flex' : 'flex'}`}>
               {!activeConversation ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
                   <div className="w-16 h-16 rounded-2xl bg-blue-600/10 border border-blue-600/20 flex items-center justify-center mb-4">
@@ -425,6 +412,12 @@ export default function ChatPage() {
               ) : (
                 <>
                   <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
+                    <button 
+                      onClick={() => setActiveConversationId('')} 
+                      className="lg:hidden p-2 -ml-3 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${activeConversation?.is_group ? 'bg-gradient-to-br from-indigo-600 to-blue-600' : 'bg-gradient-to-br from-emerald-600 to-teal-600'}`}>
                       {activeConversation?.is_group ? <Users className="w-5 h-5 text-white" /> : (otherParticipant ? displayName(otherParticipant).split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase() : '?')}
                     </div>
@@ -514,36 +507,7 @@ export default function ChatPage() {
               )}
             </Card>
 
-            {/* GitHub Updates Sidebar */}
-            <Card className="lg:col-span-1 hidden lg:flex flex-col overflow-hidden h-full border-l border-white/5">
-              <div className="p-4 border-b border-white/5 flex items-center gap-2">
-                <GitBranch className="w-5 h-5 text-blue-400" />
-                <h2 className="text-lg font-bold text-white">GitHub Updates</h2>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {loadingGithub ? (
-                  <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>
-                ) : githubEvents.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500 text-sm">No recent GitHub activity found.</div>
-                ) : (
-                  githubEvents.map((ev, idx) => (
-                    <div key={idx} className="bg-white/5 rounded-xl p-3 flex gap-3 hover:bg-white/10 transition-colors">
-                      <img src={ev.avatar_url} alt="" className="w-8 h-8 rounded-full flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate text-white">
-                          {ev.employee}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                          {ev.type === 'PushEvent' ? 'Pushed code to ' : ev.type === 'PullRequestEvent' ? 'Opened a PR in ' : 'Activity in '}
-                          <a href={ev.repo_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{ev.repo}</a>
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1.5">{new Date(ev.created_at).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Card>
+
           </div>
         </main>
       </div>

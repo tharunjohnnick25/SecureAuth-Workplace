@@ -3,9 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
-import { isMockMode } from '@/lib/mock-mode';
-
-
 
 export function useRealtimeData<T>(
   table: string,
@@ -21,23 +18,6 @@ export function useRealtimeData<T>(
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      if (isMockMode()) {
-        try {
-          const res = await fetch(`/api/telemetry?table=${table}`);
-          if (res.ok) {
-            const { data: mockData } = await res.json();
-            if (mountedRef.current) {
-              setData(mockData || []);
-            }
-          } else {
-             if (mountedRef.current) setData([]);
-          }
-        } catch {
-          if (mountedRef.current) setData([]);
-        }
-        return;
-      }
-
       const supabase = supabaseRef.current;
       let query;
       if (queryBuilder) {
@@ -67,10 +47,6 @@ export function useRealtimeData<T>(
   useEffect(() => {
     mountedRef.current = true;
     fetchData();
-
-    if (isMockMode()) {
-      return;
-    }
 
     const supabase = supabaseRef.current;
     const channelId = Math.random().toString(36).substring(7);

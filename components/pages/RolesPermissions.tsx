@@ -102,26 +102,13 @@ export function RolesPermissions() {
         }
         setPermissionsMap(mapping);
       } else {
-        throw new Error('Database tables empty, initializing fallback.');
+        setRoles([]);
+        setPermissionsMap({});
       }
     } catch (err) {
-      // Graceful fallback to sandbox simulation
-      console.warn('Supabase RBAC tables not configured. Operating in Secure Sandbox Mode.');
-      setIsSandboxMode(true);
-      
-      // Load standard enterprise roles
-      const defaultRoles: CustomRole[] = [
-        { id: '1', name: 'Super Administrator', code: 'SUPER_ADMIN', description: 'Full access to all organizations, billing, and configurations', users_count: 1, editable: false },
-        { id: '2', name: 'Organization Owner', code: 'ORGANIZATION_OWNER', description: 'Full control over active organization settings and subscriptions', users_count: 2, editable: true },
-        { id: '3', name: 'Organization Admin', code: 'ORGANIZATION_ADMIN', description: 'Manage users, departments, and active directories in the tenant', users_count: 4, editable: true },
-        { id: '4', name: 'Security Analyst', code: 'SECURITY_ANALYST', description: 'Monitor incidents, view anomalies, and perform vulnerability scans', users_count: 5, editable: true },
-        { id: '5', name: 'HR Manager', code: 'HR_MANAGER', description: 'Access employee directory, manage schedules and attendance logs', users_count: 3, editable: true },
-        { id: '6', name: 'Team Manager', code: 'TEAM_MANAGER', description: 'Review and approve access requests for assigned department teams', users_count: 8, editable: true },
-        { id: '7', name: 'Employee', code: 'EMPLOYEE', description: 'Standard workplace access, register trusted devices, submit requests', users_count: 42, editable: false },
-        { id: '8', name: 'Guest User', code: 'GUEST_USER', description: 'Temporary read-only profile access', users_count: 1, editable: true },
-      ];
-      setRoles(defaultRoles);
-      setPermissionsMap(DEFAULT_ROLE_PERMISSIONS);
+      console.warn('Failed to fetch RBAC tables:', err);
+      setRoles([]);
+      setPermissionsMap({});
     } finally {
       setIsLoading(false);
     }
@@ -161,7 +148,6 @@ export function RolesPermissions() {
     }));
 
     if (isSandboxMode) {
-      toast.success(`Permission updated for ${activeRole.name} (Sandbox Mode)`);
       return;
     }
 
@@ -234,7 +220,6 @@ export function RolesPermissions() {
     setCloneSourceRole('');
 
     if (isSandboxMode) {
-      toast.success(`Role "${newRoleName}" successfully created in Sandbox!`);
       return;
     }
 
@@ -309,10 +294,6 @@ export function RolesPermissions() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-semibold mb-2">{'Roles permission'}</h1>
-                {isSandboxMode && (
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-warning/20 border border-warning/30 text-warning uppercase font-bold tracking-wider animate-pulse">
-                    {'Local sandbox mod'}</span>
-                )}
               </div>
               <p className="text-muted-foreground">
                 {'Configureroleba'}</p>

@@ -1,41 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
+import { actionLeave, fetchProfile, LeaveServiceError } from '@/lib/leave-service';
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
     const body = await req.json();
-    const { status } = body;
+    const { status, admin_remarks } = body;
 
-    if (!['Approved', 'Rejected', 'Manager Approved'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status', success: false }, { status: 400 });
+    const supabase = await createServerSupabaseClient();
+    const admin = await createAdminClient();
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const leaveIndex = MockDB.leave_requests.findIndex((l) => l.id === id);
-    if (leaveIndex === -1) {
-      return NextResponse.json({ error: 'Leave request not found', success: false }, { status: 404 });
+    const caller = await fetchProfile(admin, session.user.id);
+    if (!caller) {
+      return NextResponse.json({ success: false, error: 'User profile not found' }, { status: 404 });
     }
 
-    // Update status
-    MockDB.leave_requests[leaveIndex].status = status;
-    const leave = MockDB.leave_requests[leaveIndex];
+    const data = await actionLeave(admin, caller, { leave_id: id, status, admin_remarks }, req);
 
-    // Create notification
-    MockDB.notifications.push({
-      id: `notif-${Date.now()}`,
-      user_id: leave.user_id,
-      type: `LEAVE_${status.toUpperCase()}`,
-      title: `Leave Request ${status}`,
-      message: `Your leave request for ${leave.start_date} to ${leave.end_date} has been ${status.toLowerCase()}.`,
-      is_read: false,
-      action_url: '/leaves',
-      created_at: new Date().toISOString()
-    });
-
-    saveMockDB();
-
-    return NextResponse.json({ data: leave, success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to update leave request', success: false }, { status: 500 });
+    return NextResponse.json({ data, success: true });
+  } catch (err: unknown) {
+    if (err instanceof LeaveServiceError) {
+      return NextResponse.json({ success: false, error: err.message, code: err.code }, { status: err.status });
+    }
+    console.error('Leave update error:', err);
+    return NextResponse.json({ success: false, error: 'Failed to update leave request' }, { status: 500 });
   }
 }

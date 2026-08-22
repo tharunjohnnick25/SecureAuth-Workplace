@@ -14,7 +14,10 @@ CREATE TABLE IF NOT EXISTS public.departments (
 -- RLS Policies for departments
 ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view departments" ON public.departments;
 CREATE POLICY "Anyone can view departments" ON public.departments FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admins can manage departments" ON public.departments;
 CREATE POLICY "Admins can manage departments" ON public.departments FOR ALL USING (
     EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin', 'super_admin'))
 );

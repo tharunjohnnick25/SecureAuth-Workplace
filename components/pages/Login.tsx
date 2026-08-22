@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, Users, Building2, ScanFace } from 'lucide-react';
+import { Shield, Users, Building2 } from 'lucide-react';
 import { Card } from '@/components/Card';
 import { AdminLogin } from '@/components/auth/AdminLogin';
 import { EmployeeLogin } from '@/components/auth/EmployeeLogin';
@@ -63,7 +63,7 @@ export function Login() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-md relative z-10 p-8 border border-white/10 bg-[#0a0a16]/80 backdrop-blur-xl">
+      <Card className="w-full max-w-md relative z-10 p-4 md:p-8 border border-white/10 bg-[#0a0a16]/80 backdrop-blur-xl mx-4 md:mx-0">
         <div className="flex flex-col items-center mb-10">
           <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30">
             <img src="/logo.jpg" alt="SecureAuth Workplace Logo" className="w-full h-full object-cover" />
@@ -119,43 +119,7 @@ export function Login() {
             </div>
           </motion.button>
 
-          <div className="flex items-center gap-4 py-2">
-            <div className="flex-1 border-t border-white/10"></div>
-            <span className="text-xs text-slate-500 uppercase tracking-widest">{'Or'}</span>
-            <div className="flex-1 border-t border-white/10"></div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => window.location.href = '/login/passkey'}
-              className="w-full p-4 rounded-xl border border-blue-500/30 hover:border-blue-500/80 bg-blue-500/5 hover:bg-blue-500/10 transition-all flex flex-col items-center justify-center gap-2 group text-center"
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                <Shield className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white text-sm">Passkey</h3>
-                <p className="text-[10px] text-gray-400">Device biometrics</p>
-              </div>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => window.location.href = '/login/face'}
-              className="w-full p-4 rounded-xl border border-purple-500/30 hover:border-purple-500/80 bg-purple-500/5 hover:bg-purple-500/10 transition-all flex flex-col items-center justify-center gap-2 group text-center"
-            >
-              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-                <ScanFace className="w-5 h-5 text-purple-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white text-sm">Face Lock</h3>
-                <p className="text-[10px] text-gray-400">Facial recognition</p>
-              </div>
-            </motion.button>
-          </div>
         </div>
       </Card>
     </div>

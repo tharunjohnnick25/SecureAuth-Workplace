@@ -35,22 +35,21 @@ import { Navbar } from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { useLanguage } from "@/context/LanguageContext";
 
-// Mock data for threat intelligence
 const attackData = [
-  { time: '00:00', bruteForce: 45, stuffing: 20, vpn: 10 },
-  { time: '04:00', bruteForce: 30, stuffing: 15, vpn: 5 },
-  { time: '08:00', bruteForce: 85, stuffing: 40, vpn: 25 },
-  { time: '12:00', bruteForce: 120, stuffing: 65, vpn: 45 },
-  { time: '16:00', bruteForce: 95, stuffing: 50, vpn: 35 },
-  { time: '20:00', bruteForce: 60, stuffing: 30, vpn: 15 },
-  { time: '23:59', bruteForce: 40, stuffing: 25, vpn: 10 },
+  { time: '00:00', bruteForce: 0, stuffing: 0, vpn: 0 },
+  { time: '04:00', bruteForce: 0, stuffing: 0, vpn: 0 },
+  { time: '08:00', bruteForce: 0, stuffing: 0, vpn: 0 },
+  { time: '12:00', bruteForce: 0, stuffing: 0, vpn: 0 },
+  { time: '16:00', bruteForce: 0, stuffing: 0, vpn: 0 },
+  { time: '20:00', bruteForce: 0, stuffing: 0, vpn: 0 },
+  { time: '23:59', bruteForce: 0, stuffing: 0, vpn: 0 },
 ];
 
 const vectorDistribution = [
-  { name: 'Brute Force', value: 40, color: '#ef4444' },
-  { name: 'Credential Stuffing', value: 30, color: '#f59e0b' },
-  { name: 'VPN/Proxy', value: 20, color: '#3b82f6' },
-  { name: 'Impossible Travel', value: 10, color: '#8a2be2' },
+  { name: 'Brute Force', value: 0, color: '#ef4444' },
+  { name: 'Credential Stuffing', value: 0, color: '#f59e0b' },
+  { name: 'VPN/Proxy', value: 0, color: '#3b82f6' },
+  { name: 'Impossible Travel', value: 0, color: '#8a2be2' },
 ];
 
 
@@ -61,11 +60,7 @@ export function ThreatIntelligence() {
   const { data: dbThreats } = useRealtimeData('threat_logs');
 
   const threats = useMemo(() => {
-    let sourceThreats = [
-      { type: 'IMPOSSIBLE_TRAVEL', user: 'adm_201', risk: 'CRITICAL', origin: 'London, UK', time: '2m ago' },
-      { type: 'CREDENTIAL_STUFFING', user: 'unknown', risk: 'HIGH', origin: 'Mumbai, IN', time: '8m ago' },
-      { type: 'BRUTE_FORCE_BLOCK', user: 'usr_823', risk: 'HIGH', origin: 'Chennai, IN', time: '14m ago' },
-    ];
+    let sourceThreats: any[] = [];
     if (dbThreats && dbThreats.length > 0) {
       sourceThreats = dbThreats.map((t: any) => ({
         type: t.type,
@@ -113,10 +108,10 @@ export function ThreatIntelligence() {
           {/* Core Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[
-              { label: 'Attacks Blocked', value: '14,209', icon: ShieldCheck, color: 'text-green-400', bg: 'bg-green-500/10' },
-              { label: 'Active Threats', value: '42', icon: Skull, color: 'text-red-400', bg: 'bg-red-500/10' },
-              { label: 'Avg Risk Score', value: '72%', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-              { label: 'VPN Logins', value: '156', icon: Globe, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+              { label: 'Attacks Blocked', value: '0', icon: ShieldCheck, color: 'text-green-400', bg: 'bg-green-500/10' },
+              { label: 'Active Threats', value: dbThreats?.length?.toString() || '0', icon: Skull, color: 'text-red-400', bg: 'bg-red-500/10' },
+              { label: 'Avg Risk Score', value: '0%', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+              { label: 'VPN Logins', value: '0', icon: Globe, color: 'text-blue-400', bg: 'bg-blue-500/10' },
             ].map((stat, i) => (
               <Card key={i} className="glass-panel p-6">
                 <div className="flex justify-between items-start mb-4">

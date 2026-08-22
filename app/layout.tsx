@@ -5,7 +5,7 @@ import { LanguageProvider } from '@/context/LanguageContext';
 import AnimateLayout from '@/components/AnimateLayout';
 import { Toaster } from 'sonner';
 import { SessionTimeout } from '@/components/SessionTimeout';
-import CapacitorBridge from '@/components/CapacitorBridge';
+
 import AntiCopy from '@/components/AntiCopy';
 import GoogleTranslate from '@/components/GoogleTranslate';
 import './globals.css';
@@ -41,6 +41,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
 };
 
@@ -63,7 +64,7 @@ export default function RootLayout({
              }}>
         </div>
         
-        <CapacitorBridge />
+
         <AntiCopy />
         <GoogleTranslate />
         <main className="flex-1">

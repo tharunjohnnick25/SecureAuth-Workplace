@@ -24,27 +24,24 @@ async def calculate_risk_score(
     auth: str = Depends(verify_api_key)
 ):
     try:
-        # Mocking the User Context Profile for demonstration.
-        # In a real environment, this is fetched asynchronously from Redis.
-        # We simulate a baseline that is mostly normal for the user.
-        mock_profile = UserContextProfile(
-            user_id=login_request.user_id,
-            last_login_timestamp=datetime.utcnow(),
-            last_login_location=GPSCoordinates(latitude=37.7749, longitude=-122.4194), # SF
-            known_device_ids=[login_request.device_id], # Treat current device as known
-            typical_login_hour=9.0
-        )
-        
-        # Override the last login location if they provide one, just so it's not always impossible travel 
-        # unless they intentionally spoof it in the mock frontend payload.
-        # For simplicity in this demo, we'll set their baseline location to roughly their current location 
-        # to ensure it returns ALLOW by default, unless they trigger an override or network risk.
-        if login_request.location:
-            mock_profile.last_login_location = GPSCoordinates(
-                latitude=login_request.location.latitude + 0.01,
-                longitude=login_request.location.longitude + 0.01
+        if login_request.profile:
+            mock_profile = login_request.profile
+        else:
+            # Mocking the User Context Profile for demonstration fallback.
+            mock_profile = UserContextProfile(
+                user_id=login_request.user_id,
+                last_login_timestamp=datetime.utcnow(),
+                last_login_location=GPSCoordinates(latitude=37.7749, longitude=-122.4194),
+                known_device_ids=[login_request.device_id],
+                typical_login_hour=9.0
             )
-            mock_profile.last_login_timestamp = datetime(2026, 8, 15, 9, 0, 0) # Fixed past date
+            
+            if login_request.location:
+                mock_profile.last_login_location = GPSCoordinates(
+                    latitude=login_request.location.latitude + 0.01,
+                    longitude=login_request.location.longitude + 0.01
+                )
+                mock_profile.last_login_timestamp = datetime(2026, 8, 15, 9, 0, 0)
 
         # Execute Engine
         result = engine.evaluate(login_request, mock_profile)

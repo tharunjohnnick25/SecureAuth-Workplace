@@ -109,7 +109,7 @@ class ZeroTrustRiskEngine:
             # 3. MACHINE LEARNING: Isolation Forest Anomaly Detection
             ml_model = UserAnomalyModel(request.user_id)
             current_features = [s_time, s_loc, s_net, s_beh]
-            ml_severity = ml_model.predict_anomaly(current_features)
+            ml_severity, confidence, model_version = ml_model.predict_anomaly(current_features)
             
             # Blend Heuristics with ML
             # If ML has a model (severity != 0.0 generally, though it could be exactly 0), 
@@ -141,19 +141,41 @@ class ZeroTrustRiskEngine:
                 "ml_anomaly_severity": round(ml_severity, 2)
             }
             
+            # Map significant risk components to signals
+            if s_loc > 30.0: triggered_overrides.append("UNUSUAL_LOCATION")
+            if s_dev > 30.0: triggered_overrides.append("NEW_DEVICE")
+            if s_time > 30.0: triggered_overrides.append("UNUSUAL_LOGIN_TIME")
+            if ml_severity > 50.0: triggered_overrides.append("BEHAVIORAL_ANOMALY")
+            
             # 4. ACTION THRESHOLDS
             if final_score <= 30.0:
                 action = "ALLOW"
+                risk_level = "LOW"
             elif final_score <= 70.0:
                 action = "CHALLENGE"
+                risk_level = "MEDIUM"
             else:
                 action = "BLOCK"
+                risk_level = "HIGH"
                 
         execution_time_ms = (datetime.now() - start_time).total_seconds() * 1000.0
         
+        # If blocked via heuristic, we still need these variables
+        if 'risk_level' not in locals():
+            risk_level = "HIGH"
+        if 'ml_severity' not in locals():
+            ml_severity = 0.0
+            confidence = 0.0
+            model_version = "heuristic"
+        
         return RiskEvaluationOutput(
             user_id=request.user_id,
-            final_score=round(final_score, 2),
+            anomaly_score=round(ml_severity, 2),
+            ai_risk_score=round(final_score, 2),
+            confidence=round(confidence, 2),
+            risk_level=risk_level,
+            signals=triggered_overrides,
+            model_version=model_version,
             action=action,
             factors=factors,
             triggered_overrides=triggered_overrides,

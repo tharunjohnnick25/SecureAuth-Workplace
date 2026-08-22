@@ -24,8 +24,6 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-const SESSION_STORAGE_KEY = 'secureauth-session';
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -69,15 +67,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (initialSession) {
           setSession(initialSession);
-          try { localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(initialSession)); } catch {}
-
           if (initialSession.user && syncingRef.current !== initialSession.user.id) {
             syncingRef.current = initialSession.user.id;
             await syncUserWithProfile(initialSession.user);
           }
         } else {
           setSession(null);
-          try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
         }
       } catch (err) {
         log('error', 'AuthProvider.init', String(err));
@@ -93,14 +88,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(newSession);
 
         if (newSession) {
-          try { localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newSession)); } catch {}
-
           if (newSession.user && syncingRef.current !== newSession.user.id) {
             syncingRef.current = newSession.user.id;
             await syncUserWithProfile(newSession.user);
           }
         } else {
-          try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
           syncingRef.current = null;
           if (_event === 'SIGNED_OUT') {
             logout();
@@ -182,7 +174,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     syncingRef.current = null;
     logout();
-    try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
     router.push('/login');
   };
 

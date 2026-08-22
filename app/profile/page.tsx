@@ -220,9 +220,9 @@ export default function ProfilePage() {
                       {activeTab === 'personal' && (
                         <Card className="p-6 md:p-8 bg-black/40 backdrop-blur-xl border-white/10">
                           <h3 className="text-xl font-bold mb-6 border-b border-white/10 pb-4">Personal Information</h3>
-                          <form onSubmit={handleSavePersonalInfo} className="space-y-6">
+                          <div className="space-y-6">
                             <div className="flex items-center gap-6 mb-4">
-                              <div className="relative group">
+                              <div className="relative">
                                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
                                   {profile?.avatar_url ? (
                                     <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
@@ -230,10 +230,6 @@ export default function ProfilePage() {
                                     <User className="w-8 h-8 text-white" />
                                   )}
                                 </div>
-                                <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                                  {uploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
-                                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                                </label>
                               </div>
                               <div>
                                 <h3 className="text-lg font-semibold">{personalInfo.name}</h3>
@@ -246,7 +242,7 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
                                 <label className="text-sm font-semibold text-gray-300 mb-2 block">Full Name</label>
-                                <Input value={personalInfo.name} onChange={(e) => setPersonalInfo({...personalInfo, name: e.target.value})} className="bg-black/50 border-white/10" />
+                                <Input value={personalInfo.name} disabled className="bg-black/50 border-white/10 text-gray-500" />
                               </div>
                               <div>
                                 <label className="text-sm font-semibold text-gray-300 mb-2 block">Email Address</label>
@@ -254,17 +250,14 @@ export default function ProfilePage() {
                               </div>
                               <div>
                                 <label className="text-sm font-semibold text-gray-300 mb-2 block">Phone Number</label>
-                                <Input value={personalInfo.phone} onChange={(e) => setPersonalInfo({...personalInfo, phone: e.target.value})} className="bg-black/50 border-white/10" />
+                                <Input value={personalInfo.phone} disabled className="bg-black/50 border-white/10 text-gray-500" />
                               </div>
                               <div>
                                 <label className="text-sm font-semibold text-gray-300 mb-2 block">Employee ID</label>
                                 <Input value={personalInfo.employeeId} disabled className="bg-black/50 border-white/10 text-gray-500" />
                               </div>
                             </div>
-                            <div className="flex justify-end pt-4">
-                              <Button type="submit" className="bg-blue-600 hover:bg-blue-500 font-bold px-8">Save Info</Button>
-                            </div>
-                          </form>
+                          </div>
                         </Card>
                       )}
 

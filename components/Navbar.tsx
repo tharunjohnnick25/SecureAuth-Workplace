@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalSearch } from './SearchCommand';
 import { NotificationCenter } from './notifications/NotificationCenter';
+import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { SidebarContent } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { LanguageSelector } from './LanguageSelector';
@@ -21,7 +22,25 @@ export function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const router = useRouter();
-  const unreadCount = 3;
+
+  const { data: notifications, loading: notifLoading } = useRealtimeData<any>(
+    'notifications',
+    (query) =>
+      user?.id
+        ? query.select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20)
+        : query.select('*').limit(0),
+    [user?.id]
+  );
+
+  const displayNotifs = notifications && notifications.length > 0 ? notifications : [{
+    id: 'welcome-default',
+    title: 'Welcome to SecureAuth',
+    message: 'Your workspace is active. Remember to review your security settings regularly.',
+    created_at: new Date().toISOString(),
+    is_read: false
+  }];
+
+  const unreadCount = displayNotifs.filter((n: any) => !n.is_read).length;
 
   const handleLogout = async () => {
     try {
@@ -29,7 +48,7 @@ export function Navbar() {
       const supabase = createClient();
       await supabase.auth.signOut();
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('secureauth-session');
+        // localStorage.removeItem('secureauth-session'); removed
       }
       setUser(null);
       router.push('/');
@@ -81,9 +100,9 @@ export function Navbar() {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center gap-3 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
               >
-                 {user?.profile_picture ? (
+                 {user?.avatar_url || user?.profile_picture ? (
                    <div className="w-8 h-8 rounded-full border border-white/20 overflow-hidden bg-black flex-shrink-0">
-                     <img src={user.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
+                     <img src={user.avatar_url || user.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
                    </div>
                  ) : (
                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
@@ -152,7 +171,7 @@ export function Navbar() {
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
               )}
             </button>
-            <NotificationCenter isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+            <NotificationCenter isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} notifications={displayNotifs} loading={notifLoading} />
           </div>
         </div>
       </motion.header>
@@ -173,14 +192,14 @@ export function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 h-screen w-[280px] bg-[#020617] border-r border-white/10 z-[60] lg:hidden shadow-2xl"
+              className="fixed top-0 left-0 h-screen w-[280px] bg-[#020617] border-r border-white/10 z-[60] lg:hidden shadow-2xl pt-12 pb-24 overflow-y-auto"
             >
-              <div className="absolute top-4 right-4 z-10">
+              <div className="absolute top-3 right-3 z-50">
                 <button 
                   onClick={() => setIsMobileNavOpen(false)}
-                  className="p-2 hover:bg-white/5 rounded-lg text-gray-500 hover:text-white transition-colors"
+                  className="p-1.5 bg-black/50 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors backdrop-blur-md"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <SidebarContent />

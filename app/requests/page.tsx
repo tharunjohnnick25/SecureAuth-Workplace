@@ -5,14 +5,15 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { AccessRequestsTab } from '@/components/admin/AccessRequestsTab';
 import { LeaveApprovalsTab } from '@/components/admin/LeaveApprovalsTab';
-import { FileCheck, Clock } from 'lucide-react';
+import { OfficeResourceRequestsTab } from '@/components/admin/OfficeResourceRequestsTab';
+import { FileCheck, Clock, Database } from 'lucide-react';
 import { GlobalSearch } from '@/components/SearchCommand';
 
 import { useAuthStore } from '@/store/useAuthStore';
 
 export default function RequestsDashboard() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'access' | 'leaves'>(user?.role === 'MANAGER' ? 'leaves' : 'access');
+  const [activeTab, setActiveTab] = useState<'access' | 'leaves' | 'resources'>(user?.role === 'MANAGER' ? 'leaves' : 'access');
 
   // If user becomes a manager after load, ensure they don't get stuck on access tab
   React.useEffect(() => {
@@ -62,11 +63,22 @@ export default function RequestsDashboard() {
                 <Clock className="w-4 h-4" /> Leave Approvals
                 {activeTab === 'leaves' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_-2px_10px_rgba(59,130,246,0.8)]" />}
               </button>
+              {(user?.role === 'MANAGER' || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+                <button 
+                  onClick={() => setActiveTab('resources')} 
+                  className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'resources' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  <Database className="w-4 h-4" /> Office Resources
+                  {activeTab === 'resources' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500 rounded-t-full shadow-[0_-2px_10px_rgba(59,130,246,0.8)]" />}
+                </button>
+              )}
             </div>
 
             {/* Tab Content */}
             <div className="min-h-[500px]">
-              {activeTab === 'access' ? <AccessRequestsTab hideLayout={true} /> : <LeaveApprovalsTab hideLayout={true} />}
+              {activeTab === 'access' && <AccessRequestsTab hideLayout={true} />}
+              {activeTab === 'leaves' && <LeaveApprovalsTab hideLayout={true} />}
+              {activeTab === 'resources' && <OfficeResourceRequestsTab hideLayout={true} />}
             </div>
           </div>
         </main>

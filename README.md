@@ -31,10 +31,8 @@ await fetch('/api/v1/users/USER_UUID/role', {
 
 ### Identity Provider (IdP) Sync
 You can synchronize roles automatically from Google Workspace or Azure AD:
-1. Navigate to `/admin/settings`
-2. Enable **Automatic Role Sync**
-3. Configure the `CRON_SECRET` environment variable to secure the `/api/v1/cron/sync-roles` endpoint.
-4. Set up an external Cron job (e.g., Vercel Cron or GitHub Actions) to hit the endpoint periodically.
+1. Configure the `CRON_SECRET` environment variable to secure the `/api/v1/cron/sync-roles` endpoint.
+2. Set up an external Cron job (e.g., Vercel Cron or GitHub Actions) to hit the endpoint periodically.
 
 ---
 

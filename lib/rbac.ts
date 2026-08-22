@@ -1,7 +1,6 @@
 // Enterprise RBAC & Role Hierarchy Definitions
 
 export type UserRole =
-  | 'SUPER_ADMIN'
   | 'ORGANIZATION_OWNER'
   | 'ORGANIZATION_ADMIN'
   | 'SECURITY_ANALYST'
@@ -32,7 +31,6 @@ export const PERMISSIONS: Permission[] = [
 ];
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  SUPER_ADMIN: 80,
   ORGANIZATION_OWNER: 70,
   ORGANIZATION_ADMIN: 60,
   ADMIN: 60,
@@ -46,17 +44,6 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
 
 // Default mapping of roles to active permissions
 export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  SUPER_ADMIN: [
-    'manage_users',
-    'manage_departments',
-    'view_analytics',
-    'export_reports',
-    'manage_security',
-    'manage_integrations',
-    'approve_access_requests',
-    'manage_attendance',
-    'manage_devices',
-  ],
   ORGANIZATION_OWNER: [
     'manage_users',
     'manage_departments',
@@ -142,7 +129,6 @@ export function isHigherRole(roleA: string, roleB: string): boolean {
 export function getRoleLabel(role: string | undefined | null): string {
   if (!role) return 'Guest User';
   const labelMap: Record<string, string> = {
-    SUPER_ADMIN: 'Super Administrator',
     ORGANIZATION_OWNER: 'Organization Owner',
     ORGANIZATION_ADMIN: 'Organization Admin',
     SECURITY_ANALYST: 'Security Analyst',

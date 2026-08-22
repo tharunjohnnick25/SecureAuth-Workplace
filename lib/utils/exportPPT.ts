@@ -1,8 +1,6 @@
 import pptxgen from 'pptxgenjs';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory } from '@capacitor/filesystem';
 
 export async function exportReportToPPT(data: any[], reportTitle: string = 'Attendance Report') {
   try {
@@ -100,19 +98,8 @@ export async function exportReportToPPT(data: any[], reportTitle: string = 'Atte
     const formattedDate = format(new Date(), 'yyyy_MM_dd');
     const fileName = `Attendance_Report_${formattedDate}.pptx`;
 
-    // Save for Native Mobile vs Web
-    if (Capacitor.isNativePlatform()) {
-      const base64 = (await pptx.write({ outputType: 'base64' })) as string;
-      await Filesystem.writeFile({
-        path: fileName,
-        data: base64,
-        directory: Directory.Documents,
-      });
-      toast.success(`Exported PowerPoint ${fileName} to Documents!`);
-    } else {
-      await pptx.writeFile({ fileName });
-      toast.success(`Exported PowerPoint presentation as ${fileName}!`);
-    }
+    await pptx.writeFile({ fileName });
+    toast.success(`Exported PowerPoint presentation as ${fileName}!`);
   } catch (error: any) {
     console.error('Error exporting PPT presentation:', error);
     toast.error(error?.message || 'Failed to export PowerPoint report.');
@@ -204,19 +191,8 @@ export async function exportAuditLogsToPPT(data: any[]) {
 
     const fileName = `Audit_Logs_${format(new Date(), 'yyyy_MM_dd')}.pptx`;
 
-    // Save for Native Mobile vs Web
-    if (Capacitor.isNativePlatform()) {
-      const base64 = (await pptx.write({ outputType: 'base64' })) as string;
-      await Filesystem.writeFile({
-        path: fileName,
-        data: base64,
-        directory: Directory.Documents,
-      });
-      toast.success(`Exported PowerPoint ${fileName} to Documents!`);
-    } else {
-      await pptx.writeFile({ fileName });
-      toast.success(`Exported PowerPoint presentation as ${fileName}!`);
-    }
+    await pptx.writeFile({ fileName });
+    toast.success(`Exported PowerPoint presentation as ${fileName}!`);
   } catch (error: any) {
     console.error('Error exporting PPT presentation:', error);
     toast.error(error?.message || 'Failed to export PowerPoint report.');

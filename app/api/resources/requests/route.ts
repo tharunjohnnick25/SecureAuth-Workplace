@@ -1,106 +1,94 @@
-import { NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { MockEmployees } from '@/lib/mock-employees';
-import { resolveCompanyKey } from '@/lib/companies';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
+import { fetchResourceRequests, createResourceRequest, ResourceServiceError } from '@/lib/resource-service';
+import { fetchProfile } from '@/lib/leave-service';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('user_id');
-  const adminId = searchParams.get('admin_id');
-  const managerId = searchParams.get('manager_id');
-  let adminCompany = searchParams.get('company_name') || '';
-  
-  if (!(MockDB as any).employee_requests) {
-    (MockDB as any).employee_requests = [];
-  }
+export const dynamic = 'force-dynamic';
 
-  let requests = userId 
-    ? (MockDB as any).employee_requests.filter((r: any) => r.user_id === userId)
-    : (MockDB as any).employee_requests;
+export async function GET(req: NextRequest) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
 
-  if (managerId) {
-    requests = requests.filter((r: any) => {
-      let mockEmp = MockEmployees.getById(r.user_id) as any;
-      if (!mockEmp) mockEmp = MockDB.employees.find((e: any) => e.id === r.user_id);
-      return mockEmp?.manager_id === managerId;
-    });
-  }
-
-  if (adminId) {
-    // Resolve the admin's canonical company key from the query param, the
-    // admin record, and (as a last resort) the Supabase user row.
-    let mockAdmin = MockEmployees.getById(adminId) as any;
-    if (!mockAdmin) mockAdmin = MockDB.employees.find(e => e.id === adminId);
-
-    let adminCompanyName = adminCompany || mockAdmin?.company_name || '';
-    if (!adminCompanyName) {
-      const supabase = await createServerSupabaseClient();
-      const { data: userData } = await supabase.from('users').select('company_name').eq('id', adminId).single();
-      if (userData?.company_name) adminCompanyName = userData.company_name;
+    if (authError || !session) {
+      return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
     }
 
-    const adminKey = resolveCompanyKey({
-      email: mockAdmin?.email || '',
-      company_name: adminCompanyName,
-    });
-
-    if (adminKey) {
-      const supabase = await createServerSupabaseClient();
-      const { data: allSupabaseUsers } = await supabase.from('users').select('id, company_name');
-
-      requests = requests.filter((r: any) => {
-        let mockEmp = MockEmployees.getById(r.user_id) as any;
-        if (!mockEmp) mockEmp = MockDB.employees.find(e => e.id === r.user_id);
-
-        const empEmail = mockEmp?.email || r.email || '';
-        const sbUser = allSupabaseUsers?.find(u => u.id === r.user_id);
-        const reqKey = resolveCompanyKey({
-          email: empEmail,
-          company_name: mockEmp?.company_name || sbUser?.company_name || '',
-        });
-
-        if (reqKey === adminKey) {
-          r.email = empEmail;
-          if (mockEmp?.full_name && !r.user_name) {
-             r.user_name = mockEmp.full_name;
-          }
-          return true;
-        }
-        return false;
-      });
-    } else {
-      requests = [];
+    const admin = await createAdminClient();
+    const caller = await fetchProfile(admin, session.user.id);
+    if (!caller) {
+      return NextResponse.json({ error: 'User profile not found', success: false }, { status: 404 });
     }
-  }
 
-  return NextResponse.json({ success: true, data: requests });
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('user_id');
+    const managerId = searchParams.get('manager_id');
+
+    // If manager_id is provided, it means a manager is fetching team requests.
+    // We pass `userId: userId` if it exists, otherwise it fetches based on the caller's role.
+    const requests = await fetchResourceRequests(admin, caller, { 
+      userId: userId || undefined, 
+      includeSelfForManager: false 
+    });
+    
+    // The frontend expects req.reason to contain "[Resource Name] - reason"
+    // So we map it back for backwards compatibility with the existing UI
+    const mappedRequests = requests.map(req => ({
+      ...req,
+      reason: `[${req.resource_name}] - ${req.reason}`,
+      status: req.status.toLowerCase(),
+      email: req.user_email,
+      users: { role: req.user_role }
+    }));
+
+    return NextResponse.json({ data: mappedRequests, success: true });
+  } catch (err: any) {
+    console.error('[API GET /api/resources/requests] Error:', err);
+    if (err instanceof ResourceServiceError) {
+      return NextResponse.json({ error: err.message, success: false }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal Server Error', success: false }, { status: 500 });
+  }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    
-    if (!(MockDB as any).employee_requests) {
-      (MockDB as any).employee_requests = [];
+    const supabase = await createServerSupabaseClient();
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+    if (authError || !session) {
+      return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
     }
 
-    const newRequest = {
-      id: `req-${Date.now()}`,
-      user_id: body.user_id || 'mock',
-      email: body.email || '',
-      user_name: body.user_name || '',
-      reason: body.reason,
-      status: body.status || 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const body = await req.json();
+    if (!body.reason) {
+      return NextResponse.json({ error: 'Missing required field: reason', success: false }, { status: 400 });
+    }
 
-    (MockDB as any).employee_requests.push(newRequest);
-    saveMockDB();
+    const admin = await createAdminClient();
+    const caller = await fetchProfile(admin, session.user.id);
 
-    return NextResponse.json({ success: true, data: newRequest });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to process request' }, { status: 500 });
+    if (!caller) {
+      return NextResponse.json({ error: 'User profile not found', success: false }, { status: 404 });
+    }
+
+    // Extract resource name from the old format: "[Resource Name] - Justification"
+    const match = body.reason.match(/^\[(.*?)\]\s*-\s*(.*)$/);
+    const resource_name = match ? match[1] : 'Requested Resource';
+    const actual_reason = match ? match[2] : body.reason;
+
+    const newRequest = await createResourceRequest(admin, caller, {
+      resource_name,
+      access_level: 'Standard',
+      reason: actual_reason
+    }, req);
+
+    return NextResponse.json({ data: newRequest, success: true }, { status: 201 });
+  } catch (err: any) {
+    console.error('[API POST /api/resources/requests] Error:', err);
+    if (err instanceof ResourceServiceError) {
+      return NextResponse.json({ error: err.message, success: false }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal Server Error', success: false }, { status: 500 });
   }
 }

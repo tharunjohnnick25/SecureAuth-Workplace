@@ -1,84 +1,47 @@
-import { createAdminClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
-
-import { NextRequest } from 'next/server';
-import { MockEmployees } from '@/lib/mock-employees';
-import { MockDB } from '@/lib/mock-db';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('user_id');
-    const role = searchParams.get('role');
-
     if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
-      let allEmp = MockEmployees.getAll();
-      
-      if (role === 'MANAGER' && userId) {
-        allEmp = allEmp.filter(e => e.manager_id === userId);
-      } else if (role === 'EMPLOYEE' && userId) {
-        allEmp = allEmp.filter(e => e.id === userId);
-      }
-      
-      const empIds = allEmp.map(e => e.id);
-      
-      // Calculate dynamic stats
-      const totalEmp = allEmp.length;
-      const activeEmp = allEmp.filter(e => e.status !== 'Inactive').length;
-      const depts = new Set(allEmp.map(e => e.department).filter(Boolean)).size;
-      
-      let deptDist: any = {};
-      let roleDist: any = {};
-      allEmp.forEach(e => {
-        if (e.department) deptDist[e.department] = (deptDist[e.department] || 0) + 1;
-        if (e.role) roleDist[e.role] = (roleDist[e.role] || 0) + 1;
-      });
-
-      const reqs = (MockDB as any).employee_requests?.filter((r: any) => empIds.includes(r.user_id)) || [];
-      const leaves = (MockDB as any).leave_requests?.filter((l: any) => empIds.includes(l.user_id)) || [];
-      const logins = (MockDB as any).login_logs?.filter((l: any) => empIds.includes(l.user_id)) || [];
-      const devices = (MockDB as any).devices?.filter((d: any) => empIds.includes(d.user_id)) || [];
-
       return NextResponse.json({
         success: true,
         data: {
-          employees: { total: totalEmp, active: activeEmp, inactive: totalEmp - activeEmp },
-          departments: { total: depts, distribution: deptDist },
-          roles: roleDist,
-          access_requests: { 
-            approved: reqs.filter((r: any) => r.status === 'approved' || r.status === 'APPROVED').length, 
-            rejected: reqs.filter((r: any) => r.status === 'rejected' || r.status === 'REJECTED').length, 
-            pending: reqs.filter((r: any) => r.status === 'pending' || r.status === 'PENDING').length, 
-            total: reqs.length 
-          },
-          devices: { 
-            total: devices.length || (role === 'ADMIN' ? 240 : role === 'EMPLOYEE' ? 2 : 15), 
-            trusted: devices.filter((d: any) => d.is_trusted).length || (role === 'ADMIN' ? 215 : role === 'EMPLOYEE' ? 2 : 12), 
-            untrusted: 0 
-          },
-          logins: { 
-            total: logins.length || (role === 'ADMIN' ? 1250 : 25), 
-            failed: logins.filter((l: any) => l.status === 'FAILED').length || 0, 
-            high_risk: 0 
-          },
-          attendance: { present: activeEmp, absent: 0, late: 0 },
-          leave: { 
-            approved: leaves.filter((l: any) => l.status === 'Approved').length, 
-            pending: leaves.filter((l: any) => l.status === 'Pending').length, 
-            rejected: leaves.filter((l: any) => l.status === 'Rejected').length 
-          },
-          compliance: { score: role === 'EMPLOYEE' ? 100 : 98, passed_checks: 120, failed_checks: role === 'EMPLOYEE' ? 0 : 2 },
-          audit_logs: { total_events: role === 'ADMIN' ? 15420 : 120, critical_events: 0, warning_events: 0 },
-          behavioural_risks: { unusual_locations: 0, multiple_failures: 0, off_hours_access: 0 },
+          employees: { total: 42, active: 38, inactive: 4 },
+          departments: { total: 5, distribution: { 'Engineering': 15, 'Sales': 10, 'Marketing': 5, 'HR': 3, 'IT': 9 } },
+          roles: { 'EMPLOYEE': 35, 'MANAGER': 5, 'ADMIN': 2 },
+          access_requests: { approved: 120, rejected: 15, pending: 8, total: 143 },
+          devices: { total: 45, trusted: 42, untrusted: 3 },
+          logins: { total: 1250, failed: 12, high_risk: 3 },
+          attendance: { present: 35, absent: 3, late: 2 },
+          leave: { approved: 5, pending: 2, rejected: 1 },
+          compliance: { score: 98, passed_checks: 145, failed_checks: 2 },
+          audit_logs: { total_events: 15420, critical_events: 5, warning_events: 45 },
+          behavioural_risks: { unusual_locations: 2, multiple_failures: 5, off_hours_access: 1 },
           generated_at: new Date().toISOString(),
         }
       });
     }
 
-    const supabase = await createAdminClient();
+    const supabase = await createServerSupabaseClient();
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
+    }
+
+    const { data: currentUser } = await supabase.from('users').select('company_id, role').eq('id', session.user.id).single();
+    if (!currentUser) {
+       return NextResponse.json({ error: 'User not found', success: false }, { status: 404 });
+    }
+
+    const role = currentUser.role?.toUpperCase() || 'EMPLOYEE';
 
     // 1. Employees
-    const { data: employees } = await supabase.from('users').select('status, role, department');
+    let empQuery = supabase.from('users').select('id, status, role, department, company_id');
+    if (currentUser.company_id) empQuery = empQuery.eq('company_id', currentUser.company_id);
+    const { data: employees } = await empQuery;
+
     const totalEmployees = employees?.length || 0;
     const activeEmployees = employees?.filter(e => e.status === 'Active').length || 0;
     const inactiveEmployees = totalEmployees - activeEmployees;
@@ -93,56 +56,125 @@ export async function GET(req: NextRequest) {
       return acc;
     }, {});
 
+    const empIds = employees?.map(e => e.id) || [];
+
     // 2. Departments
-    const { count: totalDepartments } = await supabase.from('departments').select('*', { count: 'exact', head: true });
+    let deptsQuery = supabase.from('departments').select('id', { count: 'exact', head: true });
+    if (currentUser.company_id) deptsQuery = deptsQuery.eq('company_id', currentUser.company_id);
+    let { count: totalDepartments } = await deptsQuery;
+    
+    if (totalDepartments === null) {
+       totalDepartments = Object.keys(departmentDistribution || {}).length;
+    }
 
     // 3. Access Requests
-    const { data: accessRequests } = await supabase.from('employee_requests').select('status');
-    const approvedRequests = accessRequests?.filter(r => r.status === 'approved' || r.status === 'APPROVED').length || 0;
-    const rejectedRequests = accessRequests?.filter(r => r.status === 'rejected' || r.status === 'REJECTED').length || 0;
-    const pendingRequests = accessRequests?.filter(r => r.status === 'pending' || r.status === 'PENDING').length || 0;
+    let accessRequests: any[] = [];
+    if (empIds.length > 0) {
+      const { data: reqs } = await supabase.from('employee_requests').select('status').in('user_id', empIds);
+      accessRequests = reqs || [];
+    }
+    const approvedRequests = accessRequests.filter(r => r.status === 'approved' || r.status === 'APPROVED').length;
+    const rejectedRequests = accessRequests.filter(r => r.status === 'rejected' || r.status === 'REJECTED').length;
+    const pendingRequests = accessRequests.filter(r => r.status === 'pending' || r.status === 'PENDING').length;
 
     // 4. Devices
-    const { data: devices } = await supabase.from('devices').select('is_trusted');
-    const totalDevices = devices?.length || 0;
-    const trustedDevices = devices?.filter(d => d.is_trusted).length || 0;
+    let devices: any[] = [];
+    if (empIds.length > 0) {
+      const { data: devs } = await supabase.from('devices').select('is_trusted').in('user_id', empIds);
+      devices = devs || [];
+    }
+    const totalDevices = devices.length;
+    const trustedDevices = devices.filter(d => d.is_trusted).length;
 
     // 5. Logins & Risk
-    const { data: logins } = await supabase.from('login_logs').select('status, risk_level, risk_score');
-    const totalLogins = logins?.length || 0;
-    const failedLogins = logins?.filter(l => l.status === 'FAILED' || l.status === 'failed').length || 0;
-    const highRiskLogins = logins?.filter(l => (l.risk_score || 0) >= 70 || l.risk_level === 'HIGH' || l.risk_level === 'CRITICAL').length || 0;
+    let logins: any[] = [];
+    if (empIds.length > 0) {
+      const { data: logs } = await supabase.from('login_logs').select('status, risk_level, risk_score').in('user_id', empIds);
+      logins = logs || [];
+    }
+    const totalLogins = logins.length;
+    const failedLogins = logins.filter(l => l.status === 'FAILED' || l.status === 'failed').length;
+    const highRiskLogins = logins.filter(l => (l.risk_score || 0) >= 70 || l.risk_level === 'HIGH' || l.risk_level === 'CRITICAL').length;
 
-    // 6. Attendance & Leave (Simulated from existing active employees)
+    // 6. Attendance
+    let attendanceRecords: any[] = [];
+    if (empIds.length > 0) {
+      // Just getting today's attendance roughly
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const { data: att } = await supabase.from('attendance')
+        .select('status')
+        .in('user_id', empIds)
+        .gte('created_at', startOfDay.toISOString());
+      attendanceRecords = att || [];
+    }
     const attendanceSummary = {
-      present: Math.round(activeEmployees * 0.85),
-      absent: Math.round(activeEmployees * 0.05),
-      late: Math.round(activeEmployees * 0.1),
+      present: attendanceRecords.filter(a => a.status === 'present' || a.status === 'PRESENT').length,
+      absent: attendanceRecords.filter(a => a.status === 'absent' || a.status === 'ABSENT').length,
+      late: attendanceRecords.filter(a => a.status === 'late' || a.status === 'LATE').length,
     };
 
+    // 7. Leave
+    let leaves: any[] = [];
+    if (empIds.length > 0) {
+      const { data: lvs } = await supabase.from('leaves').select('status').in('user_id', empIds);
+      leaves = lvs || [];
+    }
     const leaveSummary = {
-      approved: 12,
-      pending: 4,
-      rejected: 2,
+      approved: leaves.filter(l => l.status === 'APPROVED' || l.status === 'approved').length,
+      pending: leaves.filter(l => l.status === 'PENDING' || l.status === 'pending').length,
+      rejected: leaves.filter(l => l.status === 'REJECTED' || l.status === 'rejected').length,
     };
 
-    // 7. Compliance & Audit (Simulated)
-    const complianceOverview = {
-      score: 94,
-      passed_checks: 45,
-      failed_checks: 3,
-    };
-
+    // 8. Audit Logs
+    let auditLogs: any[] = [];
+    if (empIds.length > 0) {
+      const { data: audits } = await supabase.from('audit_logs')
+        .select('action, details')
+        .in('user_id', empIds);
+      auditLogs = audits || [];
+    }
+    
+    // Attempting to deduce severity from action names or details
     const auditLogSummary = {
-      total_events: 15420,
-      critical_events: 23,
-      warning_events: 145,
+      total_events: auditLogs.length,
+      critical_events: auditLogs.filter(a => a.action?.toUpperCase().includes('DELETE') || a.action?.toUpperCase().includes('REVOKE')).length,
+      warning_events: auditLogs.filter(a => a.action?.toUpperCase().includes('FAILED') || a.action?.toUpperCase().includes('BLOCKED')).length,
     };
+
+    // 9. Compliance & Security Events
+    let securityEvents: any[] = [];
+    if (empIds.length > 0) {
+      const { data: events } = await supabase.from('security_events').select('severity').in('user_id', empIds);
+      securityEvents = events || [];
+    }
+    
+    const passedChecks = auditLogs.filter(a => a.action?.toUpperCase().includes('SUCCESS')).length;
+    const failedChecks = securityEvents.filter(s => s.severity === 'high' || s.severity === 'critical').length + failedLogins;
+    
+    // Calculate a rough compliance score based on failed checks vs total users
+    const maxFailedChecks = Math.max(activeEmployees, 1) * 5; 
+    let computedScore = 100 - ((failedChecks / maxFailedChecks) * 100);
+    if (computedScore < 0) computedScore = 0;
+    if (isNaN(computedScore)) computedScore = 100;
+
+    const complianceOverview = {
+      score: role === 'EMPLOYEE' ? 100 : Math.round(computedScore),
+      passed_checks: role === 'EMPLOYEE' ? 0 : passedChecks,
+      failed_checks: role === 'EMPLOYEE' ? 0 : failedChecks,
+    };
+
+    // 10. Behavioural Risks (from threat_logs and anomaly_logs if they exist)
+    let threatLogs: any[] = [];
+    if (empIds.length > 0) {
+      const { data: threats } = await supabase.from('threat_logs').select('threat_type').in('user_id', empIds);
+      threatLogs = threats || [];
+    }
 
     const behaviouralRisks = {
-      unusual_locations: 14,
-      multiple_failures: 45,
-      off_hours_access: 22,
+      unusual_locations: threatLogs.filter(t => t.threat_type?.toLowerCase().includes('location') || t.threat_type?.toLowerCase().includes('geo')).length,
+      multiple_failures: threatLogs.filter(t => t.threat_type?.toLowerCase().includes('brute') || t.threat_type?.toLowerCase().includes('fail')).length,
+      off_hours_access: threatLogs.filter(t => t.threat_type?.toLowerCase().includes('time') || t.threat_type?.toLowerCase().includes('hour')).length,
     };
 
     return NextResponse.json({
@@ -162,7 +194,7 @@ export async function GET(req: NextRequest) {
           approved: approvedRequests,
           rejected: rejectedRequests,
           pending: pendingRequests,
-          total: (accessRequests?.length || 0),
+          total: accessRequests.length,
         },
         devices: {
           total: totalDevices,

@@ -49,7 +49,7 @@ export function verifyPassword(password: string, stored: string): boolean {
   }
 }
 
-export const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
+export const ADMIN_ROLES = new Set(['ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
 
 export const validKeys: (keyof MockEmployee)[] = [
   'full_name', 'phone', 'department', 'designation', 'role', 

@@ -68,7 +68,7 @@ export default function RemindersPage() {
     slack: false,
   });
 
-  const [activeTab, setActiveTab] = useState<'reminders' | 'rules'>('reminders');
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newReminder, setNewReminder] = useState({
     title: '',
@@ -259,38 +259,12 @@ export default function RemindersPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 border-b border-white/10 mb-8">
-            <button
-              onClick={() => setActiveTab('reminders')}
-              className={`pb-4 text-sm font-bold transition-all relative ${
-                activeTab === 'reminders' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              Active Reminders
-              {activeTab === 'reminders' && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500 shadow-[0_-2px_10px_rgba(59,130,246,0.5)]" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('rules')}
-              className={`pb-4 text-sm font-bold transition-all relative ${
-                activeTab === 'rules' ? 'text-purple-400' : 'text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              Automation Rules
-              {activeTab === 'rules' && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-500 shadow-[0_-2px_10px_rgba(168,85,247,0.5)]" />
-              )}
-            </button>
-          </div>
-
-          {activeTab === 'rules' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-white mb-4">Automation Rules</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
                 { key: 'push', label: 'Push Notifications', desc: 'In-app and browser alerts', icon: Smartphone, color: 'text-blue-400', bg: 'bg-blue-500/10' },
                 { key: 'email', label: 'Email Alerts', desc: 'Sent to your inbox', icon: Mail, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                { key: 'sms', label: 'SMS Texts', desc: 'High priority alerts via SMS', icon: MessageSquare, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                { key: 'slack', label: 'Slack Webhook', desc: 'Send alerts to team channel', icon: Hash, color: 'text-orange-400', bg: 'bg-orange-500/10' },
               ].map((rule) => (
                 <div key={rule.key} className="bg-[#0a0f1c]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-5">
                   <div className="flex items-start justify-between mb-4">
@@ -304,10 +278,13 @@ export default function RemindersPage() {
                 </div>
               ))}
             </div>
-          )}
+          </div>
 
-          {activeTab === 'reminders' && (
-            loading ? (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-white">Active Reminders</h2>
+          </div>
+
+          {loading ? (
               <div className="flex justify-center py-24">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
               </div>
@@ -376,8 +353,7 @@ export default function RemindersPage() {
                   );
                 })}
               </div>
-            )
-          )}
+            )}
         </main>
       </div>
 

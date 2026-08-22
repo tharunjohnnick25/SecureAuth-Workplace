@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const { user_id, approve } = body;
 
-    const meeting = MockDB.meetings.find((m: any) => m.id === id);
-    if (!meeting) {
-      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
+    // Verify host
+    const { id } = await context.params;
+    const { data: meeting } = await supabase.from('meetings').select('host_id').eq('id', id).single();
+    if (meeting?.host_id !== session.user.id) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
-    const pIdx = MockDB.meeting_participants.findIndex(
-      (p: any) => p.meeting_id === id && p.user_id === user_id
-    );
-    if (pIdx === -1) {
-      return NextResponse.json({ error: 'Participant not found' }, { status: 404 });
-    }
+    const { error } = await supabase
+      .from('meeting_participants')
+      .update({ status: approve ? 'JOINED' : 'DENIED', joined_at: approve ? new Date().toISOString() : null })
+      .eq('meeting_id', id)
+      .eq('user_id', user_id);
 
-    MockDB.meeting_participants[pIdx].status = approve ? 'IN_CALL' : 'DENIED';
-    saveMockDB();
+    if (error) throw error;
 
-    return NextResponse.json({
-      data: { status: approve ? 'IN_CALL' : 'DENIED' },
-      success: true,
-    });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

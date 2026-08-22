@@ -23,9 +23,6 @@ const DEFAULT_LANGUAGES = [
   { language: 'javascript', version: '' },
   { language: 'typescript', version: '' },
   { language: 'java', version: '' },
-  { language: 'cpp', version: '' },
-  { language: 'go', version: '' },
-  { language: 'rust', version: '' },
 ];
 
 const COMPILER_STORAGE_KEY = 'secureauth-compiler-state';

@@ -90,7 +90,7 @@ export function ForgotPasswordForm() {
             />
             <Button className="w-full bg-primary hover:bg-primary/90 text-white" type="submit" disabled={isLoading}>
               {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-              {'Send reset link'}</Button>
+              {'Send Reset Link'}</Button>
           </form>
         </Form>
       </CardContent>

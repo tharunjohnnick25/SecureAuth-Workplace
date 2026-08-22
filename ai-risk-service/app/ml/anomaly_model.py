@@ -13,10 +13,13 @@ class UserAnomalyModel:
     multi-dimensional anomalies in their login patterns.
     """
     
+    MODEL_VERSION = "isolation_forest_v1"
+    
     def __init__(self, user_id: str):
         self.user_id = user_id
         self.model_path = os.path.join(MODEL_DIR, f"iforest_{user_id}.joblib")
         self.model = self._load_model()
+        self.confidence = 0.8 if self.model else 0.0
         
     def _load_model(self) -> IsolationForest:
         if os.path.exists(self.model_path):
@@ -46,13 +49,14 @@ class UserAnomalyModel:
         joblib.dump(self.model, self.model_path)
         return True
 
-    def predict_anomaly(self, current_features: list[float]) -> float:
+    def predict_anomaly(self, current_features: list[float]) -> tuple[float, float, str]:
         """
         Predict if the current login is an anomaly.
-        Returns an anomaly score between 0.0 (normal) and 100.0 (highly anomalous).
+        Returns (severity, confidence, model_version).
+        Severity is between 0.0 (normal) and 100.0 (highly anomalous).
         """
         if not self.model:
-            return 0.0 # Fail-open if no model exists (rely on heuristics)
+            return 0.0, 0.0, self.MODEL_VERSION # Fail-open with low confidence
             
         X = np.array([current_features])
         
@@ -68,4 +72,4 @@ class UserAnomalyModel:
         else:
             severity = min(100.0, 50.0 + (abs(score) * 100.0))
             
-        return severity
+        return severity, self.confidence, self.MODEL_VERSION

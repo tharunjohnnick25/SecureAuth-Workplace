@@ -12,8 +12,10 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const isAdmin = session.user.user_metadata?.role === 'admin';
-    if (!isAdmin) {
+    const adminClient = await createServerSupabaseClient();
+    const { data: profile } = await adminClient.from('users').select('role').eq('id', session.user.id).single();
+    
+    if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

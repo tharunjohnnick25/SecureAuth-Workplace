@@ -12,29 +12,27 @@ import { useAuthStore } from '@/store/useAuthStore';
 export function AccessRequestsTab({ hideLayout = false }: { hideLayout?: boolean }) {
   const { t } = useLanguage();
   const { user } = useAuthStore();
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes((user?.role || '').toUpperCase());
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchRequests = useCallback(async () => {
     try {
-      let url = '/api/resources/requests';
-      if (user?.id) {
-        if (user.role === 'MANAGER') {
-          // Managers should not be approving office resources, only Admins.
-          setRequests([]);
-          setLoading(false);
-          return;
-        } else {
-          url = `/api/resources/requests?admin_id=${user.id}&company_name=${encodeURIComponent(user.company_name || '')}`;
-        }
-      }
+      if (!user?.id) return;
+      
+      let url = '/api/access-requests';
+      
       const res = await fetch(url);
       const data = await res.json();
+      
       if (data.success) {
-        setRequests((data.data || []).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        setRequests(data.data || []);
+      } else {
+        toast.error(data.error || 'Failed to fetch access requests');
       }
     } catch (err) {
       console.error(err);
+      toast.error('Network error fetching requests');
     } finally {
       setLoading(false);
     }
@@ -48,10 +46,11 @@ export function AccessRequestsTab({ hideLayout = false }: { hideLayout?: boolean
 
   const handleAction = async (requestId: string, status: 'APPROVED' | 'REJECTED') => {
     try {
-      const res = await fetch(`/api/resources/requests/${requestId}`, {
-        method: 'PUT',
+      const endpoint = status === 'APPROVED' ? 'approve' : 'reject';
+      const res = await fetch(`/api/access-requests/${requestId}/${endpoint}`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: status.toLowerCase() })
+        body: JSON.stringify(status === 'REJECTED' ? { reason: 'Admin Rejected' } : {})
       });
       const data = await res.json();
 
@@ -78,52 +77,69 @@ export function AccessRequestsTab({ hideLayout = false }: { hideLayout?: boolean
       )
     },
     { 
+      key: 'module', 
+      label: 'Requested Module',
+      render: (val: string, row: any) => <span className="font-semibold text-white">{row.module || 'Unknown'}</span>
+    },
+    { 
       key: 'reason', 
       label: 'Justification',
-      render: (val: string) => <span className="text-gray-400 text-xs italic">"{val || 'No reason provided'}"</span>
+      render: (val: string, row: any) => <span className="text-gray-400 text-xs italic">"{row.reason || 'No reason provided'}"</span>
     },
     { 
       key: 'status', 
       label: 'Status',
-      render: (val: string) => (
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-          val === 'approved' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-          val === 'rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-          'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-        }`}>
-          {val}
-        </span>
-      )
+      render: (val: string, row: any) => {
+        const s = (row.status || '').toUpperCase();
+        return (
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+            s === 'APPROVED' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+            s === 'REJECTED' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+            s === 'MANAGER_APPROVED' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+            'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+          }`}>
+            {s === 'MANAGER_APPROVED' ? 'MGR APPROVED' : s}
+          </span>
+        );
+      }
     },
     { 
       key: 'created_at', 
       label: 'Requested',
-      render: (val: string) => val ? formatDistanceToNow(new Date(val), { addSuffix: true }) : 'N/A'
+      render: (val: string, row: any) => row.created_at ? formatDistanceToNow(new Date(row.created_at), { addSuffix: true }) : 'N/A'
     },
     { 
       key: 'actions', 
       label: 'Management',
-      render: (_: any, row: any) => (
-        <div className="flex gap-2">
-          {row.status === 'pending' && (
-            <>
-              <Button 
-                size="sm" 
-                className="h-8 bg-green-600 hover:bg-green-500 text-xs gap-1"
-                onClick={() => handleAction(row.id, 'APPROVED')}
-              >
-                <CheckCircle className="w-3.5 h-3.5" /> {'Approve'}</Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="h-8 border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs gap-1"
-                onClick={() => handleAction(row.id, 'REJECTED')}
-              >
-                <XCircle className="w-3.5 h-3.5" /> {'Reject'}</Button>
-            </>
-          )}
-        </div>
-      )
+      render: (_: any, row: any) => {
+        const s = (row.status || '').toUpperCase();
+        const isOwnRequest = row.requester_id === user?.id;
+        const canApprove = !isOwnRequest && (s === 'PENDING' || (s === 'MANAGER_APPROVED' && isAdmin));
+        
+        return (
+          <div className="flex gap-2">
+            {canApprove && (
+              <>
+                <Button 
+                  size="sm" 
+                  className="h-8 bg-green-600 hover:bg-green-500 text-xs gap-1"
+                  onClick={() => handleAction(row.id, 'APPROVED')}
+                >
+                  <CheckCircle className="w-3.5 h-3.5" /> {'Approve'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-8 border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs gap-1"
+                  onClick={() => handleAction(row.id, 'REJECTED')}
+                >
+                  <XCircle className="w-3.5 h-3.5" /> {'Reject'}
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      }
     }
   ];
 

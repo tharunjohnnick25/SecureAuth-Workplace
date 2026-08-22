@@ -157,7 +157,7 @@ export function Admin() {
           requested_at: r.created_at,
         })));
       } else {
-        throw new Error('Access requests table empty.');
+        setRequestsList([]);
       }
 
       // Fetch audit logs
@@ -174,52 +174,17 @@ export function Admin() {
           created_at: l.created_at,
         })));
       } else {
-        throw new Error('Audit logs empty.');
+        setLogs([]);
       }
       setIsSandboxMode(false);
+      setInvitationsList([]); // No invitations in real DB for now
     } catch (err) {
-      console.warn('Backend tables offline. Directing to Live Admin Governance Sandbox.');
-      setIsSandboxMode(true);
-
-      // In sandbox mode, generate robust sample values isolated by organization ID
-      const currentOrgId = activeOrg?.id || 'org-acme-corp';
-      const acmeUsers: GovernanceUser[] = [
-        { id: 'u1', full_name: 'John Doe', email: 'john.doe@acme.com', role: 'ORGANIZATION_ADMIN', status: 'ACTIVE', risk_score: 12, last_login: new Date(Date.now() - 50000).toISOString(), department: 'Security Operations', org_id: 'org-acme-corp', mfa_enabled: true },
-        { id: 'u2', full_name: 'Jane Smith', email: 'jane.smith@acme.com', role: 'EMPLOYEE', status: 'ACTIVE', risk_score: 8, last_login: new Date(Date.now() - 600000).toISOString(), department: 'Engineering', org_id: 'org-acme-corp', mfa_enabled: true },
-        { id: 'u3', full_name: 'Bob Wilson', email: 'bob.wilson@acme.com', role: 'SECURITY_ANALYST', status: 'ACTIVE', risk_score: 85, last_login: new Date(Date.now() - 3600000).toISOString(), department: 'Security Operations', org_id: 'org-acme-corp', mfa_enabled: false },
-        { id: 'u4', full_name: 'Alice Brown', email: 'alice.brown@acme.com', role: 'TEAM_MANAGER', status: 'SUSPENDED', risk_score: 45, last_login: new Date(Date.now() - 25000000).toISOString(), department: 'Human Resources', org_id: 'org-acme-corp', mfa_enabled: true },
-        { id: 'u5', full_name: 'Tom Jenkins', email: 'tom.jenkins@acme.com', role: 'HR_MANAGER', status: 'PENDING', risk_score: 18, last_login: undefined, department: 'Human Resources', org_id: 'org-acme-corp', mfa_enabled: false },
-      ];
-
-      const globexUsers: GovernanceUser[] = [
-        { id: 'ug1', full_name: 'Hank Scorpio', email: 'hank@globex.com', role: 'ORGANIZATION_OWNER', status: 'ACTIVE', risk_score: 95, last_login: new Date().toISOString(), department: 'Executive Management', org_id: 'org-globex', mfa_enabled: true },
-        { id: 'ug2', full_name: 'Homer Simpson', email: 'homer@globex.com', role: 'EMPLOYEE', status: 'LOCKED', risk_score: 98, last_login: new Date(Date.now() - 240000000).toISOString(), department: 'Nuclear Engineering', org_id: 'org-globex', mfa_enabled: false },
-      ];
-
-      setUsersList(currentOrgId === 'org-globex' ? globexUsers : acmeUsers);
-
-      // Access requests setup
-      const sampleRequests: GovernanceRequest[] = [
-        { id: 'req1', user_name: 'Jane Smith', user_email: 'jane.smith@acme.com', resource: 'Production AWS Root Console', status: 'PENDING', step: 'MANAGER', requested_at: new Date(Date.now() - 8000000).toISOString() },
-        { id: 'req2', user_name: 'Bob Wilson', user_email: 'bob.wilson@acme.com', resource: 'SSO Integrations Module', status: 'PENDING', step: 'SECURITY', requested_at: new Date(Date.now() - 4000000).toISOString() },
-        { id: 'req3', user_name: 'Tom Jenkins', user_email: 'tom.jenkins@acme.com', resource: 'Salary Ledger database access', status: 'PENDING', step: 'ADMIN', requested_at: new Date(Date.now() - 1000000).toISOString() },
-      ];
-      setRequestsList(currentOrgId === 'org-globex' ? [] : sampleRequests);
-
-      // Onboarding invitations setup
-      const sampleInvites: GovernanceInvitation[] = [
-        { id: 'inv1', email: 'recruit.cyber@acme.com', role: 'EMPLOYEE', department: 'Engineering', status: 'PENDING', created_at: new Date(Date.now() - 8600000).toISOString() },
-        { id: 'inv2', email: 'analyst.contractor@acme.com', role: 'SECURITY_ANALYST', department: 'Security Operations', status: 'ACCEPTED', created_at: new Date(Date.now() - 24000000).toISOString() }
-      ];
-      setInvitationsList(currentOrgId === 'org-globex' ? [] : sampleInvites);
-
-      // Governance audit logs
-      const sampleLogs: AuditLogEntry[] = [
-        { id: 'log1', actor_email: 'admin@secureauth.ai', action: 'ROLE_ASSIGNED', resource: 'users/u3', details: 'Assigned Security Analyst role to bob.wilson@acme.com', ip_address: '192.168.1.5', organization: activeOrg?.name || 'Acme Corporation', created_at: new Date(Date.now() - 60000).toISOString() },
-        { id: 'log2', actor_email: 'admin@secureauth.ai', action: 'POLICY_MODIFIED', resource: 'security_policies/org-acme-corp', details: 'Enforced absolute multi-factor authentication policies', ip_address: '192.168.1.5', organization: activeOrg?.name || 'Acme Corporation', created_at: new Date(Date.now() - 3600000).toISOString() },
-        { id: 'log3', actor_email: 'admin@secureauth.ai', action: 'USER_SUSPENDED', resource: 'users/u4', details: 'Suspended account for alice.brown@acme.com due to credential anomalies', ip_address: '192.168.1.5', organization: activeOrg?.name || 'Acme Corporation', created_at: new Date(Date.now() - 86400000).toISOString() },
-      ];
-      setLogs(sampleLogs);
+      console.warn('Failed to load governance data:', err);
+      setIsSandboxMode(false);
+      setUsersList([]);
+      setRequestsList([]);
+      setLogs([]);
+      setInvitationsList([]);
     } finally {
       setIsLoading(false);
     }
@@ -582,7 +547,7 @@ export function Admin() {
                       className="h-9 px-3 rounded-md bg-[#131924] border border-white/10 text-xs text-gray-300 focus:outline-none"
                     >
                       <option value="">{'All roles'}</option>
-                      <option value="SUPER_ADMIN">{'Super administra'}</option>
+                      
                       <option value="ORGANIZATION_OWNER">{'Org owner'}</option>
                       <option value="ORGANIZATION_ADMIN">{'Org admin'}</option>
                       <option value="SECURITY_ANALYST">{'Security analyst'}</option>
@@ -652,7 +617,7 @@ export function Admin() {
                                   <select
                                     value={user.role}
                                     onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                                    disabled={user.role === 'SUPER_ADMIN' || user.role === 'ORGANIZATION_OWNER'}
+                                    disabled={user.role === 'ORGANIZATION_OWNER'}
                                     className="bg-[#131924] border border-white/10 text-xs rounded px-2 py-1 text-gray-200 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                                   >
                                     <option value="EMPLOYEE">{'Employee'}</option>
@@ -661,7 +626,7 @@ export function Admin() {
                                     <option value="SECURITY_ANALYST">{'Security analyst'}</option>
                                     <option value="ORGANIZATION_ADMIN">{'Org admin'}</option>
                                     <option value="ORGANIZATION_OWNER">{'Org owner'}</option>
-                                    <option value="SUPER_ADMIN">{'Super admin'}</option>
+                                    
                                   </select>
                                 </td>
                                 <td className="py-4 px-4">

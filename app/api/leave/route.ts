@@ -1,118 +1,69 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { sendNotification } from '@/lib/notify';
-import { isMockMode } from '@/lib/mock-employees';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
+import {
+  createLeave,
+  fetchLeaveRequests,
+  fetchProfile,
+  LeaveServiceError,
+} from '@/lib/leave-service';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { leave_type, start_date, end_date, total_days, reason, document_url, user_id } = body;
-
-    if (!leave_type || !start_date || !end_date || !total_days || !reason) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    if (isMockMode()) {
-      const now = new Date().toISOString();
-      const newRequest = {
-        id: `lr-${Date.now()}`,
-        user_id: user_id || 'mock',
-        user_name: 'John Employee',
-        type: leave_type,
-        leave_type,
-        start_date,
-        end_date,
-        total_days,
-        reason,
-        document_url: document_url || null,
-        status: 'Pending',
-        created_at: now,
-      };
-      MockDB.leave_requests = MockDB.leave_requests || [];
-      MockDB.leave_requests.push(newRequest as any);
-      saveMockDB();
-      return NextResponse.json({ message: 'Leave request submitted successfully', data: newRequest });
-    }
-
     const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const admin = await createAdminClient();
 
-    // In a real app with mock auth, we might pass the user_id in the body if session management is custom
-    let userId = user?.id;
-    if (!userId && body.user_id) {
-      userId = body.user_id;
-    }
-
-    if (!userId) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data, error } = await supabase
-      .from('leave_requests')
-      .insert([{
-        user_id: userId,
-        leave_type,
-        start_date,
-        end_date,
-        total_days,
-        reason,
-        document_url,
-        status: 'PENDING'
-      }])
-      .select();
-
-    if (error) {
-      throw error;
+    const caller = await fetchProfile(admin, session.user.id);
+    if (!caller) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
     }
 
-    // Insert notification for admins (suppressed if the recipient is in focus mode)
-    await sendNotification(supabase, {
-      user_id: userId, // In reality, this should be sent to admin users
-      type: 'SYSTEM_ALERT',
-      title: 'New Leave Request',
-      message: `A new ${leave_type} request has been submitted.`
-    });
+    const body = await req.json();
+    const data = await createLeave(admin, caller, body, req);
 
-    return NextResponse.json({ message: 'Leave request submitted successfully', data: data[0] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ message: 'Leave request submitted successfully', data });
+  } catch (err: unknown) {
+    if (err instanceof LeaveServiceError) {
+      return NextResponse.json({ error: err.message, code: err.code }, { status: err.status });
+    }
+    console.error('Leave create error:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const admin = await createAdminClient();
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const caller = await fetchProfile(admin, session.user.id);
+    if (!caller) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+    }
+
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('user_id');
 
-    if (isMockMode()) {
-      let requests = (MockDB.leave_requests || []).slice();
-      if (userId) {
-        requests = requests.filter((r: any) => r.user_id === userId);
-      }
-      const normalized = requests.map((r: any) => ({
-        ...r,
-        leave_type: r.leave_type || r.type || 'Leave',
-      }));
-      normalized.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      return NextResponse.json({ data: normalized });
-    }
-
-    const supabase = await createServerSupabaseClient();
-    let query = supabase.from('leave_requests').select('*').order('created_at', { ascending: false });
-
-    if (userId) {
-      query = query.eq('user_id', userId);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      throw error;
-    }
+    const data = await fetchLeaveRequests(admin, caller, {
+      userId,
+      includeSelfForManager: true,
+    });
 
     return NextResponse.json({ data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof LeaveServiceError) {
+      return NextResponse.json({ error: err.message, code: err.code }, { status: err.status });
+    }
+    console.error('Leave list error:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

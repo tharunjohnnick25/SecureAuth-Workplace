@@ -48,7 +48,9 @@ function parseCSV(text: string): string[][] {
   return rows;
 }
 
-export async function POST(req: NextRequest) {
+import { requireCompanyAccess } from '@/lib/auth';
+
+export const POST = requireCompanyAccess(async (req: NextRequest, user, companyId) => {
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -81,31 +83,18 @@ export async function POST(req: NextRequest) {
     const result = { total: rows.length - 1, imported: 0, skipped: 0, errors: [] as { row: number; message: string }[] };
     const mock = isMockMode();
     const supabase = mock ? null : await createServerSupabaseClient();
+    
+    // Dynamic import to avoid edge runtime issues if supabase-admin uses Node internals
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
-    // Determine admin domain to enforce company boundaries
-    let adminDomain = '';
-    if (mock) {
-      const mockSession = req.cookies.get('mock_session')?.value;
-      if (mockSession) {
-        try {
-          // Some mock cookies are URI-encoded
-          let decoded = mockSession;
-          try { decoded = decodeURIComponent(mockSession); } catch(e) {}
-          const parsed = JSON.parse(decoded);
-          if (parsed.email) adminDomain = parsed.email.split('@')[1]?.toLowerCase();
-        } catch (e) {}
-      }
-    } else {
-      const { data: { session } } = await supabase!.auth.getSession();
-      if (session?.user?.email) adminDomain = session.user.email.split('@')[1]?.toLowerCase();
-    }
+    const adminDomain = user.email ? user.email.split('@')[1]?.toLowerCase() : '';
 
     for (let i = 1; i < rows.length; i++) {
       const values = rows[i];
       const get = (idx: number) => (idx >= 0 ? (values[idx] || '').trim() : '');
 
       const email = get(emailIdx);
-      const password = get(passwordIdx) || 'Welcome@123';
+      const password = get(passwordIdx) || `Temp@${Math.random().toString(36).slice(-8)}`;
       const full_name = get(fullNameIdx) || email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       const employee_id = get(employeeIdIdx);
       const role = get(roleIdx) || 'EMPLOYEE';
@@ -134,11 +123,6 @@ export async function POST(req: NextRequest) {
           result.errors.push({ row: i + 1, message: `Duplicate email: ${email}` });
           continue;
         }
-        if (employee_id && MockEmployees.findByEmployeeId(employee_id)) {
-          result.skipped++;
-          result.errors.push({ row: i + 1, message: `Duplicate employee ID: ${employee_id}` });
-          continue;
-        }
         MockEmployees.add({ full_name, email, employee_id, role, status, department, designation, employment_type, phone, password });
         result.imported++;
         continue;
@@ -151,18 +135,33 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const { error } = await supabase!.from('users').insert([{
-        full_name,
+      // 1. Create auth.users via Admin API
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
+        password: password,
+        email_confirm: true,
+        user_metadata: { full_name }
+      });
+
+      if (authError || !authData.user) {
+        result.skipped++;
+        result.errors.push({ row: i + 1, message: 'Auth creation failed: ' + (authError?.message || 'Unknown') });
+        continue;
+      }
+
+      // 2. Update public.users profile securely
+      const { error } = await (supabaseAdmin as any).from('users').update({
+        id: authData.user.id,
+        full_name,
         employee_id: employee_id || undefined,
-        role,
+        role: role.toLowerCase(),
         status,
         department: department || null,
         designation: designation || null,
         employment_type,
         phone: phone || null,
-        password_hash: hashPassword(password),
-      }]);
+        company_id: companyId
+      }).eq('id', authData.user.id);
 
       if (error) {
         result.skipped++;
@@ -176,4 +175,4 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Import failed', success: false }, { status: 500 });
   }
-}
+});

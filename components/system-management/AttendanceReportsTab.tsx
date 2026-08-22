@@ -15,9 +15,7 @@ import {
   UserX,
   Users,
   CheckCircle2,
-  XCircle,
   Loader2,
-  Filter,
   X,
 } from 'lucide-react';
 
@@ -32,6 +30,11 @@ interface AttendanceRecord {
   full_name: string;
   email: string;
   department: string;
+  ip_address: string | null;
+  location_in: string | null;
+  location_out: string | null;
+  lat: number | null;
+  lon: number | null;
 }
 
 function formatTime(iso: string | null) {
@@ -80,7 +83,6 @@ export function AttendanceReportsTab({ hideLayout }: { hideLayout?: boolean }) {
   });
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
   const [page, setPage] = useState(1);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const limit = 50;
 
   // Summary stats
@@ -118,7 +120,7 @@ export function AttendanceReportsTab({ hideLayout }: { hideLayout?: boolean }) {
       .then(r => r.json())
       .then(j => {
         if (j.success && j.data) {
-          const names = j.data.map((d: any) => d.name).filter(Boolean);
+          const names = j.data.map((d: { name?: string }) => d.name).filter(Boolean);
           setDepartments(names);
         }
       })
@@ -128,11 +130,11 @@ export function AttendanceReportsTab({ hideLayout }: { hideLayout?: boolean }) {
   useEffect(() => {
     const debounce = setTimeout(() => fetchRecords(), search ? 400 : 0);
     return () => clearTimeout(debounce);
-  }, [fetchRecords]);
+  }, [fetchRecords, search]);
 
   const handleExport = () => {
     if (!records.length) return;
-    const headers = ['Date', 'Employee', 'Email', 'Department', 'Check In', 'Check Out', 'Duration', 'Status'];
+    const headers = ['Date', 'Employee', 'Email', 'Department', 'Check In', 'Check Out', 'Duration', 'Network IP', 'Location', 'Status'];
     const rows = records.map(r => [
       r.date,
       r.full_name,
@@ -141,6 +143,8 @@ export function AttendanceReportsTab({ hideLayout }: { hideLayout?: boolean }) {
       formatTime(r.check_in),
       formatTime(r.check_out),
       r.duration,
+      r.ip_address || '',
+      r.lat != null && r.lon != null ? `${r.lat}, ${r.lon}` : (r.location_out || r.location_in || ''),
       r.status,
     ]);
     const csv = [headers, ...rows].map(row => row.map(v => `"${v}"`).join(',')).join('\n');
@@ -309,6 +313,8 @@ export function AttendanceReportsTab({ hideLayout }: { hideLayout?: boolean }) {
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-4 py-4">Check In</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-4 py-4">Check Out</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-4 py-4">Duration</th>
+                        <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-4 py-4">Network IP</th>
+                        <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-4 py-4">Location</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-4 py-4">Status</th>
                       </tr>
                     </thead>
@@ -349,6 +355,24 @@ export function AttendanceReportsTab({ hideLayout }: { hideLayout?: boolean }) {
                           </td>
                           <td className="px-4 py-4">
                             <span className="text-sm text-gray-300 font-mono">{record.duration}</span>
+                          </td>
+                          <td className="px-4 py-4">
+                            {record.ip_address ? (
+                              <span className="text-sm font-mono text-gray-300">{record.ip_address}</span>
+                            ) : (
+                              <span className="text-sm text-gray-600">–</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-4">
+                            {record.lat != null && record.lon != null ? (
+                              <span className="text-sm font-mono text-gray-300">{`${Number(record.lat).toFixed(4)}, ${Number(record.lon).toFixed(4)}`}</span>
+                            ) : (record.location_out || record.location_in) ? (
+                              <span className={`text-sm ${record.location_out === 'Remote' || record.location_in === 'Remote' ? 'text-amber-400' : 'text-gray-300'}`}>
+                                {record.location_out || record.location_in}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-600">Headquarters</span>
+                            )}
                           </td>
                           <td className="px-4 py-4">
                             {getStatusBadge(record.status, record.check_in)}

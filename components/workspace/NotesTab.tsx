@@ -1,16 +1,37 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
-import { Sidebar } from '@/components/Sidebar';
-import { Navbar } from '@/components/Navbar';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Loader2, Pin, Trash2, Palette, X, Plus, FileText, Mic, MicOff } from 'lucide-react';
+import { Loader2, Pin, Trash2, Palette, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { useVoiceInput } from '@/hooks/useVoiceInput';
+
+interface Note {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  color: string;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+const COLORS = [
+  'bg-white/5',
+  'bg-red-900/40',
+  'bg-orange-900/40',
+  'bg-yellow-900/40',
+  'bg-green-900/40',
+  'bg-teal-900/40',
+  'bg-blue-900/40',
+  'bg-indigo-900/40',
+  'bg-purple-900/40',
+  'bg-pink-900/40'
+];
 
 export function NotesTab() {
   const { user } = useAuthStore();
-  const [notes, setNotes] = useState<any[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
 
   // New Note State
@@ -19,24 +40,92 @@ export function NotesTab() {
   const [newContent, setNewContent] = useState('');
   const [newColor, setNewColor] = useState('bg-white/5');
   const createRef = useRef<HTMLDivElement>(null);
-  const { isListening, toggleVoiceInput } = useVoiceInput((text) => setNewContent(prev => prev + (prev ? ' ' : '') + text));
 
-  // Note colors (Cyber Theme)
-  const COLORS = [
-    'bg-white/5',
-    'bg-red-900/40',
-    'bg-orange-900/40',
-    'bg-yellow-900/40',
-    'bg-green-900/40',
-    'bg-teal-900/40',
-    'bg-blue-900/40',
-    'bg-indigo-900/40',
-    'bg-purple-900/40',
-    'bg-pink-900/40'
-  ];
+  const loadNotes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/notes?user_id=${user?.id}`);
+      const data = await res.json();
+      if (data.success) setNotes(data.data);
+    } catch {
+      toast.error('Failed to load notes');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const handleCreateNote = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle,
+          content: newContent,
+          color: newColor
+        })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Failed to create note');
+      }
+
+      setNewTitle('');
+      setNewContent('');
+      setNewColor('bg-white/5');
+      setIsCreating(false);
+      loadNotes();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create note');
+    }
+  }, [newTitle, newContent, newColor, loadNotes]);
+
+  const handleUpdateNote = useCallback(async (id: string, updates: Partial<Note>) => {
+    try {
+      // Optimistic update
+      setNotes(notes.map(n => n.id === id ? { ...n, ...updates } : n));
+
+      const res = await fetch(`/api/notes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (!res.ok) throw new Error('Failed to update note');
+      loadNotes(); // Refetch to ensure correct sorting and timestamps
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update note');
+      loadNotes(); // Revert on error
+    }
+  }, [notes, loadNotes]);
+
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      setNotes(notes.filter(n => n.id !== id));
+      const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      toast.success('Note deleted');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete');
+      loadNotes();
+    }
+  }, [notes, loadNotes]);
 
   useEffect(() => {
-    if (user) loadNotes();
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/notes?user_id=${user.id}`);
+        const data = await res.json();
+        if (!cancelled && data.success) setNotes(data.data);
+      } catch {
+        if (!cancelled) toast.error('Failed to load notes');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user]);
 
   // Click outside listener for the create box
@@ -52,77 +141,7 @@ export function NotesTab() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isCreating, newTitle, newContent, newColor]);
-
-  const loadNotes = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/notes?user_id=${user?.id}`);
-      const data = await res.json();
-      if (data.success) setNotes(data.data);
-    } catch (e) {
-      toast.error('Failed to load notes');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateNote = async () => {
-    try {
-      const res = await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user?.id,
-          title: newTitle,
-          content: newContent,
-          color: newColor
-        })
-      });
-      if (!res.ok) throw new Error('Failed to create note');
-      
-      setNewTitle('');
-      setNewContent('');
-      setNewColor('bg-white/5');
-      setIsCreating(false);
-      loadNotes();
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
-  const handleUpdateNote = async (id: string, updates: any) => {
-    try {
-      // Optimistic update
-      setNotes(notes.map(n => n.id === id ? { ...n, ...updates } : n).sort((a, b) => {
-        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
-        return 0; // maintain relative order for simple optimistic update
-      }));
-
-      const res = await fetch(`/api/notes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      if (!res.ok) throw new Error('Failed to update note');
-      loadNotes(); // Refetch to ensure correct sorting and timestamps
-    } catch (err: any) {
-      toast.error(err.message);
-      loadNotes(); // Revert on error
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      setNotes(notes.filter(n => n.id !== id));
-      const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
-      toast.success('Note deleted');
-    } catch (err: any) {
-      toast.error(err.message);
-      loadNotes();
-    }
-  };
+  }, [isCreating, newTitle, newContent, handleCreateNote]);
 
   return (
     <div className="w-full">
@@ -152,25 +171,20 @@ export function NotesTab() {
                   />
                   <div className="flex items-center justify-between pt-4 border-t border-white/10">
                     <div className="flex gap-2">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); toggleVoiceInput(); }}
-                        className={`p-2.5 rounded-full transition-colors ${isListening ? 'bg-red-500/20 text-red-400' : 'hover:bg-white/10 text-gray-400'}`}
-                        title="Dictate Note"
-                      >
-                        {isListening ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
-                      </button>
                       <div className="relative group/palette">
                         <button className="p-2.5 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
                           <Palette className="w-5 h-5" />
                         </button>
-                        <div className="absolute top-full left-0 mt-2 p-3 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl flex gap-2 hidden group-hover/palette:flex z-50 flex-wrap w-[220px]">
-                          {COLORS.map(c => (
-                            <button 
-                              key={c} 
-                              onClick={(e) => { e.stopPropagation(); setNewColor(c); }}
-                              className={`w-7 h-7 rounded-full ${c} border ${newColor === c ? 'border-white scale-110' : 'border-white/20'} hover:scale-110 transition-all`} 
-                            />
-                          ))}
+                        <div className="absolute top-full left-0 pt-2 hidden group-hover/palette:block z-50">
+                          <div className="p-3 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl flex gap-2 flex-wrap w-[220px]">
+                            {COLORS.map(c => (
+                              <button 
+                                key={c} 
+                                onClick={(e) => { e.stopPropagation(); setNewColor(c); }}
+                                className={`w-7 h-7 rounded-full ${c} border ${newColor === c ? 'border-white scale-110' : 'border-white/20'} hover:scale-110 transition-all`} 
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -239,7 +253,7 @@ export function NotesTab() {
   );
 }
 
-function NoteCard({ note, onUpdate, onDelete, colors }: { note: any, onUpdate: (id: string, updates: any) => void, onDelete: (id: string) => void, colors: string[] }) {
+function NoteCard({ note, onUpdate, onDelete, colors }: { note: Note, onUpdate: (id: string, updates: Partial<Note>) => void, onDelete: (id: string) => void, colors: string[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(note.title);
   const [editContent, setEditContent] = useState(note.content);
@@ -286,14 +300,16 @@ function NoteCard({ note, onUpdate, onDelete, colors }: { note: any, onUpdate: (
             <button className="p-1.5 rounded-full hover:bg-black/20 text-white/70 hover:text-white transition-colors">
               <Palette className="w-4 h-4" />
             </button>
-            <div className="absolute bottom-full left-0 mb-2 p-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl flex gap-1 hidden group-hover/palette:flex z-50">
-              {colors.map(c => (
-                <button 
-                  key={c} 
-                  onClick={() => onUpdate(note.id, { color: c })}
-                  className={`w-6 h-6 rounded-full ${c} border border-white/20 hover:scale-110 transition-transform`} 
-                />
-              ))}
+            <div className="absolute bottom-full left-0 pb-2 hidden group-hover/palette:block z-50">
+              <div className="p-2 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl flex gap-1 flex-wrap w-[200px]">
+                {colors.map(c => (
+                  <button 
+                    key={c} 
+                    onClick={(e) => { e.stopPropagation(); onUpdate(note.id, { color: c }); }}
+                    className={`w-6 h-6 rounded-full ${c} border border-white/20 hover:scale-110 transition-transform`} 
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <button onClick={() => onDelete(note.id)} className="p-1.5 rounded-full hover:bg-red-500/20 text-white/70 hover:text-red-400 transition-colors">

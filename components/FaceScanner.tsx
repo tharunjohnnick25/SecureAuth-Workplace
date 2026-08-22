@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button'; // Assuming standard shadcn ui is present
 import { Loader2 } from 'lucide-react';
+import * as faceapi from 'face-api.js';
 
 interface FaceScannerProps {
   onCapture: (base64Image: string) => void;
@@ -13,10 +14,21 @@ interface FaceScannerProps {
 export function FaceScanner({ onCapture, promptText = "Position your face in the frame", isProcessing = false }: FaceScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const loadModels = async () => {
+      try {
+        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+      } catch (err) {
+        console.error('Failed to load face models', err);
+      }
+    };
+    loadModels();
+
     async function setupCamera() {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -34,11 +46,45 @@ export function FaceScanner({ onCapture, promptText = "Position your face in the
     setupCamera();
 
     return () => {
+      if (animationRef.current) {
+        clearInterval(animationRef.current as any);
+      }
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
+
+  const handleVideoPlay = () => {
+    if (animationRef.current) clearInterval(animationRef.current as any);
+    
+    animationRef.current = setInterval(async () => {
+      if (videoRef.current && overlayRef.current && faceapi.nets.ssdMobilenetv1.isLoaded) {
+        try {
+          const detections = await faceapi.detectAllFaces(
+            videoRef.current, 
+            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 })
+          );
+          
+          if (!videoRef.current || !overlayRef.current) return;
+          
+          const displaySize = { 
+            width: videoRef.current.videoWidth, 
+            height: videoRef.current.videoHeight 
+          };
+          faceapi.matchDimensions(overlayRef.current, displaySize);
+          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+          
+          const ctx = overlayRef.current.getContext('2d');
+          ctx?.clearRect(0, 0, overlayRef.current.width, overlayRef.current.height);
+          
+          faceapi.draw.drawDetections(overlayRef.current, resizedDetections);
+        } catch (err) {
+          // Ignore intermittent tensor errors
+        }
+      }
+    }, 100) as any;
+  };
 
   const handleCapture = () => {
     if (videoRef.current && canvasRef.current) {
@@ -66,13 +112,16 @@ export function FaceScanner({ onCapture, promptText = "Position your face in the
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover"
+            onPlay={handleVideoPlay}
+            className="absolute inset-0 w-full h-full object-cover"
             style={{ transform: 'scaleX(-1)' }} // Mirror effect
           />
-          {/* Scanning Box overlay */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-48 h-48 md:w-64 md:h-64 border-4 border-blue-500/50 rounded-full"></div>
-          </div>
+          <canvas
+            ref={overlayRef}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style={{ transform: 'scaleX(-1)' }}
+          />
+          {/* Scanning Box overlay removed to let face-api draw it */}
           {isProcessing && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm z-10">
               <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />

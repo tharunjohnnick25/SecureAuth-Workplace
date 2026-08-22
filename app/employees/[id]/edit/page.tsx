@@ -28,7 +28,7 @@ export default function EditEmployeePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [activeEmployees, setActiveEmployees] = useState<{ id: string; full_name: string }[]>([]);
+  const [activeEmployees, setActiveEmployees] = useState<{ id: string; full_name: string; department?: string; role?: string }[]>([]);
   const [form, setForm] = useState<EmployeeFormData>({
     full_name: '',
     email: '',
@@ -67,7 +67,7 @@ export default function EditEmployeePage() {
         salary: emp.salary || undefined,
       });
       setDepartments(depts);
-      setActiveEmployees(actives.map(e => ({ id: e.id, full_name: e.full_name || '' })));
+      setActiveEmployees(actives.map(e => ({ id: e.id, full_name: e.full_name || '', department: e.department, role: e.role })));
       setLoading(false);
     }).catch((e) => {
       toast.error(e.message || 'Failed to load employee');
@@ -232,7 +232,9 @@ export default function EditEmployeePage() {
                         <select value={form.manager_id || ''} onChange={(e) => updateField('manager_id', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
                           <option value="">{'No manager'}</option>
-                          {activeEmployees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                          {activeEmployees
+                            .filter(e => e.role === 'MANAGER' && (!form.department || e.department === form.department))
+                            .map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
                         </select>
                       </div>
                       <div>

@@ -1,32 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
-    const { user_id, end_meeting } = body;
+    const targetUserId = body.user_id || session.user.id;
 
-    const meeting = MockDB.meetings.find((m: any) => m.id === id);
-    if (!meeting) {
-      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
+    // Only user themselves can leave, unless host is ending meeting
+    if (targetUserId !== session.user.id) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
-    const pIdx = MockDB.meeting_participants.findIndex(
-      (p: any) => p.meeting_id === id && p.user_id === user_id
-    );
-    if (pIdx !== -1) {
-      MockDB.meeting_participants[pIdx].status = 'LEFT';
-    }
+    const { id } = await context.params;
+    const { error } = await supabase
+      .from('meeting_participants')
+      .update({ status: 'LEFT', left_at: new Date().toISOString() })
+      .eq('meeting_id', id)
+      .eq('user_id', targetUserId);
 
-    if (end_meeting) {
-      meeting.status = 'ENDED';
-    }
+    if (error) throw error;
 
-    saveMockDB();
-
-    return NextResponse.json({ data: { status: 'LEFT' }, success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

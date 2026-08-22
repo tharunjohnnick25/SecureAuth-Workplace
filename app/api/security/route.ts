@@ -1,19 +1,17 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { requireCompanyAccess, requireRole } from '@/lib/auth';
 
-export async function GET() {
+export const GET = requireRole(['admin', 'super_admin'], requireCompanyAccess(async (req: NextRequest, user, companyId) => {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    
+    // Explicitly add company filter for defense-in-depth on top of RLS
     const [securityEvents, threatLogs, failedLogins] = await Promise.all([
-      supabase.from('security_events').select('*').order('created_at', { ascending: false }).limit(100),
-      supabase.from('threat_logs').select('*').order('created_at', { ascending: false }).limit(100),
-      supabase.from('login_logs').select('*').eq('status', 'FAILURE').order('created_at', { ascending: false }).limit(50),
+      supabase.from('security_events').select('*').eq('company_id', companyId).order('created_at', { ascending: false }).limit(100),
+      // Assuming threatLogs and login_logs also have company_id per phase 4
+      supabase.from('threat_logs').select('*').eq('company_id', companyId).order('created_at', { ascending: false }).limit(100),
+      supabase.from('login_history').select('*').eq('company_id', companyId).eq('status', 'FAILURE').order('created_at', { ascending: false }).limit(50),
     ]);
 
     return NextResponse.json({
@@ -27,6 +25,7 @@ export async function GET() {
       }
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[Security API] Error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
-}
+}));

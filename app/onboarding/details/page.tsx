@@ -9,7 +9,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useLanguage } from '@/context/LanguageContext';
 import { Loader2, UserRound, Phone, Building2, Briefcase, CalendarDays, Cake, UserCog, UsersRound, ShieldCheck, Lock } from 'lucide-react';
 
-const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
+const ADMIN_ROLES = new Set(['ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance'];
 const GENDERS = ['Male', 'Female', 'Other', 'Prefer not to say'];
@@ -43,7 +43,7 @@ export default function CompleteDetailsPage() {
       router.replace('/dashboard');
       return;
     }
-    if (user.profile_completed === true) {
+    if (user.status !== 'INVITED') {
       router.replace('/dashboard');
       return;
     }

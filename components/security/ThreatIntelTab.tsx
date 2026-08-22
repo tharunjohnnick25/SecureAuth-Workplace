@@ -7,14 +7,14 @@ import { ShieldAlert, ShieldCheck, Zap, Globe, AlertTriangle } from 'lucide-reac
 import { useMemo } from 'react';
 
 export function ThreatIntelTab() {
-  const { data: alerts, loading } = useRealtimeData('alerts', (q) => 
+  const { data: alerts, loading } = useRealtimeData('threat_logs', (q) => 
     q.order('created_at', { ascending: false }).limit(50)
   );
   
   const { data: riskScores } = useRealtimeData('risk_scores');
 
   const stats = useMemo(() => {
-    const highRisk = alerts?.filter((a: any) => a.severity === 'critical' || a.severity === 'warning').length || 0;
+    const highRisk = alerts?.filter((a: any) => a.severity?.toLowerCase() === 'critical' || a.severity?.toLowerCase() === 'high').length || 0;
     const avgScore = riskScores?.length 
       ? (riskScores.reduce((acc: number, curr: any) => acc + Number(curr.score), 0) / riskScores.length).toFixed(1)
       : '0.0';
@@ -30,9 +30,9 @@ export function ThreatIntelTab() {
   const recentActivity = useMemo(() => {
     return alerts?.map((alert: any) => ({
       id: alert.id,
-      title: alert.type?.replace(/_/g, ' ').toUpperCase() || 'UNKNOWN ALERT',
+      title: alert.threat_type?.replace(/_/g, ' ').toUpperCase() || 'UNKNOWN THREAT',
       time: new Date(alert.created_at).toLocaleTimeString(),
-      status: (alert.severity === 'critical' ? 'danger' : alert.severity === 'warning' ? 'warning' : 'success') as 'success' | 'warning' | 'danger'
+      status: (alert.severity?.toLowerCase() === 'critical' ? 'danger' : alert.severity?.toLowerCase() === 'high' ? 'warning' : 'success') as 'success' | 'warning' | 'danger'
     })) || [];
   }, [alerts]);
 
@@ -62,9 +62,9 @@ export function ThreatIntelTab() {
 
   const barData = useMemo(() => {
     if (!alerts) return [];
-    const critical = alerts.filter((a: any) => a.severity === 'critical').length;
-    const warning = alerts.filter((a: any) => a.severity === 'warning').length;
-    const info = alerts.filter((a: any) => a.severity === 'info').length;
+    const critical = alerts.filter((a: any) => a.severity?.toLowerCase() === 'critical').length;
+    const warning = alerts.filter((a: any) => a.severity?.toLowerCase() === 'high' || a.severity?.toLowerCase() === 'warning').length;
+    const info = alerts.filter((a: any) => a.severity?.toLowerCase() === 'low' || a.severity?.toLowerCase() === 'info').length;
     return [
       { name: 'Critical', value: critical },
       { name: 'Warning', value: warning },

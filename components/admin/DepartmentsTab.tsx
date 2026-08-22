@@ -230,7 +230,7 @@ export function DepartmentsTab() {
                             <Building2 className="w-4 h-4" />
                           </div>
                           <div>
-                            <Link href={`/departments/${dept.id}`} className="text-sm font-medium text-white hover:text-blue-400 transition-colors">
+                            <Link href="#" onClick={(e) => { e.preventDefault(); handleOpenModal(dept); }} className="text-sm font-medium text-white hover:text-blue-400 transition-colors">
                               {dept.name}
                             </Link>
                             {dept.description && <p className="text-xs text-gray-500">{dept.description}</p>}
@@ -245,9 +245,9 @@ export function DepartmentsTab() {
                       <td className="px-6 py-4 text-sm text-gray-300">-</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Link href={`/departments/${dept.id}`} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
+                          <button onClick={() => handleOpenModal(dept)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
                             <Eye className="w-4 h-4" />
-                          </Link>
+                          </button>
                           <button onClick={() => handleOpenModal(dept)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
                             <Edit className="w-4 h-4" />
                           </button>

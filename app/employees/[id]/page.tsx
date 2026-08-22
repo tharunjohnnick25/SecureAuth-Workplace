@@ -33,11 +33,6 @@ export default function EmployeeProfilePage() {
   const id = params.id as string;
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
-  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
-  const [docsLoading, setDocsLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadDocType, setUploadDocType] = useState<DocumentType>('Other');
-  const [showUpload, setShowUpload] = useState(false);
   
   const [isTrainingFace, setIsTrainingFace] = useState(false);
   const [trainingProgress, setTrainingProgress] = useState(0);
@@ -58,16 +53,6 @@ export default function EmployeeProfilePage() {
     }
   }, [id]);
 
-  const loadDocuments = useCallback(async () => {
-    setDocsLoading(true);
-    try {
-      const docs = await EmployeeService.getDocuments(id);
-      setDocuments(docs);
-    } catch { /* ignore */ } finally {
-      setDocsLoading(false);
-    }
-  }, [id]);
-
   const loadRiskProfile = useCallback(async () => {
     setRiskLoading(true);
     try {
@@ -81,7 +66,7 @@ export default function EmployeeProfilePage() {
     }
   }, [id]);
 
-  useEffect(() => { loadEmployee(); loadDocuments(); loadRiskProfile(); }, [loadEmployee, loadDocuments, loadRiskProfile]);
+  useEffect(() => { loadEmployee(); loadRiskProfile(); }, [loadEmployee, loadRiskProfile]);
 
   const handlePhotoUpload = async () => {
     const input = document.createElement('input');
@@ -107,32 +92,6 @@ export default function EmployeeProfilePage() {
       }
     };
     input.click();
-  };
-
-  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      await EmployeeService.uploadDocument(id, file, uploadDocType);
-      toast.success('Document uploaded');
-      setShowUpload(false);
-      loadDocuments();
-    } catch (e: any) {
-      toast.error(e.message || 'Upload failed');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteDoc = async (docId: string) => {
-    try {
-      await EmployeeService.deleteDocument(id, docId);
-      toast.success('Document deleted');
-      loadDocuments();
-    } catch (e: any) {
-      toast.error(e.message || 'Delete failed');
-    }
   };
 
   const handleFaceTraining = async () => {
@@ -378,81 +337,10 @@ export default function EmployeeProfilePage() {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-white text-sm">{'Documents'}</CardTitle>
-                  <Button onClick={() => setShowUpload(true)} variant="outline" className="border-white/10 text-xs h-8">
-                    <Upload className="w-3 h-3 mr-1" /> {'Upload'}</Button>
-                </CardHeader>
-                <CardContent>
-                  {docsLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
-                    </div>
-                  ) : documents.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">{'Nodocumentsuplo'}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-blue-400" />
-                            <div>
-                              <p className="text-sm text-white font-medium">{doc.document_name}</p>
-                              <p className="text-xs text-gray-500">{doc.document_type}{doc.file_size ? ` · ${(doc.file_size / 1024).toFixed(1)} KB` : ''}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <a href={doc.file_url} target="_blank" rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
-                              <Download className="w-4 h-4" />
-                            </a>
-                            <button onClick={() => handleDeleteDoc(doc.id)}
-                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </div>
           </div>
         </main>
       </div>
-
-      <AnimatePresence>
-        {showUpload && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#0b132b] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center"><Upload className="w-6 h-6" /></div>
-                  <div><h3 className="text-lg font-bold text-white">{'Upload document'}</h3><p className="text-xs text-gray-400">{'Pdfdocxpngjpegm'}</p></div>
-                </div>
-                <button onClick={() => setShowUpload(false)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
-              </div>
-              <div className="mb-4">
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">{'Document type'}</label>
-                <select value={uploadDocType} onChange={(e) => setUploadDocType(e.target.value as DocumentType)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white">
-                  {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <input type="file" accept=".pdf,.docx,.png,.jpg,.jpeg" onChange={handleDocUpload} disabled={uploading}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:text-xs hover:file:bg-blue-500" />
-              {uploading && <div className="flex items-center gap-2 mt-3 text-sm text-blue-400"><Loader2 className="w-4 h-4 animate-spin" /> {'Uploading'}</div>}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {isTrainingFace && (

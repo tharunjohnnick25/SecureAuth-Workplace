@@ -16,8 +16,11 @@ interface Task {
   description?: string;
   status: 'TODO' | 'IN_PROGRESS' | 'DONE';
   assignee: string;
+  assigned_to?: string;
   assignee_name?: string;
   created_by?: string;
+  assigned_by?: string;
+  assigner_name?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   created_at: string;
 }
@@ -50,7 +53,7 @@ export default function TasksPage() {
   useEffect(() => {
     if (user?.id) {
       fetchTasks();
-      if (user?.role === 'MANAGER') {
+      if (user?.role?.toUpperCase() === 'MANAGER') {
         fetchEmployees();
       }
     }
@@ -70,7 +73,8 @@ export default function TasksPage() {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch(`/api/workspace/tasks?assignee=${user?.id}`);
+      const url = `/api/workspace/tasks?assignee=${user?.id}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.tasks) setTasks(data.tasks);
     } catch (err) {
@@ -264,11 +268,28 @@ export default function TasksPage() {
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getPriorityColor(task.priority)}`}>
                           {task.priority}
                         </span>
-                        {task.assignee !== user?.id && (
-                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 ml-2">
-                            Assigned to: {task.assignee_name || 'Unknown'}
-                          </span>
-                        )}
+                        {(() => {
+                          const isAssignee = task.assignee === user?.id || task.assigned_to === user?.id;
+                          const isSelfAssigned = isAssignee && (task.created_by === user?.id || task.assigned_by === user?.id);
+                          
+                          if (isSelfAssigned) {
+                            return null;
+                          }
+                          
+                          if (isAssignee) {
+                            return (
+                              <span className="text-[10px] bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded border border-blue-800 ml-2">
+                                Assigned from: {task.assigner_name || 'Manager'}
+                              </span>
+                            );
+                          }
+                          
+                          return (
+                            <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 ml-2">
+                              Assigned to: {task.assignee_name || 'Team Member'}
+                            </span>
+                          );
+                        })()}
                         <button 
                           onClick={() => handleDeleteTask(task.id)}
                           className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -349,7 +370,7 @@ export default function TasksPage() {
                 </select>
               </div>
               
-              {user?.role === 'MANAGER' && employees.length > 0 && (
+              {user?.role?.toUpperCase() === 'MANAGER' && employees.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">Assign To</label>
                   <select

@@ -34,7 +34,6 @@ export default function MailPage() {
   const [loading, setLoading] = useState(true);
   const [activeFolder, setActiveFolder] = useState<Folder>('inbox');
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-  const [hasGmail, setHasGmail] = useState(false);
   
   // Compose state
   const [isComposing, setIsComposing] = useState(false);
@@ -50,24 +49,8 @@ export default function MailPage() {
   const { isListening, toggleVoiceInput } = useVoiceInput((text) => setComposeBody(prev => prev + (prev ? ' ' : '') + text));
 
   useEffect(() => {
-    // Check if user just authenticated Gmail
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('gmail_connected') === 'true') {
-      localStorage.setItem('gmail_connected', 'true');
-      window.history.replaceState({}, document.title, '/mail');
-    }
-    if (localStorage.getItem('gmail_connected') === 'true') {
-      setHasGmail(true);
-    }
-  }, []);
-
-  useEffect(() => {
     if (user) {
-      if (activeFolder === 'gmail') {
-        fetchGmail();
-      } else {
-        fetchEmails(activeFolder);
-      }
+      fetchEmails(activeFolder);
     }
   }, [user, activeFolder]);
 
@@ -85,7 +68,7 @@ export default function MailPage() {
               id: e.id,
               name: e.full_name,
               email: e.email,
-              avatar: e.profile_picture
+              avatar: e.avatar_url
             })));
           }
         });
@@ -104,26 +87,6 @@ export default function MailPage() {
       }
     } catch (err) {
       toast.error('Failed to load emails');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchGmail = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/gmail/messages`);
-      const data = await res.json();
-      if (res.ok) {
-        setEmails(data.data);
-      } else {
-        toast.error('Failed to load Gmail. Please reconnect.');
-        setHasGmail(false);
-        localStorage.removeItem('gmail_connected');
-        setActiveFolder('inbox');
-      }
-    } catch (err) {
-      toast.error('Failed to load Gmail');
     } finally {
       setLoading(false);
     }
@@ -209,7 +172,8 @@ export default function MailPage() {
     if (!composeTo || !composeSubject) return;
 
     // Find recipient ID from the composeTo string (usually email)
-    const recipient = employees.find(emp => emp.email === composeTo);
+    const normalizedTo = composeTo.trim().toLowerCase();
+    const recipient = employees.find(emp => emp.email.toLowerCase() === normalizedTo);
     if (!recipient) {
       toast.error('Recipient not found. Please enter a valid employee email.');
       return;
@@ -275,10 +239,11 @@ export default function MailPage() {
       <Sidebar />
       <div className="lg:ml-64 transition-all duration-300 flex flex-col min-h-screen">
         <Navbar />
-        <main className="flex-1 p-4 sm:p-6 pt-24 overflow-hidden">
-          <div className="flex h-[calc(100vh-12rem)] rounded-2xl border border-white/10 bg-[#0a0f1c] overflow-hidden">
-      {/* Folder Sidebar */}
-      <div className="w-64 border-r border-white/5 bg-[#0a0f1c]/90 backdrop-blur-xl flex flex-col shrink-0">
+        <main className="flex-1 p-0 sm:p-6 pt-20 sm:pt-24 overflow-hidden h-[100dvh] sm:h-auto">
+          <div className="flex h-full sm:h-[calc(100vh-12rem)] sm:rounded-2xl border-0 sm:border border-white/10 bg-[#0a0f1c] overflow-hidden">
+      
+      {/* Folder Sidebar (Desktop) */}
+      <div className="hidden md:flex w-64 border-r border-white/5 bg-[#0a0f1c]/90 backdrop-blur-xl flex-col shrink-0">
         <div className="p-4 pt-6">
           <button 
             onClick={() => setIsComposing(true)}
@@ -295,27 +260,28 @@ export default function MailPage() {
           <FolderItem icon={<Send className="w-5 h-5" />} label="Sent" id="sent" active={activeFolder} onClick={setActiveFolder} />
           <FolderItem icon={<Trash className="w-5 h-5" />} label="Trash" id="trash" active={activeFolder} onClick={setActiveFolder} />
           
-          <div className="pt-4 mt-4 border-t border-white/5">
-            <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Integrations</p>
-            {hasGmail ? (
-              <FolderItem icon={<img src="https://mail.google.com/favicon.ico" alt="Gmail" className="w-5 h-5" />} label="Gmail Inbox" id="gmail" active={activeFolder} onClick={setActiveFolder} />
-            ) : (
-              <div className="px-4 mt-2">
-                <button 
-                  onClick={() => window.location.href = '/api/gmail/auth'}
-                  className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-colors"
-                >
-                  <img src="https://mail.google.com/favicon.ico" alt="Gmail" className="w-4 h-4 grayscale opacity-70" />
-                  Connect Gmail
-                </button>
-              </div>
-            )}
-          </div>
         </nav>
       </div>
 
       {/* Email List */}
-      <div className={`w-full md:w-96 border-r border-white/5 bg-[#0a0f1c]/80 backdrop-blur-md flex flex-col shrink-0 transition-all ${selectedEmail ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`w-full md:w-96 border-r border-white/5 bg-[#0a0f1c]/80 backdrop-blur-md flex flex-col shrink-0 transition-all relative ${selectedEmail ? 'hidden md:flex' : 'flex'}`}>
+        
+        {/* Mobile Folder Tabs */}
+        <div className="md:hidden flex items-center overflow-x-auto p-3 gap-2 border-b border-white/5 shrink-0 hide-scrollbar bg-[#0a0f1c]">
+          {['inbox', 'starred', 'sent', 'trash'].map((folder) => (
+            <button
+              key={folder}
+              onClick={() => setActiveFolder(folder as Folder)}
+              className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-colors ${
+                activeFolder === folder ? 'bg-blue-600 text-white' : 'bg-[#1a2133] text-gray-400 hover:text-white'
+              }`}
+            >
+              {folder.charAt(0).toUpperCase() + folder.slice(1)}
+              {folder === 'inbox' && unreadCount > 0 && ` (${unreadCount})`}
+            </button>
+          ))}
+        </div>
+
         <div className="p-4 border-b border-white/5 shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -399,6 +365,14 @@ export default function MailPage() {
             </div>
           )}
         </div>
+
+        {/* Mobile Compose FAB */}
+        <button
+          onClick={() => setIsComposing(true)}
+          className="md:hidden absolute bottom-24 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center transition-transform active:scale-90 z-10"
+        >
+          <Edit3 className="w-6 h-6" />
+        </button>
       </div>
 
       {/* Reading Pane */}
@@ -457,7 +431,8 @@ export default function MailPage() {
                       <Star className={`w-5 h-5 ${selectedEmail.is_starred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                     </button>
                     <button onClick={() => {
-                      setComposeTo(selectedEmail.sender?.email || '');
+                      const replyTo = selectedEmail.sender?.id === user?.id ? selectedEmail.recipient?.email : selectedEmail.sender?.email;
+                      setComposeTo(replyTo || '');
                       setComposeSubject(`Re: ${selectedEmail.subject.replace(/^Re: /, '')}`);
                       setIsComposing(true);
                     }} className="text-gray-400 hover:text-white">
@@ -482,16 +457,7 @@ export default function MailPage() {
                             </button>
                             <button onClick={async () => {
                               setShowMoreMenu(false);
-                              try {
-                                const res = await fetch(`/api/mail/${selectedEmail.id}`, { method: 'DELETE' });
-                                if (res.ok) {
-                                  toast.success('Conversation moved to trash');
-                                  setSelectedEmail(null);
-                                  fetchEmails();
-                                }
-                              } catch (e) {
-                                toast.error('Failed to delete email');
-                              }
+                              deleteEmail(null, selectedEmail);
                             }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors">
                               <Trash className="w-4 h-4" /> Delete this message
                             </button>
@@ -509,7 +475,8 @@ export default function MailPage() {
                 <div className="mt-12 flex gap-3">
                   <button 
                     onClick={() => {
-                      setComposeTo(selectedEmail.sender?.email || '');
+                      const replyTo = selectedEmail.sender?.id === user?.id ? selectedEmail.recipient?.email : selectedEmail.sender?.email;
+                      setComposeTo(replyTo || '');
                       setComposeSubject(`Re: ${selectedEmail.subject.replace(/^Re: /, '')}`);
                       setIsComposing(true);
                     }}
@@ -540,7 +507,7 @@ export default function MailPage() {
 
       {/* Compose Modal */}
       {isComposing && (
-        <div className="fixed bottom-0 right-12 w-full max-w-lg bg-[#1a2133] rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border border-white/10 flex flex-col overflow-hidden z-50">
+        <div className="fixed inset-0 sm:inset-auto sm:bottom-0 sm:right-12 w-full sm:max-w-lg bg-[#1a2133] sm:rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border border-white/10 flex flex-col overflow-hidden z-50 pt-safe">
           <div className="bg-[#2a3447] px-4 py-3 flex items-center justify-between cursor-pointer">
             <span className="text-sm font-semibold">New Message</span>
             <div className="flex items-center gap-2">

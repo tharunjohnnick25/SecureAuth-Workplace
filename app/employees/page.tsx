@@ -56,38 +56,31 @@ export default function EmployeesPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const toastId = toast.loading('Reading & encoding faces...');
+    const file = files[0];
+    const reader = new FileReader();
     
-    try {
-      const base64Images: string[] = [];
+    reader.onload = async (event) => {
+      const fullDataUrl = event.target?.result as string;
+      // Strip out the data:image/jpeg;base64, prefix
+      const base64Image = fullDataUrl.split(',')[1];
       
-      // Read all files concurrently
-      const readPromises = Array.from(files).map((file) => {
-        return new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string);
-          reader.onerror = (error) => reject(error);
-          reader.readAsDataURL(file);
+      const toastId = toast.loading('Uploading & encoding face...');
+      try {
+        const res = await fetch('/api/auth/enroll-face', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId, image: base64Image })
         });
-      });
-      
-      const images = await Promise.all(readPromises);
-      
-      toast.loading(`Uploading ${images.length} face templates...`, { id: toastId });
-      
-      const res = await fetch('/api/admin/enroll-face', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employeeId, images })
-      });
-      
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || 'Failed to register faces');
-      toast.success(data.message || `Successfully enrolled ${images.length} face templates!`, { id: toastId });
-    } catch (err: any) {
-      toast.error(err.message, { id: toastId });
-    }
+        
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Failed to register face');
+        toast.success(data.message || 'Successfully enrolled face template!', { id: toastId });
+      } catch (err: any) {
+        toast.error(err.message, { id: toastId });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const loadEmployees = useCallback(async () => {

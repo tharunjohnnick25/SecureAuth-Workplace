@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockEmployees, forceReload, ADMIN_ROLES } from '@/lib/mock-employees';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { logAuditEvent } from '@/lib/audit';
+
+const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
 
 export async function POST(req: NextRequest) {
   try {
-    forceReload();
     const { user, details } = await req.json();
 
-    if (!user || !details) {
+    if (!user || !user.id || !details) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -24,22 +26,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let record =
-      MockEmployees.getById(user.id) ||
-      MockEmployees.findByEmail(user.email) ||
-      MockEmployees.findByEmployeeId(user.employee_id);
+    const supabase = await createServerSupabaseClient();
 
-    if (!record) {
-      // Persist an ad-hoc account (e.g. test accounts) so details are saved
-      record = MockEmployees.add({
-        email: user.email,
-        full_name: String(full_name || '').trim(),
-        role: String(user.role || 'EMPLOYEE'),
-        employee_id: user.employee_id,
-      });
+    // Verify authentication matches the user we're updating
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || session.user.id !== user.id) {
+       return NextResponse.json({ error: 'Unauthorized to complete this profile' }, { status: 401 });
     }
 
-    const updated = MockEmployees.update(record.id, {
+    const updateData = {
       full_name: String(full_name).trim(),
       phone: String(phone).trim(),
       department: String(department).trim(),
@@ -50,34 +45,33 @@ export async function POST(req: NextRequest) {
       gender: String(gender).trim(),
       emergency_contact_name: String(emergency_contact_name).trim(),
       emergency_contact_phone: String(emergency_contact_phone).trim(),
-      profile_completed: true,
-    });
+      status: 'ACTIVE', // Move them out of the 'INVITED' state
+      updated_at: new Date().toISOString()
+    };
 
-    if (!updated) {
+    const { data: updatedProfile, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (error || !updatedProfile) {
+      console.error('[Profile Complete Error]', error);
       return NextResponse.json({ error: 'Could not save profile details' }, { status: 500 });
     }
 
+    // Audit logging for completing onboarding
+    await logAuditEvent(user.id, updatedProfile.company_id, {
+      action: 'ONBOARDING_COMPLETED',
+      resource: 'users',
+      entity_id: user.id,
+      details: { role: updatedProfile.role, new_status: 'ACTIVE' }
+    }, req);
+
     return NextResponse.json({
       success: true,
-      user: {
-        id: updated.id,
-        email: updated.email,
-        role: updated.role,
-        first_name: updated.full_name?.split(' ')[0] || '',
-        last_name: updated.full_name?.split(' ').slice(1).join(' ') || '',
-        full_name: updated.full_name,
-        employee_id: updated.employee_id,
-        phone: updated.phone || '',
-        department: updated.department || '',
-        designation: updated.designation || '',
-        employment_type: updated.employment_type || '',
-        date_of_joining: updated.date_of_joining || '',
-        date_of_birth: updated.date_of_birth || '',
-        gender: updated.gender || '',
-        emergency_contact_name: updated.emergency_contact_name || '',
-        emergency_contact_phone: updated.emergency_contact_phone || '',
-        profile_completed: true,
-      },
+      user: updatedProfile
     });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });

@@ -1,105 +1,156 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
-import { MockEmployees } from '@/lib/mock-employees';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { sendNotification } from '@/lib/notify';
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('user_id');
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
+    const { searchParams } = new URL(req.url);
+    const targetUserId = searchParams.get('user_id') || session.user.id;
+
+    // Validate access
+    if (targetUserId !== session.user.id) {
+       const { data: currentUser } = await supabase.from('users').select('role').eq('id', session.user.id).single();
+       if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
+           return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+       }
     }
 
-    // Return meetings where user is host OR participant
-    const userMeetingIds = MockDB.meeting_participants
-      .filter((p: any) => p.user_id === userId)
-      .map((p: any) => p.meeting_id);
+    // Fetch meetings where the user is a participant or host
+    const { data: meetings, error } = await supabase
+      .from('meetings')
+      .select(`
+        *,
+        host:host_id(full_name),
+        participants:meeting_participants!inner(user_id)
+      `)
+      .eq('participants.user_id', targetUserId)
+      .order('start_time', { ascending: true });
 
-    const meetings = MockDB.meetings
-      .filter((m: any) => m.host_id === userId || userMeetingIds.includes(m.id))
-      .map((m: any) => {
-        const host = MockEmployees.getById(m.host_id);
-        const participants = MockDB.meeting_participants.filter(
-          (p: any) => p.meeting_id === m.id
-        );
-        return {
-          ...m,
-          host_name: host?.full_name || m.host_id,
-          participant_count: participants.length,
-          in_call_count: participants.filter((p: any) => p.status === 'IN_CALL').length,
-        };
-      });
+    if (error) {
+      if (error.code === '42P01') {
+        return NextResponse.json({ data: [], success: true }); // Missing schema fallback
+      }
+      throw error;
+    }
 
-    return NextResponse.json({ data: meetings, success: true });
+    const formatted = (meetings || []).map(m => ({
+      ...m,
+      host_name: m.host?.full_name || 'Unknown',
+      date: new Date(m.start_time).toISOString().split('T')[0],
+      participant_count: m.participants?.length || 0,
+      in_call_count: 0
+    }));
+
+    return NextResponse.json({ data: formatted, success: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
-    const { 
-      host_id, title, description, date, start_time, end_time, 
-      type, password, waiting_room, recording_enabled, face_auth_required, participants, status 
-    } = body;
+    const { title, description, start_time, end_time, type, participants, face_auth_required } = body;
 
-    if (!host_id || !title || !date || !start_time) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!title || !start_time || !end_time) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    const meetingId = `meet-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // Get user's company_id
+    const { data: user } = await supabase.from('users').select('company_id').eq('id', session.user.id).single();
+    if (!user?.company_id) throw new Error('Missing company context');
 
-    const newMeeting = {
-      id: meetingId,
-      host_id,
-      title,
-      description: description || '',
-      date,
-      start_time,
-      end_time,
-      type: type || 'Private',
-      password: password || '',
-      waiting_room: waiting_room ?? true,
-      recording_enabled: recording_enabled ?? false,
-      face_auth_required: face_auth_required ?? false,
-      status: status || 'SCHEDULED',
-      created_at: new Date().toISOString()
-    };
+    // 1. Create meeting record
+    const { data: newMeeting, error: meetingError } = await supabase
+      .from('meetings')
+      .insert({
+         company_id: user.company_id,
+         host_id: session.user.id,
+         title,
+         description: description || '',
+         status: type === 'INSTANT' ? 'ACTIVE' : 'SCHEDULED',
+         start_time,
+         end_time,
+         type: type || 'SCHEDULED',
+         face_auth_required: !!face_auth_required
+      })
+      .select()
+      .single();
 
-    MockDB.meetings.push(newMeeting as any);
-
-    // Add participants and notify
-    const invited = new Set<string>();
-    if (Array.isArray(participants)) {
-      participants.forEach((userId: string) => {
-        if (!userId || userId === host_id || invited.has(userId)) return;
-        invited.add(userId);
-        MockDB.meeting_participants.push({
-          meeting_id: meetingId,
-          user_id: userId,
-          status: 'INVITED'
-        } as any);
-
-        // Notify invited users
-        MockDB.notifications.push({
-          id: `notif-${Date.now()}-${Math.random()}`,
-          user_id: userId,
-          type: 'MEETING_INVITE',
-          title: 'New Meeting Invitation',
-          message: `You have been invited to: ${title} on ${date} at ${start_time}`,
-          is_read: false,
-          action_url: `/meetings/${meetingId}/pre-join`,
-          created_at: new Date().toISOString()
-        } as any);
-      });
+    if (meetingError) {
+      if (meetingError.code === '42P01') {
+        return NextResponse.json({ success: false, error: 'Database migration required' }, { status: 500 });
+      }
+      throw meetingError;
     }
 
-    saveMockDB();
+    // 2. Add Host to participants
+    const participantRows = [{
+      meeting_id: newMeeting.id,
+      user_id: session.user.id,
+      role: 'HOST',
+      status: type === 'INSTANT' ? 'JOINED' : 'INVITED',
+      joined_at: type === 'INSTANT' ? new Date().toISOString() : null
+    }];
+
+    // 3. Add other participants (validate company_id!)
+    let invitedCount = 0;
+    if (Array.isArray(participants) && participants.length > 0) {
+      const { data: validUsers } = await supabase
+        .from('users')
+        .select('id, company_id')
+        .in('id', participants)
+        .eq('company_id', user.company_id);
+
+      if (validUsers) {
+        for (const vu of validUsers) {
+          if (vu.id === session.user.id) continue;
+          participantRows.push({
+            meeting_id: newMeeting.id,
+            user_id: vu.id,
+            role: 'PARTICIPANT',
+            status: 'INVITED',
+            joined_at: null
+          });
+          
+          await sendNotification(supabase, {
+             user_id: vu.id,
+             title: 'New Meeting Invitation',
+             message: `You have been invited to: ${title}`,
+             type: 'INFO'
+          });
+          invitedCount++;
+        }
+      }
+    }
+
+    // Insert participants
+    await supabase.from('meeting_participants').insert(participantRows);
+
+    // 4. Create calendar event if scheduled
+    if (type !== 'INSTANT') {
+      await supabase.from('calendar_events').insert(
+        participantRows.map(pr => ({
+          user_id: pr.user_id,
+          title,
+          description: description || '',
+          start_time,
+          end_time,
+          type: 'MEETING'
+        }))
+      );
+    }
 
     return NextResponse.json({ data: newMeeting, success: true }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

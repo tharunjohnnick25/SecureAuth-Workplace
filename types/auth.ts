@@ -1,5 +1,4 @@
 export type UserRole =
-  | 'SUPER_ADMIN'
   | 'ORGANIZATION_OWNER'
   | 'ORGANIZATION_ADMIN'
   | 'SECURITY_ANALYST'

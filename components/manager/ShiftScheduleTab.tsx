@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Calendar, Save, User } from 'lucide-react';
+import { Calendar, Save, Check, User } from 'lucide-react';
 import { Button } from '@/components/Button';
 
 const SHIFT_OPTIONS = [
@@ -12,6 +12,15 @@ const SHIFT_OPTIONS = [
   'Off'
 ];
 
+const normalizeShift = (value: string): string => {
+  const shortToFull: Record<string, string> = {
+    '09:00 AM - 05:00 PM': 'Morning (09:00 AM - 05:00 PM)',
+    '02:00 PM - 10:00 PM': 'Evening (02:00 PM - 10:00 PM)',
+    '10:00 PM - 06:00 AM': 'Night (10:00 PM - 06:00 AM)',
+  };
+  return shortToFull[value] || value;
+};
+
 export function ShiftScheduleTab({ employees }: { employees: any[] }) {
   const [shifts, setShifts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,23 +28,22 @@ export function ShiftScheduleTab({ employees }: { employees: any[] }) {
 
   useEffect(() => {
     fetchShifts();
-    
-    // Pre-populate assignments with current employee shift_timing
+  }, []);
+
+  useEffect(() => {
+    // Pre-populate assignments from saved shifts (falling back to employee shift_timing)
     const initialAssignments: Record<string, string> = {};
     employees.forEach(emp => {
-      if (emp.shift_timing) {
-        initialAssignments[emp.id] = emp.shift_timing;
-      }
+      const saved = shifts.find(s => s.id === emp.id);
+      const raw = saved?.shift_timing || emp.shift_timing;
+      if (raw) initialAssignments[emp.id] = normalizeShift(raw);
     });
     setAssignments(initialAssignments);
-  }, [employees]);
+  }, [employees, shifts]);
 
   const fetchShifts = async () => {
     try {
-      const managerId = employees[0]?.manager_id;
-      if (!managerId) return;
-      
-      const res = await fetch(`/api/manager/shifts?manager_id=${managerId}`);
+      const res = await fetch('/api/manager/shifts');
       const json = await res.json();
       if (json.data) setShifts(json.data);
     } catch (e) {
@@ -70,6 +78,11 @@ export function ShiftScheduleTab({ employees }: { employees: any[] }) {
       toast.error('Failed to assign shift');
     }
   };
+
+  const savedShifts: Record<string, string> = {};
+  shifts.forEach(s => {
+    if (s.shift_timing) savedShifts[s.id] = normalizeShift(s.shift_timing);
+  });
 
   return (
     <div className="bg-[#0b132b] border border-white/5 rounded-xl p-6 min-h-[600px]">
@@ -120,13 +133,23 @@ export function ShiftScheduleTab({ employees }: { employees: any[] }) {
                   </select>
                 </td>
                 <td className="py-4 px-4">
-                  <Button 
-                    onClick={() => handleSave(emp.id)}
-                    className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 h-auto text-xs border border-blue-500/30"
-                  >
-                    <Save className="w-3 h-3 mr-1.5" />
-                    Assign
-                  </Button>
+                  {savedShifts[emp.id] === assignments[emp.id] && assignments[emp.id] ? (
+                    <Button
+                      disabled
+                      className="bg-emerald-600/20 text-emerald-400 px-3 py-1.5 h-auto text-xs border border-emerald-500/30 cursor-not-allowed"
+                    >
+                      <Check className="w-3 h-3 mr-1.5" />
+                      Assigned
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleSave(emp.id)}
+                      className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 h-auto text-xs border border-blue-500/30"
+                    >
+                      <Save className="w-3 h-3 mr-1.5" />
+                      Assign
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}

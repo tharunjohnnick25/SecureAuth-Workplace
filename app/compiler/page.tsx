@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/Button';
-import { Terminal, Play, Loader2, Clock, CheckCircle2, XCircle, Settings2, Copy, Check } from 'lucide-react';
+import { Terminal, Play, Loader2, Clock, CheckCircle2, XCircle, Settings2, Copy, Check, Download } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { useLanguage } from "@/context/LanguageContext";
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -24,9 +24,6 @@ const DEFAULT_LANGUAGES = [
   { language: 'javascript', version: '' },
   { language: 'typescript', version: '' },
   { language: 'java', version: '' },
-  { language: 'cpp', version: '' },
-  { language: 'go', version: '' },
-  { language: 'rust', version: '' },
 ];
 
 const COMPILER_STORAGE_KEY = 'secureauth-compiler-state';
@@ -62,6 +59,14 @@ export default function CompilerPage() {
   const [isFixing, setIsFixing] = useState(false);
   const [activeTab, setActiveTab] = useState<'TESTCASE' | 'RESULT'>('TESTCASE');
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -99,6 +104,45 @@ export default function CompilerPage() {
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
     setCode(CODE_TEMPLATES[lang] || CODE_TEMPLATES.python);
+  };
+
+  const handleDownloadCode = () => {
+    const extensions: Record<string, string> = {
+      python: '.py',
+      javascript: '.js',
+      typescript: '.ts',
+      java: '.java',
+      cpp: '.cpp',
+      go: '.go',
+      rust: '.rs',
+    };
+    const ext = extensions[language] || '.txt';
+    const filename = `code${ext}`;
+
+    // Native App Handling for File Download
+    if (typeof window !== 'undefined' && (window as any).isNativeApp && (window as any).ReactNativeWebView) {
+      try {
+        const base64Content = btoa(unescape(encodeURIComponent(code)));
+        (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'download_data',
+          filename,
+          content: base64Content
+        }));
+        return;
+      } catch (e) {
+        console.error("Native download failed", e);
+      }
+    }
+
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleRunCode = async () => {
@@ -155,11 +199,12 @@ export default function CompilerPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-white overflow-hidden flex">
       <Sidebar />
-      <div className="lg:ml-64 flex-1 flex flex-col h-screen">
+      <div className="lg:ml-64 flex-1 flex flex-col h-screen sm:h-[100dvh]">
         <Navbar />
-        <main className="flex-1 flex flex-col pt-16 overflow-hidden bg-[#0a0a0a]">
+        <main className="flex-1 flex flex-col pt-20 sm:pt-24 pb-20 sm:pb-4 px-4 sm:px-6 overflow-hidden bg-transparent">
+          <div className="flex-1 flex flex-col rounded-2xl border border-white/10 bg-[#0a0f1c]/90 backdrop-blur-xl overflow-hidden shadow-2xl">
           {/* Top Toolbar */}
-          <div className="h-14 border-b border-white/5 bg-[#111111] flex items-center justify-between px-4 shrink-0">
+          <div className="h-16 border-b border-white/5 bg-black/40 flex items-center justify-between px-6 shrink-0">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-emerald-400 font-bold tracking-wider">
                 <Terminal className="w-5 h-5" />
@@ -177,24 +222,39 @@ export default function CompilerPage() {
               </select>
             </div>
             
-            <Button 
-              onClick={handleRunCode} 
-              disabled={running} 
-              className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-md px-6 shadow-[0_0_15px_rgba(16,185,129,0.1)] transition-all"
-            >
-              {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-              {running ? 'Running...' : 'Run Code'}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={handleDownloadCode}
+                className="bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10 rounded-md px-4 transition-all"
+                title="Download code file"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+              <Button 
+                onClick={handleRunCode} 
+                disabled={running} 
+                className="bg-emerald-500 hover:bg-emerald-400 text-black border-none rounded-lg px-6 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all transform hover:scale-[1.02] active:scale-[0.98] font-bold"
+              >
+                {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-black" /> : <Play className="w-4 h-4 mr-2" />}
+                {running ? 'Running...' : 'Run Code'}
+              </Button>
+            </div>
           </div>
 
           {/* Resizable Layout */}
-          <div className="flex-1 min-h-0">
-            <PanelGroup direction="horizontal">
-              <Panel defaultSize={60} minSize={30} className="flex flex-col">
-                <div className="h-8 border-b border-white/5 bg-[#1a1a1a] flex items-center px-4 shrink-0">
-                  <span className="text-xs text-gray-400 font-medium tracking-wide">main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : language === 'typescript' ? 'ts' : language === 'java' ? 'java' : language === 'cpp' ? 'cpp' : language === 'go' ? 'go' : language === 'rust' ? 'rs' : 'txt'}</span>
+          <div className="flex-1 min-h-0 relative">
+            <PanelGroup direction={isMobile ? "vertical" : "horizontal"}>
+              <Panel defaultSize={60} minSize={30} className="flex flex-col relative z-0">
+                <div className="h-10 border-b border-white/5 bg-black/20 flex items-center px-6 shrink-0">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                  </div>
+                  <span className="ml-4 text-xs text-gray-400 font-mono tracking-wide">main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : language === 'typescript' ? 'ts' : language === 'java' ? 'java' : language === 'cpp' ? 'cpp' : language === 'go' ? 'go' : language === 'rust' ? 'rs' : 'txt'}</span>
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 bg-[#1e1e1e]">
                   <Editor
                     height="100%"
                     language={language}
@@ -222,10 +282,10 @@ export default function CompilerPage() {
                 </div>
               </Panel>
 
-              <PanelResizeHandle className="w-1.5 bg-white/5 hover:bg-emerald-500/50 transition-colors cursor-col-resize z-10" />
+              <PanelResizeHandle className={`transition-colors cursor-col-resize z-10 ${isMobile ? 'h-1.5 w-full bg-white/10 hover:bg-emerald-500/50 cursor-row-resize' : 'w-1.5 h-full bg-white/10 hover:bg-emerald-500/50 cursor-col-resize'}`} />
 
-              <Panel defaultSize={40} minSize={25} className="flex flex-col bg-[#111111]">
-                <div className="flex h-10 border-b border-white/5 bg-[#1a1a1a] shrink-0">
+              <Panel defaultSize={40} minSize={25} className="flex flex-col bg-black/30 backdrop-blur-md z-0">
+                <div className="flex h-12 border-b border-white/5 bg-black/40 shrink-0">
                   <button
                     onClick={() => setActiveTab('TESTCASE')}
                     className={`flex items-center gap-2 px-6 h-full text-sm font-medium transition-colors relative ${
@@ -356,6 +416,7 @@ export default function CompilerPage() {
                 </div>
               </Panel>
             </PanelGroup>
+          </div>
           </div>
         </main>
       </div>

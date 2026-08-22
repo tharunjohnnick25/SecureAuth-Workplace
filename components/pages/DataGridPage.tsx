@@ -173,22 +173,6 @@ export function DataGridPage({ title, description, columns, data, loading, onRef
                 )}
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                {onExportExcel && (
-                  <Button 
-                    variant="outline" 
-                    className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-1.5"
-                    onClick={onExportExcel}
-                  >
-                    <FileSpreadsheet className="w-4 h-4" /> {'Excel (.xlsx)'}</Button>
-                )}
-                {onExportPPT && (
-                  <Button 
-                    variant="outline" 
-                    className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 flex items-center gap-1.5"
-                    onClick={onExportPPT}
-                  >
-                    <Presentation className="w-4 h-4" /> {'PPT (.pptx)'}</Button>
-                )}
               </div>
             </div>
 

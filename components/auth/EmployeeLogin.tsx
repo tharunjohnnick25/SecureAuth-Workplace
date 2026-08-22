@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, MapPin, Camera, CheckCircle2, XCircle, Loader2, Building2, IdCard } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, MapPin, Camera, CheckCircle2, XCircle, Loader2, Building2, ChevronRight, User, X } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Card } from '@/components/Card';
-import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as faceapi from 'face-api.js';
 
 import { useAuthStore } from '@/store/useAuthStore';
 import { loginSchema } from '@/lib/validations/auth';
@@ -25,8 +25,8 @@ import { REGISTERED_COMPANIES, getCompanyByDomain, type Company } from '@/lib/co
 const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-
 type DeviceAuthStep = 'idle' | 'prompting' | 'verifying' | 'success' | 'failed' | 'camera_blocked';
+type LoginFlowStep = 1 | 2 | 3; // 1: Email, 2: Face, 3: Password
 
 export function EmployeeLogin() {
   const router = useRouter();
@@ -40,31 +40,89 @@ export function EmployeeLogin() {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const simulatedRisk = 'medium';
 
+  // Flow State
+  const [currentStep, setCurrentStep] = useState<LoginFlowStep>(1);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [requiresFace, setRequiresFace] = useState(false);
+
   // Camera-based face verification
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Device Lock Screen Authentication State
   const [deviceAuthStep, setDeviceAuthStep] = useState<DeviceAuthStep>('idle');
-  const [deviceVerified, setDeviceVerified] = useState(true);
+  const [deviceVerified, setDeviceVerified] = useState(false);
   const [showDeviceModal, setShowDeviceModal] = useState(false);
-  const [employeeId, setEmployeeId] = useState('');
 
   useEffect(() => {
+    const loadModels = async () => {
+      try {
+        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+      } catch (err) {
+        console.error('Failed to load face models', err);
+      }
+    };
+    loadModels();
+
     setFingerprint(getDeviceFingerprint());
     requestLocation();
+    
     if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
-      setDeviceVerified(true);
+      // In mock mode, we still demonstrate the UI flow, but we can bypass strict checks if needed
     }
+
+    // Listen for messages from React Native Native App
+    const handleNativeMessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'native_face_success') {
+          setDeviceVerified(true);
+          setShowDeviceModal(false);
+          setCurrentStep(3);
+          toast.success('Face verified securely via Native Camera');
+        } else if (data.type === 'native_face_failed') {
+          toast.error(data.error || 'Native face verification failed');
+          setDeviceAuthStep('failed');
+          setCameraError(data.error || 'Face mismatch. Please try again.');
+        }
+      } catch (e) {}
+    };
+    
+    // Also support document event for iOS injected JS communication
+    const handleDocumentMessage = (event: any) => {
+       if (event.detail && event.detail.type) {
+         handleNativeMessage({ data: JSON.stringify(event.detail) } as any);
+       }
+    };
+
+    window.addEventListener('message', handleNativeMessage);
+    document.addEventListener('nativeMessage', handleDocumentMessage);
+    
+    return () => {
+      window.removeEventListener('message', handleNativeMessage);
+      document.removeEventListener('nativeMessage', handleDocumentMessage);
+    };
   }, []);
 
-  // Cleanup camera stream on unmount
   useEffect(() => {
     return () => {
       if (stream) stream.getTracks().forEach(t => t.stop());
     };
   }, [stream]);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { isSubmitting, errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const emailValue = watch('email');
 
   const startCamera = async (): Promise<boolean> => {
     try {
@@ -80,44 +138,153 @@ export function EmployeeLogin() {
   };
 
   const stopCamera = () => {
+    if (animationRef.current) {
+      clearInterval(animationRef.current as any);
+      animationRef.current = null;
+    }
     if (stream) {
       stream.getTracks().forEach(t => t.stop());
       setStream(null);
     }
   };
 
-  // Trigger device face verification via camera
+  const handleVideoPlay = () => {
+    if (animationRef.current) clearInterval(animationRef.current as any);
+    
+    animationRef.current = setInterval(async () => {
+      if (videoRef.current && canvasRef.current && faceapi.nets.ssdMobilenetv1.isLoaded) {
+        try {
+          const detections = await faceapi.detectAllFaces(
+            videoRef.current, 
+            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 })
+          );
+          
+          if (!videoRef.current || !canvasRef.current) return;
+          
+          const displaySize = { 
+            width: videoRef.current.videoWidth, 
+            height: videoRef.current.videoHeight 
+          };
+          faceapi.matchDimensions(canvasRef.current, displaySize);
+          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+          
+          const ctx = canvasRef.current.getContext('2d');
+          ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          
+          // Set color to cyan to match theme
+          faceapi.draw.drawDetections(canvasRef.current, resizedDetections);
+        } catch (err) {
+          // Ignore intermittent tensor errors
+        }
+      }
+    }, 100) as any;
+  };
+
+  const handleNextStep1 = async () => {
+    if (!emailValue || errors.email) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    
+    setCheckingEmail(true);
+    try {
+      const res = await fetch('/api/auth/check-face-enrolled', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailValue })
+      });
+      const data = await res.json();
+      
+      if (data.enrolled) {
+        setRequiresFace(true);
+        setCurrentStep(2);
+      } else {
+        // Skip face verification if not enrolled
+        setRequiresFace(false);
+        setDeviceVerified(true);
+        setCurrentStep(3);
+      }
+    } catch (err) {
+      // On error, safely fallback to password
+      setDeviceVerified(true);
+      setCurrentStep(3);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
   const triggerDeviceAuth = useCallback(async () => {
+    // If running inside React Native, trigger the native camera instead
+    if (typeof window !== 'undefined' && (window as any).isNativeApp) {
+      if ((window as any).ReactNativeWebView) {
+        (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'start_face_login',
+          email: emailValue
+        }));
+      }
+      return;
+    }
+
     setShowDeviceModal(true);
     setDeviceAuthStep('prompting');
 
     const hasCamera = await startCamera();
-
     if (!hasCamera) {
       setDeviceAuthStep('camera_blocked');
       return;
     }
+  }, [emailValue]);
 
-    // Camera is live — simulate a brief capture delay for UX
+  const captureAndVerify = async () => {
     setDeviceAuthStep('verifying');
-    setTimeout(() => {
+    try {
+      if (!videoRef.current) throw new Error('Video not initialized');
+      const video = videoRef.current;
+      
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        throw new Error('Camera feed is blank. Please check permissions.');
+      }
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Failed to create canvas context');
+      
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      const base64Image = dataUrl.split(',')[1];
+      
+      if (!base64Image || base64Image.length < 100) {
+         throw new Error('Failed to capture a valid image from the camera.');
+      }
+
+      const res = await fetch('/api/auth/verify-face-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailValue, captured_image_base64: base64Image })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Identity verification failed');
+      }
+
       stopCamera();
       setDeviceAuthStep('success');
       setTimeout(() => {
         setDeviceVerified(true);
         setShowDeviceModal(false);
-        toast.success('Face verification successful');
+        setCurrentStep(3);
+        toast.success('Face verified successfully');
       }, 1000);
-    }, 2000);
-  }, []);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting, errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-  });
+    } catch (err: any) {
+      stopCamera();
+      setDeviceAuthStep('failed');
+      setCameraError(err.message);
+    }
+  };
 
   const onSubmit = async (data: LoginFormValues) => {
     setError(null);
@@ -129,7 +296,7 @@ export function EmployeeLogin() {
         fingerprint,
         typingMetrics: metrics,
         location: location || undefined,
-        deviceVerified: true,
+        deviceVerified: deviceVerified,
         simulatedRisk,
       };
 
@@ -137,7 +304,7 @@ export function EmployeeLogin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employee_id: employeeId || data.email, 
+          employee_id: data.email, 
           email: data.email,
           password: data.password,
           company_id: company?.id || null,
@@ -152,14 +319,25 @@ export function EmployeeLogin() {
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.error || 'Login failed');
+        throw new Error(result.error || 'Sign-in failed. Please check your credentials and try again.');
       }
 
-      // Adaptive MFA: route to the ceremony the risk policy demands.
+      if (result.requiresMfaSetup) {
+        storePendingAuth(result, securitySignals);
+        window.location.href = '/mfa-setup';
+        return;
+      }
+      
+      if (result.requiresBiometric || result.requiresMfa) {
+        storePendingAuth(result, securitySignals);
+        window.location.href = '/verify-mfa';
+        return;
+      }
+
       if (result.risk) {
         const role = String(result.user?.role || '').toUpperCase();
         const isAdmin = ADMIN_ROLES.has(role);
-        const needsDetails = !isAdmin && result.user?.profile_completed !== true;
+        const needsDetails = !isAdmin && result.user?.status === 'INVITED';
         const defaultRoute = needsDetails ? '/onboarding/details' : '/dashboard';
 
         const flow = resolveRiskRoute(result, defaultRoute);
@@ -174,18 +352,11 @@ export function EmployeeLogin() {
         return;
       }
 
-      if (result.requiresBiometric) {
-        // Store pending auth state to pass to the next step in the pipeline
-        storePendingAuth(result, securitySignals);
-        window.location.href = '/verify-mfa';
-      } else {
-        // Fallback for older mock tests
-        setUser(result.user);
-        const role = String(result.user?.role || '').toUpperCase();
-        const isAdmin = ADMIN_ROLES.has(role);
-        const needsDetails = !isAdmin && result.user?.profile_completed !== true;
-        window.location.href = needsDetails ? '/onboarding/details' : '/dashboard';
-      }
+      setUser(result.user);
+      const role = String(result.user?.role || '').toUpperCase();
+      const isAdmin = ADMIN_ROLES.has(role);
+      const needsDetails = !isAdmin && result.user?.status === 'INVITED';
+      window.location.href = needsDetails ? '/onboarding/details' : '/dashboard';
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message);
@@ -197,13 +368,12 @@ export function EmployeeLogin() {
       case 'prompting':
         return <Camera className="w-16 h-16 text-cyan-400 animate-pulse" />;
       case 'verifying':
-        return <Camera className="w-16 h-16 text-purple-400 animate-pulse" />;
+        return <Loader2 className="w-16 h-16 text-purple-400 animate-spin" />;
       case 'success':
         return <CheckCircle2 className="w-16 h-16 text-emerald-400" />;
       case 'failed':
-        return <XCircle className="w-16 h-16 text-red-400" />;
       case 'camera_blocked':
-        return <XCircle className="w-16 h-16 text-amber-400" />;
+        return <XCircle className="w-16 h-16 text-red-400" />;
       default:
         return <Camera className="w-16 h-16 text-cyan-400" />;
     }
@@ -212,15 +382,15 @@ export function EmployeeLogin() {
   const getAuthStepMessage = () => {
     switch (deviceAuthStep) {
       case 'prompting':
-        return { title: 'Camera Access Required', desc: 'Allow camera access for face verification' };
+        return { title: 'Camera Required', desc: 'Allow camera access for face verification' };
       case 'verifying':
-        return { title: 'Capturing Image', desc: 'Please look at the camera to verify your identity' };
+        return { title: 'Analyzing Identity', desc: 'Comparing with your enrolled template...' };
       case 'success':
-        return { title: 'Identity Verified!', desc: 'Your face has been verified successfully' };
+        return { title: 'Identity Verified!', desc: 'Match confirmed securely.' };
       case 'failed':
-        return { title: 'Verification Failed', desc: 'Could not verify identity. Please try again.' };
+        return { title: 'Verification Failed', desc: cameraError || 'Face mismatch. Please try again.' };
       case 'camera_blocked':
-        return { title: 'Camera Unavailable', desc: cameraError || 'Please allow camera access in your browser settings' };
+        return { title: 'Camera Error', desc: cameraError || 'Please allow camera access' };
       default:
         return { title: '', desc: '' };
     }
@@ -235,214 +405,198 @@ export function EmployeeLogin() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-md relative">
+      <Card className="w-full max-w-md relative overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-24 h-24 mb-4 flex items-center justify-center">
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-20 h-20 mb-3 flex items-center justify-center">
             <img src="/new-logo.png" alt="SecureAuth Logo" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">{t('employeeLoginTitle')}</h1>
-          <p className="text-gray-400 text-center text-sm">
+          <h1 className="text-2xl font-semibold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">{t('employeeLoginTitle')}</h1>
+          <p className="text-gray-400 text-center text-xs">
             {t('employeeLoginDesc')}
           </p>
         </div>
 
-        {/* Step 1: Device Lock Screen Auth */}
-        {!deviceVerified && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <button
-              onClick={triggerDeviceAuth}
-              className="w-full group relative overflow-hidden rounded-xl border-2 border-dashed border-cyan-500/30 hover:border-cyan-500/60 p-6 transition-all duration-300 hover:bg-cyan-500/5"
-            >
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-600/20 flex items-center justify-center border border-cyan-500/30 group-hover:border-cyan-500/60 transition-all">
-                  <Camera className="w-7 h-7 text-cyan-400 group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-white mb-1">{t('Step1FaceVerifi_355')}</p>
-                  <p className="text-xs text-gray-400">
-                    {'Taptoverifyyour'}</p>
-                </div>
-              </div>
-              {/* Animated border glow */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/0 via-cyan-500/10 to-purple-600/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          </motion.div>
-        )}
-
-        {/* Device verified badge */}
-        {deviceVerified && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-6 flex items-center gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
-          >
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-emerald-400">{'Identity verifie'}</p>
-              <p className="text-xs text-gray-400">{'Cameraverificat'}</p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Step 2: Login Form */}
-        <motion.div
-          animate={{ opacity: deviceVerified ? 1 : 0.4, pointerEvents: deviceVerified ? 'auto' : 'none' }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${deviceVerified ? 'bg-cyan-500 text-white' : 'bg-gray-700 text-gray-400'}`}>2</div>
-            <span className="text-sm text-gray-300">{'Enter credential'}</span>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="block mb-2 text-sm text-gray-300">{t('employeeIdLabel')}</label>
-              <div className="relative">
-                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  placeholder="EMP-12345"
-                  disabled={!deviceVerified}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors disabled:opacity-50"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">{t('employeeIdHint')}</p>
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm text-gray-300">{t('companyLabel')}</label>
-              <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <select
-                  value={selectedCompany?.id || ''}
-                  onChange={(e) => {
-                    const company = REGISTERED_COMPANIES.find((c) => c.id === e.target.value) || null;
-                    setSelectedCompany(company);
-                  }}
-                  disabled={!deviceVerified}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-8 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer disabled:opacity-50"
-                >
-                  <option value="" className="bg-[#0f0f23]">{t('selectRegisteredCompany')}</option>
-                  {REGISTERED_COMPANIES.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-[#0f0f23]">
-                      {c.name} — {c.country} ({c.domain})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {selectedCompany && (
-                <p className="mt-1 text-xs text-emerald-400">
-                  {t('companyDetected')}: {selectedCompany.name} · {selectedCompany.industry} · {selectedCompany.country}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm text-gray-300">{t('employeeEmailLabel')}</label>
-              <Input
-                {...register('email')}
-                type="email"
-                placeholder="employee@company.com"
-                icon={<Mail className="w-4 h-4" />}
-                onKeyDown={handleKeyDown}
-                onKeyUp={handleKeyUp}
-                disabled={!deviceVerified}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  register('email').onChange(e);
-                  const domain = e.target.value.split('@')[1] || '';
-                  setSelectedCompany(getCompanyByDomain(domain) || null);
-                }}
-              />
-              {errors.email && <p className="mt-1 text-xs text-red-400">{'Validemailisreq'}</p>}
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm text-gray-300">{t('passwordLabel')}</label>
-              <div className="relative">
-                <Input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  icon={<Lock className="w-4 h-4" />}
-                  onKeyDown={handleKeyDown}
-                  onKeyUp={handleKeyUp}
-                  disabled={!deviceVerified}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
-            </div>
-
-
-            {/* Location Status */}
-            <div className="flex items-center gap-2 text-xs text-gray-400 bg-white/5 p-2.5 rounded-lg border border-white/5">
-              <MapPin className={`w-4 h-4 shrink-0 ${location ? 'text-emerald-400' : 'text-amber-400'}`} />
-              <span>
-                {locationLoading ? 'Detecting location...' :
-                 location ? `Location: ${location.city || 'Detected'}, ${location.country || ''}` :
-                 'Please allow location access for enhanced security'}
-              </span>
-            </div>
-
-            {/* Login Button */}
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all"
-              size="lg"
-              disabled={isSubmitting || !deviceVerified}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t('analyzing')}
-                </span>
-              ) : (
-                t('signInSecurely')
-              )}
-            </Button>
-          </form>
-        </motion.div>
-
-        {/* Links */}
-        <div className="mt-4 flex justify-center text-xs">
-          <button onClick={() => router.push('/forgot-password')} className="text-gray-400 hover:text-cyan-400 transition-colors">
-            {t('forgotPassword')}
-          </button>
+        {/* Stepper Header */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <div className={`w-8 h-1 rounded-full ${currentStep >= 1 ? 'bg-cyan-500' : 'bg-white/10'}`} />
+          <div className={`w-8 h-1 rounded-full ${currentStep >= 2 ? 'bg-cyan-500' : 'bg-white/10'}`} />
+          <div className={`w-8 h-1 rounded-full ${currentStep >= 3 ? 'bg-cyan-500' : 'bg-white/10'}`} />
         </div>
 
+        {error && (
+          <div className="p-3 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
 
+        {/* Form Container */}
+        <div className="relative min-h-[280px]">
+          <AnimatePresence mode="wait">
+            
+            {/* STEP 1: EMAIL */}
+            {currentStep === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute inset-0"
+              >
+                <div className="space-y-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="w-5 h-5 text-cyan-400" />
+                    <h3 className="font-semibold text-white">Identify Yourself</h3>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1.5 text-sm text-gray-300">{t('companyLabel')}</label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <select
+                        value={selectedCompany?.id || ''}
+                        onChange={(e) => setSelectedCompany(REGISTERED_COMPANIES.find((c) => c.id === e.target.value) || null)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-8 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer"
+                      >
+                        <option value="" className="bg-[#0f0f23]">{t('selectRegisteredCompany')}</option>
+                        {REGISTERED_COMPANIES.map((c) => (
+                          <option key={c.id} value={c.id} className="bg-[#0f0f23]">
+                            {c.name} ({c.domain})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1.5 text-sm text-gray-300">{t('employeeEmailLabel')}</label>
+                    <Input
+                      {...register('email')}
+                      type="email"
+                      placeholder="employee@company.com"
+                      icon={<Mail className="w-4 h-4" />}
+                      onChange={(e) => {
+                        register('email').onChange(e);
+                        const domain = e.target.value.split('@')[1] || '';
+                        setSelectedCompany(getCompanyByDomain(domain) || null);
+                      }}
+                    />
+                    {errors.email && <p className="mt-1 text-xs text-red-400">Valid email is required.</p>}
+                  </div>
+
+                  <Button
+                    onClick={handleNextStep1}
+                    disabled={checkingEmail || !emailValue}
+                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white mt-4"
+                  >
+                    {checkingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                      <span className="flex items-center gap-2">Continue <ChevronRight className="w-4 h-4" /></span>
+                    )}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 2: FACE VERIFICATION */}
+            {currentStep === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute inset-0 flex flex-col items-center justify-center text-center py-4"
+              >
+                <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4 border border-cyan-500/20">
+                  <Camera className="w-8 h-8 text-cyan-400" />
+                </div>
+                <h3 className="font-semibold text-white mb-2">Face Verification Required</h3>
+                <p className="text-sm text-gray-400 mb-6 px-4">
+                  For enhanced security, please verify your identity using your camera.
+                </p>
+                <Button onClick={triggerDeviceAuth} className="bg-cyan-600 hover:bg-cyan-500 w-full mb-3">
+                  Start Camera Scan
+                </Button>
+                <button onClick={() => setCurrentStep(1)} className="text-sm text-gray-500 hover:text-white transition-colors">
+                  Back to Email
+                </button>
+              </motion.div>
+            )}
+
+            {/* STEP 3: PASSWORD */}
+            {currentStep === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute inset-0"
+              >
+                <div className="flex items-center gap-2 mb-4 p-3 bg-white/5 rounded-xl border border-white/10">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-xs text-gray-400">Authenticating as</p>
+                    <p className="text-sm font-medium text-white truncate">{emailValue}</p>
+                  </div>
+                  <button onClick={() => { setCurrentStep(1); setDeviceVerified(false); }} className="ml-auto text-xs text-cyan-400 hover:underline">Change</button>
+                </div>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                  <div>
+                    <label className="block mb-1.5 text-sm text-gray-300">Additional Authentication</label>
+                    <div className="relative">
+                      <Input
+                        {...register('password')}
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        icon={<Lock className="w-4 h-4" />}
+                        onKeyDown={handleKeyDown}
+                        onKeyUp={handleKeyUp}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold"
+                    size="lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {t('analyzing')}</span>
+                    ) : (
+                      t('signInSecurely')
+                    )}
+                  </Button>
+                </form>
+
+                <div className="mt-4 flex justify-center text-xs">
+                  <button onClick={() => router.push('/forgot-password')} className="text-gray-400 hover:text-cyan-400 transition-colors">
+                    {t('forgotPassword')}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Security indicators */}
-        <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-6 text-xs text-gray-500">
+        <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-center gap-6 text-xs text-gray-500">
           <div className="flex items-center gap-1.5">
-            <Camera className={`w-4 h-4 ${deviceVerified ? 'text-emerald-400' : 'text-gray-500'}`} />
-            <span>{deviceVerified ? 'Verified' : 'Pending'}</span>
+            <Camera className={`w-3.5 h-3.5 ${deviceVerified ? 'text-emerald-400' : 'text-gray-500'}`} />
+            <span>{deviceVerified ? 'Verified' : requiresFace ? 'Required' : 'Optional'}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <img src="/new-logo.png" className="w-4 h-4 object-contain" alt="AI Engine" />
-            <span>{'Airisk engine'}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MapPin className={`w-4 h-4 ${location ? 'text-emerald-400' : 'text-amber-400'}`} />
+            <MapPin className={`w-3.5 h-3.5 ${location ? 'text-emerald-400' : 'text-amber-400'}`} />
             <span>{location ? 'Located' : 'Pending'}</span>
           </div>
         </div>
@@ -455,20 +609,27 @@ export function EmployeeLogin() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           >
-            {/* Backdrop */}
             <div onClick={() => { stopCamera(); setShowDeviceModal(false); setDeviceAuthStep('idle'); }} className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer" />
 
-            {/* Modal */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="relative w-full max-w-sm bg-[#0f0f23]/95 border border-white/10 rounded-2xl shadow-2xl shadow-cyan-500/10 p-8 backdrop-blur-xl"
             >
-              {/* Animated ring */}
+              <button
+                onClick={() => {
+                  stopCamera();
+                  setShowDeviceModal(false);
+                  setDeviceAuthStep('idle');
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
               <div className="relative flex justify-center mb-6">
                 <motion.div
                   animate={{
@@ -485,36 +646,40 @@ export function EmployeeLogin() {
                 </motion.div>
               </div>
 
-              {/* Status text */}
               <div className="text-center mb-6">
-                <motion.h3
-                  key={deviceAuthStep}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-lg font-semibold text-white mb-2"
-                >
-                  {getAuthStepMessage().title}
-                </motion.h3>
-                <motion.p
-                  key={`desc-${deviceAuthStep}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-sm text-gray-400"
-                >
-                  {getAuthStepMessage().desc}
-                </motion.p>
+                <h3 className="text-lg font-semibold text-white mb-2">{getAuthStepMessage().title}</h3>
+                <p className="text-sm text-gray-400">{getAuthStepMessage().desc}</p>
               </div>
 
-              {/* Camera preview */}
               {(deviceAuthStep === 'prompting' || deviceAuthStep === 'verifying') && (
                 <div className="relative aspect-video bg-black rounded-xl border border-white/10 overflow-hidden mb-6">
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover grayscale opacity-70" />
-                  <div className="absolute inset-0 border-2 border-dashed border-cyan-500/30 rounded-xl m-6 pointer-events-none animate-pulse" />
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    onPlay={handleVideoPlay}
+                    className="absolute inset-0 w-full h-full object-cover" 
+                    style={{ transform: 'scaleX(-1)' }} 
+                  />
+                  <canvas 
+                    ref={canvasRef} 
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none" 
+                    style={{ transform: 'scaleX(-1)' }} 
+                  />
                 </div>
               )}
+              
+              {deviceAuthStep === 'prompting' && (
+                <Button 
+                  onClick={captureAndVerify}
+                  className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-3 rounded-xl transition-all duration-200 mb-6"
+                >
+                  <Camera className="w-5 h-5 mr-2" /> Capture & Verify
+                </Button>
+              )}
 
-              {/* Progress bar */}
-              {(deviceAuthStep === 'prompting' || deviceAuthStep === 'verifying') && (
+              {deviceAuthStep === 'verifying' && (
                 <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: '0%' }}
@@ -525,30 +690,41 @@ export function EmployeeLogin() {
                 </div>
               )}
 
-              {/* Retry/skip buttons for failed or blocked state */}
               {(deviceAuthStep === 'failed' || deviceAuthStep === 'camera_blocked') && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3 mt-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-3 mt-6 w-full">
                   <Button
                     onClick={() => {
                       setShowDeviceModal(false);
                       setDeviceAuthStep('idle');
                       setTimeout(triggerDeviceAuth, 300);
                     }}
-                    className="flex-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/30"
+                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-3 rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-200"
                   >
-                    {'Try again'}</Button>
+                    Try Again
+                  </Button>
                   <Button
                     onClick={() => {
                       stopCamera();
                       setShowDeviceModal(false);
                       setDeviceAuthStep('idle');
-                      setDeviceVerified(true);
-                      toast.info('Proceeding without camera verification');
                     }}
                     variant="outline"
-                    className="flex-1 border-white/10 text-gray-400"
+                    className="w-full border-white/10 hover:bg-white/5 text-gray-300 font-medium py-3 rounded-xl transition-all duration-200"
                   >
-                    {'Skip'}</Button>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      stopCamera();
+                      setShowDeviceModal(false);
+                      setDeviceAuthStep('idle');
+                      setCurrentStep(1); // Go back to email
+                    }}
+                    variant="ghost"
+                    className="w-full text-cyan-400 hover:text-cyan-300 hover:bg-white/5 font-medium py-3 rounded-xl transition-all duration-200"
+                  >
+                    Back to Email
+                  </Button>
                 </motion.div>
               )}
             </motion.div>

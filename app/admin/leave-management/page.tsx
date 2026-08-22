@@ -1,23 +1,24 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useMemo, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Clock, CheckCircle2, XCircle, AlertCircle, Search, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 
-
 type LeaveRequest = {
   id: string;
   user_id: string;
+  user_name?: string;
+  user_role?: string;
   leave_type: string;
   start_date: string;
   end_date: string;
@@ -30,37 +31,37 @@ type LeaveRequest = {
 
 export default function AdminLeaveManagementPage() {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
-  const [filteredRequests, setFilteredRequests] = useState<LeaveRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
-  
-  // Dialog state
+
   const [selectedReq, setSelectedReq] = useState<LeaveRequest | null>(null);
   const [remarks, setRemarks] = useState('');
   const [actionStatus, setActionStatus] = useState<'APPROVED' | 'REJECTED' | 'INFO_REQUESTED' | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    fetchRequests();
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/leave');
+        const data = await res.json();
+        if (res.ok && !cancelled) {
+          setRequests(data.data || []);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  useEffect(() => {
-    // Simple filter by user_id or status
-    if (!search) {
-      setFilteredRequests(requests);
-    } else {
-      const lower = search.toLowerCase();
-      setFilteredRequests(requests.filter(r => 
-        r.user_id.toLowerCase().includes(lower) || 
-        r.status.toLowerCase().includes(lower) ||
-        r.leave_type.toLowerCase().includes(lower)
-      ));
-    }
-  }, [search, requests]);
 
   const fetchRequests = async () => {
     try {
-      // In reality, admin fetches all. Our GET API without user_id fetches all.
       const res = await fetch('/api/leave');
       const data = await res.json();
       if (res.ok) {
@@ -68,25 +69,33 @@ export default function AdminLeaveManagementPage() {
       }
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
+  const filteredRequests = useMemo(() => {
+    if (!search) return requests;
+    const lower = search.toLowerCase();
+    return requests.filter(r =>
+      r.user_id.toLowerCase().includes(lower) ||
+      r.status.toLowerCase().includes(lower) ||
+      r.leave_type.toLowerCase().includes(lower)
+    );
+  }, [search, requests]);
+
   const handleAction = async () => {
     if (!selectedReq || !actionStatus) return;
-    
+
     try {
       const res = await fetch('/api/leave/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          leave_id: selectedReq.id, 
+        body: JSON.stringify({
+          leave_id: selectedReq.id,
           status: actionStatus,
           admin_remarks: remarks
         })
       });
-      
+
       if (res.ok) {
         toast.success(`Request marked as ${actionStatus}`);
         setIsDialogOpen(false);
@@ -95,7 +104,7 @@ export default function AdminLeaveManagementPage() {
         const data = await res.json();
         toast.error(data.error || 'Failed to update request');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred');
     }
   };
@@ -116,16 +125,35 @@ export default function AdminLeaveManagementPage() {
         return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
       case 'info_requested':
         return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20"><AlertCircle className="w-3 h-3 mr-1" /> Info Requested</Badge>;
-      case 'manager approved':
+      case 'manager_approved':
         return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><Clock className="w-3 h-3 mr-1" /> Manager Approved</Badge>;
       default:
         return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
     }
   };
 
-  const isActionable = (status: string) => {
+  const isEmployee = (role?: string) => {
+    const r = (role || '').toLowerCase();
+    return r === '' || r === 'employee';
+  };
+
+  // Admin may final-approve MANAGER_APPROVED employee leaves, or any PENDING
+  // leave from a manager-level user. Employee PENDING leaves must first be
+  // approved by the manager.
+  const canFinalApprove = (status: string, role?: string) => {
     const s = (status || '').toLowerCase();
-    return s === 'pending' || s === 'manager approved';
+    return s === 'manager_approved' || (s === 'pending' && !isEmployee(role));
+  };
+
+  // Reject / Info-request may be actioned while PENDING or MANAGER_APPROVED.
+  const canRejectOrInfo = (status: string) => {
+    const s = (status || '').toLowerCase();
+    return s === 'pending' || s === 'manager_approved';
+  };
+
+  const isProcessed = (status: string) => {
+    const s = (status || '').toLowerCase();
+    return s === 'approved' || s === 'rejected' || s === 'info_requested';
   };
 
   return (
@@ -140,12 +168,12 @@ export default function AdminLeaveManagementPage() {
           <h1 className="text-3xl font-bold text-white tracking-tight">Leave Management</h1>
           <p className="text-slate-400">Review and manage employee leave requests.</p>
         </div>
-        
+
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-            <Input 
-              placeholder="Search by ID or Status..." 
+            <Input
+              placeholder="Search by ID or Status..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 bg-slate-900 border-slate-700"
@@ -183,7 +211,7 @@ export default function AdminLeaveManagementPage() {
                   filteredRequests.map((req) => (
                     <tr key={req.id} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-slate-200">Employee</div>
+                        <div className="font-medium text-slate-200">{req.user_name || 'Employee'}</div>
                         <div className="text-xs text-slate-500 font-mono mt-1" title={req.user_id}>
                           {req.user_id.substring(0, 8)}...
                         </div>
@@ -204,11 +232,20 @@ export default function AdminLeaveManagementPage() {
                         {getStatusBadge(req.status)}
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
-                        {isActionable(req.status) ? (
+                        {!isProcessed(req.status) ? (
                           <>
-                            <Button size="sm" onClick={() => openActionDialog(req, 'APPROVED')} className="bg-emerald-600 hover:bg-emerald-700 text-white">Approve</Button>
-                            <Button size="sm" variant="destructive" onClick={() => openActionDialog(req, 'REJECTED')}>Reject</Button>
-                            <Button size="sm" variant="outline" onClick={() => openActionDialog(req, 'INFO_REQUESTED')} className="border-slate-700 hover:bg-slate-800 text-slate-300">Info</Button>
+                            {canFinalApprove(req.status, req.user_role) && (
+                              <Button size="sm" onClick={() => openActionDialog(req, 'APPROVED')} className="bg-emerald-600 hover:bg-emerald-700 text-white">Approve</Button>
+                            )}
+                            {canRejectOrInfo(req.status) && (
+                              <>
+                                <Button size="sm" variant="destructive" onClick={() => openActionDialog(req, 'REJECTED')}>Reject</Button>
+                                <Button size="sm" variant="outline" onClick={() => openActionDialog(req, 'INFO_REQUESTED')} className="border-slate-700 hover:bg-slate-800 text-slate-300">Info</Button>
+                              </>
+                            )}
+                            {isEmployee(req.user_role) && (req.status || '').toLowerCase() === 'pending' && (
+                              <span className="text-slate-500 text-xs uppercase tracking-wider font-medium">Awaiting Manager</span>
+                            )}
                           </>
                         ) : (
                           <span className="text-slate-500 text-xs uppercase tracking-wider font-medium">Processed</span>
@@ -233,11 +270,11 @@ export default function AdminLeaveManagementPage() {
               You are about to mark this leave request as {actionStatus?.toLowerCase()}. Please provide any remarks (optional, sent to employee).
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-4">
             <Label htmlFor="remarks" className="text-slate-300">Remarks</Label>
-            <Textarea 
-              id="remarks" 
-              value={remarks} 
+            <Textarea
+              id="remarks"
+              value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="e.g. Please provide a medical certificate..."
               className="bg-slate-950 border-slate-700 mt-2"
@@ -245,11 +282,11 @@ export default function AdminLeaveManagementPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-slate-700 text-slate-300">Cancel</Button>
-            <Button 
+            <Button
               onClick={handleAction}
               className={
-                actionStatus === 'APPROVED' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 
-                actionStatus === 'REJECTED' ? 'bg-red-600 hover:bg-red-700 text-white' : 
+                actionStatus === 'APPROVED' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' :
+                actionStatus === 'REJECTED' ? 'bg-red-600 hover:bg-red-700 text-white' :
                 'bg-amber-600 hover:bg-amber-700 text-white'
               }
             >

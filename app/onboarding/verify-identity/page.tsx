@@ -44,31 +44,38 @@ export default function VerifyIdentityPage() {
     setIsScanning(true);
     setErrorMsg('');
 
-    // Simulate the time it takes to extract a 128-d face embedding via OpenCV / FaceAPI
-    setTimeout(async () => {
-      try {
-        // Mocking a successful embedding extraction since we couldn't install OpenCV due to disk space
-        const mockEmbedding = Array.from({ length: 128 }, () => Math.random());
-        
-        const res = await apiClient.post<any>('/api/security/face-register', {
-          embedding: mockEmbedding
-        });
+    try {
+      if (!videoRef.current) return;
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not initialize canvas context');
+      
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      
+      // Get base64 string without the data URL prefix
+      const base64String = canvas.toDataURL('image/jpeg').split(',')[1];
+      
+      const res = await apiClient.post<any>('/api/security/face-register', {
+        image_base64: base64String
+      });
 
-        if (res.success) {
-          setIsSuccess(true);
-          toast.success('Face Identity Verified and Registered!');
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 2000);
-        } else {
-          setErrorMsg(res.error || 'Verification failed. Please try again.');
-          setIsScanning(false);
-        }
-      } catch (err: any) {
-        setErrorMsg(err.message || 'Verification failed.');
+      if (res.success) {
+        setIsSuccess(true);
+        toast.success('Face Identity Verified and Registered!');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        setErrorMsg(res.error || 'Verification failed. Please try again.');
         setIsScanning(false);
       }
-    }, 3000);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Verification failed.');
+      setIsScanning(false);
+    }
   };
 
   return (

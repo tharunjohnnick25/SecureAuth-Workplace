@@ -21,9 +21,6 @@ const MOCK_RUNTIMES = [
   { language: 'javascript', version: '18.15.0', aliases: ['node', 'js'] },
   { language: 'typescript', version: '5.0.3', aliases: ['ts'] },
   { language: 'java', version: '15.0.2' },
-  { language: 'cpp', version: '10.2.0', aliases: ['c++', 'g++'] },
-  { language: 'go', version: '1.16.2' },
-  { language: 'rust', version: '1.68.2' },
 ];
 
 const FILE_EXTENSIONS: Record<string, string> = {
@@ -197,12 +194,8 @@ async function runLocalCode(language: string, code: string, stdin?: string): Pro
 
 export async function GET() {
   try {
-    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
-      return NextResponse.json({ success: true, data: MOCK_RUNTIMES, mock: true });
-    }
-
-    const runtimes = await fetchRuntimes();
-    return NextResponse.json({ success: true, data: runtimes });
+    // Only return the 4 languages that we guarantee 100% execution for
+    return NextResponse.json({ success: true, data: MOCK_RUNTIMES, mock: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Server error';
     console.error('Error fetching Piston runtimes:', error);

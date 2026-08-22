@@ -3,7 +3,6 @@
  */
 
 export const ROLES = {
-  SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
   MANAGER: 'manager',
   EMPLOYEE: 'employee',
@@ -12,12 +11,10 @@ export const ROLES = {
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 export const ADMIN_ROLES: Role[] = [
-  ROLES.SUPER_ADMIN,
   ROLES.ADMIN,
 ];
 
 export const ROLE_HIERARCHY = {
-  [ROLES.SUPER_ADMIN]: 4,
   [ROLES.ADMIN]: 3,
   [ROLES.MANAGER]: 2,
   [ROLES.EMPLOYEE]: 1,
@@ -34,10 +31,10 @@ export function getRoleHomePath(role: string): string {
 }
 
 export const ROUTE_PERMISSIONS = {
-  '/admin': [ROLES.SUPER_ADMIN, ROLES.ADMIN],
-  '/manager': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER],
-  '/employee': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.EMPLOYEE],
-  '/settings': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.EMPLOYEE],
-  '/admin/users': [ROLES.SUPER_ADMIN, ROLES.ADMIN],
-  '/admin/audit': [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+  '/admin': [ROLES.ADMIN],
+  '/manager': [ROLES.ADMIN, ROLES.MANAGER],
+  '/employee': [ROLES.ADMIN, ROLES.MANAGER, ROLES.EMPLOYEE],
+  '/settings': [ROLES.ADMIN, ROLES.MANAGER, ROLES.EMPLOYEE],
+  '/admin/users': [ROLES.ADMIN],
+  '/admin/audit': [ROLES.ADMIN],
 };

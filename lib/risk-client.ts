@@ -24,8 +24,8 @@ export interface RiskFlow {
 }
 
 const MFA_PENDING_PATHS: Partial<Record<MfaRequirement, string>> = {
-  totp: '/mfa-verify',
-  hardware_key: '/login/passkey?risk=high',
+  totp: '/verify-mfa',
+  hardware_key: '/verify-mfa',
 };
 
 /**
@@ -47,7 +47,7 @@ export function resolveRiskRoute(response: RiskAuthResponse, defaultRoute: strin
   }
 
   if (response?.requiresMfa) {
-    return { route: '/mfa-verify', needsPending: true, completed: false };
+    return { route: '/verify-mfa', needsPending: true, completed: false };
   }
 
   return { route: defaultRoute, needsPending: false, completed: true };

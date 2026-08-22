@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,19 +15,16 @@ type LeaveRequest = {
   start_date: string;
   end_date: string;
   total_days: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INFO_REQUESTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'MANAGER_APPROVED' | 'INFO_REQUESTED';
   reason: string;
   admin_remarks: string | null;
   created_at: string;
 };
 
 export default function LeaveHistoryPage() {
+  const router = useRouter();
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchRequests();
-  }, []);
 
   const fetchRequests = async () => {
     try {
@@ -42,9 +40,30 @@ export default function LeaveHistoryPage() {
     }
   };
 
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/leave');
+        const data = await res.json();
+        if (res.ok && !cancelled) {
+          setRequests(data.data || []);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const cancelRequest = async (id: string) => {
     if (!confirm('Are you sure you want to cancel this leave request?')) return;
-    
+
     try {
       const res = await fetch('/api/leave/cancel', {
         method: 'PATCH',
@@ -58,7 +77,7 @@ export default function LeaveHistoryPage() {
         const data = await res.json();
         toast.error(data.error || 'Failed to cancel request');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred');
     }
   };
@@ -69,6 +88,8 @@ export default function LeaveHistoryPage() {
         return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"><CheckCircle2 className="w-3 h-3 mr-1" /> Approved</Badge>;
       case 'REJECTED':
         return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
+      case 'MANAGER_APPROVED':
+        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><Clock className="w-3 h-3 mr-1" /> Manager Approved</Badge>;
       case 'INFO_REQUESTED':
         return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20"><AlertCircle className="w-3 h-3 mr-1" /> Info Requested</Badge>;
       default:
@@ -89,7 +110,7 @@ export default function LeaveHistoryPage() {
           ) : requests.length === 0 ? (
             <div className="text-center p-12 border border-dashed border-slate-800 rounded-lg">
               <p className="text-slate-400 mb-4">You have not submitted any leave requests yet.</p>
-              <Button onClick={() => window.location.href = '/dashboard/leave/request'} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => router.push('/dashboard/leave/request')} className="bg-blue-600 hover:bg-blue-700">
                 Request Leave
               </Button>
             </div>
@@ -112,11 +133,11 @@ export default function LeaveHistoryPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   {req.status === 'PENDING' && (
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
+                    <Button
+                      variant="destructive"
+                      size="sm"
                       onClick={() => cancelRequest(req.id)}
                       className="w-full md:w-auto"
                     >

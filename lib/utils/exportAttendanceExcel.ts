@@ -1,8 +1,6 @@
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory } from '@capacitor/filesystem';
 
 export async function exportAttendanceToExcel(data: any[]) {
   try {
@@ -60,19 +58,8 @@ export async function exportAttendanceToExcel(data: any[]) {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance Report');
 
-    // Save for Native Mobile (Capacitor) vs Web Browser
-    if (Capacitor.isNativePlatform()) {
-      const base64 = XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' });
-      await Filesystem.writeFile({
-        path: fileName,
-        data: base64,
-        directory: Directory.Documents,
-      });
-      toast.success(`Exported ${fileName} to Documents folder!`);
-    } else {
-      XLSX.writeFile(workbook, fileName);
-      toast.success(`Exported ${fileName} successfully!`);
-    }
+    XLSX.writeFile(workbook, fileName);
+    toast.success(`Exported ${fileName} successfully!`);
   } catch (error: any) {
     console.error('Error exporting attendance to Excel:', error);
     toast.error(error?.message || 'Failed to export Attendance Report to Excel.');

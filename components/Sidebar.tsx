@@ -43,49 +43,46 @@ const navigationSectionsConfig = [
     title: 'Team Management',
     items: [
       { id: 'managerTeam', name: 'My Team', href: '/manager/team', icon: Users, roles: ['MANAGER'] },
-      { id: 'employees', name: 'Employee Directory', href: '/employees', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
-      { id: 'requestsAdmin', name: 'Requests & Approvals', href: '/requests', icon: FileCheck, roles: ['SUPER_ADMIN', 'ADMIN'] },
-      { id: 'orgStructure', name: 'Organization Structure', href: '/org-structure', icon: Building2, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'employees', name: 'Employee Directory', href: '/employees', icon: Users, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER'] },
+      { id: 'requestsAdmin', name: 'Requests & Approvals', href: '/requests', icon: FileCheck, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN'] },
+      { id: 'orgStructure', name: 'Organization Structure', href: '/org-structure', icon: Building2, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN'] },
     ],
   },
   {
     title: 'Overview',
     items: [
-      { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
-      { id: 'attendance', name: 'Attendance & Login', href: '/attendance', icon: Clock, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'attendance', name: 'Attendance & Login', href: '/attendance', icon: Clock, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
     ],
   },
   {
     title: 'Workspace',
     items: [
-      { id: 'tasks', name: 'My Tasks', href: '/tasks', icon: FileCheck, roles: ['MANAGER', 'EMPLOYEE'] },
-      { id: 'chat', name: 'Chat with Colleagues', href: '/chat', icon: MessageSquare, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
-      { id: 'calendar', name: 'Calendar', href: '/calendar', icon: Clock, roles: ['MANAGER', 'EMPLOYEE'] },
-      { id: 'leaves', name: 'Leave Apply', href: '/leaves', icon: Clock, roles: ['MANAGER', 'EMPLOYEE'] },
-      { id: 'vault', name: 'Personal Vault', href: '/vault', icon: FileText, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
-      { id: 'workspace', name: 'Company Drive', href: '/workspace', icon: HardDrive, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'tasks', name: 'My Tasks', href: '/tasks', icon: FileCheck, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'chat', name: 'Chat with Colleagues', href: '/chat', icon: MessageSquare, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'calendar', name: 'Calendar', href: '/calendar', icon: Clock, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'leaves', name: 'Leave Management', href: '/leaves', icon: Clock, roles: ['MANAGER', 'EMPLOYEE'] },
+      { id: 'vault', name: 'Personal Vault', href: '/vault', icon: FileText, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'workspace', name: 'Company Drive', href: '/workspace', icon: HardDrive, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
       { id: 'resources', name: 'Office Resources', href: '/resources', icon: ShieldAlert, roles: ['MANAGER', 'EMPLOYEE'] },
-      { id: 'meetings', name: 'Video Meetings', href: '/meetings', icon: Video, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
-      { id: 'mail', name: 'Internal Mail', href: '/mail', icon: Mail, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
-      { id: 'reminders', name: 'Automated Reminders', href: '/reminders', icon: BellRing, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
-      { id: 'employeeCompiler', name: 'Code Compiler', href: '/compiler', icon: Plug, roles: ['MANAGER', 'EMPLOYEE'] },
+      { id: 'meetings', name: 'Video Meetings', href: '/meetings', icon: Video, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'mail', name: 'Internal Mail', href: '/mail', icon: Mail, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'reminders', name: 'Automated Reminders', href: '/reminders', icon: BellRing, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'employeeCompiler', name: 'Code Compiler', href: '/compiler', icon: Plug, roles: ['EMPLOYEE'] },
     ],
   },
   {
     title: 'Office Security',
     items: [
-      { id: 'unifiedSecurity', name: 'Security Hub', href: '/security', icon: Shield, roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { id: 'unifiedSecurity', name: 'Security', href: '/security', icon: Shield, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN'] },
     ],
   },
   {
     title: 'System & RBAC Management',
     items: [
-      { id: 'rbacUsers', name: 'Access Management', href: '/admin/users', icon: UserCog, roles: ['SUPER_ADMIN', 'ADMIN'] },
-      { id: 'enrollFace', name: 'Face Enrollment', href: '/admin/enroll-face', icon: ScanFace, roles: ['SUPER_ADMIN', 'ADMIN'] },
-      { id: 'rbacAudit', name: 'Role Audit Logs', href: '/admin/audit', icon: ClipboardList, roles: ['SUPER_ADMIN', 'ADMIN'] },
-      { id: 'systemOverview', name: 'System Overview', href: '/system-management', icon: BarChart3, roles: ['SUPER_ADMIN', 'ADMIN'] },
-      { id: 'rbacSettings', name: 'System Settings', href: '/admin/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN'] },
-      { id: 'settings', name: 'My Settings', href: '/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EMPLOYEE'] },
+      { id: 'devices', name: 'Hardware Tokens', href: '/admin/devices', icon: Smartphone, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN'] },
+      { id: 'rbacAudit', name: 'Role Audit Logs', href: '/admin/audit', icon: ClipboardList, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN'] },
+      { id: 'settings', name: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'MANAGER', 'EMPLOYEE'] },
     ],
   },
 ];
@@ -104,7 +101,7 @@ export function SidebarContent() {
       const supabase = createClient();
       await supabase.auth.signOut();
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('secureauth-session');
+        // localStorage.removeItem('secureauth-session'); removed
       }
       setUser(null);
       router.push('/');
@@ -150,6 +147,7 @@ export function SidebarContent() {
                       <Link
                         key={item.id}
                         href={href}
+                        data-nav-id={item.id}
                         className={cn(
                           'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm',
                           isActive
@@ -171,9 +169,9 @@ export function SidebarContent() {
 
       <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
         <Link href="/settings" className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors flex-1 min-w-0">
-          {user?.profile_picture ? (
+          {user?.avatar_url || user?.profile_picture ? (
             <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden bg-black flex-shrink-0">
-              <img src={user.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={user.avatar_url || user.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           ) : (
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">

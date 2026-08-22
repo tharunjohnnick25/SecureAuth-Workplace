@@ -58,10 +58,10 @@ export default function MfaVerifyPage() {
 
       if (user) {
          // Create mock session locally or update Zustand
-         const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
+         const ADMIN_ROLES = new Set(['ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN']);
          const role = String(user.role || '').toUpperCase();
          const isAdmin = ADMIN_ROLES.has(role);
-         const needsDetails = !isAdmin && user.profile_completed !== true;
+         const needsDetails = !isAdmin && user.status === 'INVITED';
          const mustChangePassword = user.must_change_password === true;
          
          if (!mustChangePassword) {

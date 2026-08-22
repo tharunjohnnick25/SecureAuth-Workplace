@@ -17,7 +17,6 @@ export default function Employee360Page() {
   const [employee, setEmployee] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,21 +28,18 @@ export default function Employee360Page() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [empRes, tRes, attRes, docRes] = await Promise.all([
+      const [empRes, tRes, attRes] = await Promise.all([
         fetch('/api/admin/employees'),
         fetch('/api/admin/tasks'),
-        fetch(`/api/employee/attendance?userId=${params.id}`),
-        fetch(`/api/employee/documents?userId=${params.id}`)
+        fetch(`/api/employee/attendance?userId=${params.id}`)
       ]);
       const empJson = await empRes.json();
       const tJson = await tRes.json();
       const attJson = await attRes.json();
-      const docJson = await docRes.json();
       
       if(empJson.success) setEmployee(empJson.data.find((e:any) => e.id === params.id));
       if(tJson.success) setTasks(tJson.data.filter((t:any) => t.assigned_to === params.id));
       if(attJson.success) setAttendance(attJson.data);
-      if(docJson.success) setDocuments(docJson.data);
     } catch(err) {
        console.error(err);
     } finally {
@@ -149,28 +145,6 @@ export default function Employee360Page() {
                        </div>
                      </Card>
                   </div>
-                  
-                  <Card className="p-6 bg-black/40 backdrop-blur-xl border-white/10">
-                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FileText className="w-5 h-5 text-gray-400"/> {'Documents verification'}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {documents.length === 0 ? (
-                         <p className="text-sm text-gray-400 col-span-2">{'No documents uploaded'}</p>
-                      ) : (
-                         documents.map(d => (
-                            <div key={d.id} className="flex items-center gap-3 p-3 bg-white/5 border border-white/5 rounded-xl">
-                               <FileText className="w-8 h-8 text-blue-400/50" />
-                               <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold truncate">{d.document_type}</p>
-                                  <p className="text-xs text-gray-400 truncate">{d.document_name}</p>
-                               </div>
-                               <div>
-                                 {d.is_verified ? <ShieldCheck className="w-5 h-5 text-green-500" /> : <AlertTriangle className="w-5 h-5 text-yellow-500" />}
-                               </div>
-                            </div>
-                         ))
-                      )}
-                    </div>
-                  </Card>
                </div>
             </div>
           )}

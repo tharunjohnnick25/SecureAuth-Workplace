@@ -16,22 +16,11 @@ export function AuditLogsTab({ hideLayout }: { hideLayout?: boolean }) {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const { data, error } = await supabase
-          .from('audit_logs')
-          .select(`
-            id,
-            action,
-            resource,
-            created_at,
-            users ( email )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          const formattedLogs = data.map((log: any) => ({
+        const res = await fetch('/api/admin/audit-logs');
+        const json = await res.json();
+        
+        if (res.ok && json.success && json.data && json.data.length > 0) {
+          const formattedLogs = json.data.map((log: any) => ({
             event: log.action,
             user: log.users?.email || 'System',
             resource: log.resource || 'N/A',

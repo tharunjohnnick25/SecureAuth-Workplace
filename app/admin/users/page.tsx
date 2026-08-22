@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
-import { Search, Shield, UserCog, MoreVertical, Loader2, Check, AlertTriangle } from 'lucide-react';
+import { Search, Shield, UserCog, MoreVertical, Loader2, Check, AlertTriangle, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface User {
@@ -77,6 +77,7 @@ export default function AdminUsersPage() {
     }
   };
 
+
   const filteredUsers = search 
     ? users.filter(u => u.email.includes(search) || (u.name && u.name.toLowerCase().includes(search.toLowerCase())))
     : users;
@@ -119,7 +120,7 @@ export default function AdminUsersPage() {
                     onChange={e => setRoleFilter(e.target.value)}
                   >
                     <option value="">All Roles</option>
-                    <option value="super_admin">Super Admin</option>
+                    
                     <option value="admin">Admin</option>
                     <option value="manager">Manager</option>
                     <option value="employee">Employee</option>
@@ -172,15 +173,18 @@ export default function AdminUsersPage() {
                             {user.department || '-'}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button 
-                              onClick={() => {
-                                setEditUser(user);
-                                setEditForm({ role: user.role, department: user.department || '', managerId: user.managerId || '', reason: '' });
-                              }}
-                              className="text-xs text-cyan-400 hover:text-cyan-300 font-medium px-3 py-1.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors"
-                            >
-                              Edit Role
-                            </button>
+                            <div className="flex justify-end gap-2">
+
+                              <button 
+                                onClick={() => {
+                                  setEditUser(user);
+                                  setEditForm({ role: user.role, department: user.department || '', managerId: user.managerId || '', reason: '' });
+                                }}
+                                className="text-xs text-cyan-400 hover:text-cyan-300 font-medium px-3 py-1.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors"
+                              >
+                                Edit Role
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -216,7 +220,7 @@ export default function AdminUsersPage() {
                   <option value="employee">Employee</option>
                   <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
-                  <option value="super_admin">Super Admin</option>
+                  
                 </select>
               </div>
 

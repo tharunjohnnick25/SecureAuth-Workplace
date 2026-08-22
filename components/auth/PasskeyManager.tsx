@@ -52,7 +52,7 @@ export function PasskeyManager() {
     try {
       // 1. Get options from server
       const optionsRes = await fetch('/api/auth/webauthn/register/generate-options');
-      if (!optionsRes.ok) throw new Error('Failed to generate passkey options');
+      if (!optionsRes.ok) throw new Error('Failed to generate passkey options.');
       
       const options = await optionsRes.json();
 
@@ -80,7 +80,7 @@ export function PasskeyManager() {
         toast.success('Passkey registered successfully!');
         fetchPasskeys();
       } else {
-        toast.error(verifyData.error || 'Failed to verify passkey');
+        toast.error(verifyData.error || 'Failed to verify passkey.');
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred during passkey registration');
@@ -99,7 +99,7 @@ export function PasskeyManager() {
       toast.success('Passkey removed');
       fetchPasskeys();
     } catch (error) {
-      toast.error('Failed to remove passkey');
+      toast.error('Failed to remove passkey.');
     }
   };
 

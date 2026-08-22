@@ -1,14 +1,16 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { isMockMode, MockEmployees } from '@/lib/mock-employees';
-import { verify } from 'otplib';
+import { verifyTotp } from '@/services/auth/mfa';
+import { createClient } from '@supabase/supabase-js';
+import { logAuditEvent } from '@/lib/audit';
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   try {
-    const { factorId, code } = await req.json();
+    const { code } = await req.json();
 
     if (isMockMode()) {
-      // For mock mode, get the user from the mock session cookie
       const sessionCookie = req.cookies.get('mock_session')?.value;
       let userId = 'mock-user-id';
       
@@ -28,13 +30,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
       }
 
-      const isValid = verify({ token: code, secret: user.totp_secret });
+      const isValid = verifyTotp(user.totp_secret, String(code).trim());
 
       if (!isValid) {
          return NextResponse.json({ error: 'Incorrect verification code. Please try again.' }, { status: 400 });
       }
 
-      // Mark enrolled
       MockEmployees.update(userId, { totp_enrolled: true });
 
       return NextResponse.json({
@@ -43,49 +44,116 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const supabase = await createServerSupabaseClient();
+    let supabase = await createServerSupabaseClient();
+    let accessToken: string | undefined;
+    let refreshToken: string | undefined;
+
+    const pendingSessionStr = req.cookies.get('mfa_pending_session')?.value;
+    if (pendingSessionStr) {
+      try { 
+         const tokens = JSON.parse(pendingSessionStr);
+         accessToken = tokens.access_token; 
+         refreshToken = tokens.refresh_token;
+      } catch(e) {}
+    }
+
+    if (accessToken && refreshToken) {
+       supabase = createClient(
+         process.env.NEXT_PUBLIC_SUPABASE_URL!,
+         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+         { auth: { persistSession: false } }
+       ) as any;
+       
+       await supabase.auth.setSession({
+           access_token: accessToken,
+           refresh_token: refreshToken
+       });
+    }
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+
     if (userError || !user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const { data, error } = await supabase.auth.mfa.challengeAndVerify({
-      factorId,
-      code,
-    });
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    const { data: userData, error: dbError } = await adminClient
+      .from('users')
+      .select('company_id, status, mfa_secret')
+      .eq('id', user.id)
+      .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (userData?.status === 'SUSPENDED') {
+      return NextResponse.json({ error: 'Account suspended' }, { status: 403 });
     }
+
+    let isValid = false;
+
+    if (userData?.mfa_secret) {
+        isValid = verifyTotp(userData.mfa_secret, String(code).trim());
+    }
+
+    if (!isValid) {
+      await logAuditEvent(
+        user.id,
+        userData?.company_id || null,
+        {
+          action: 'TOTP_VERIFICATION_FAILED',
+          resource: 'auth.mfa.totp',
+          details: { reason: 'invalid_code' },
+        },
+        req
+      );
+      return NextResponse.json({ error: 'Incorrect verification code. Please try again.' }, { status: 400 });
+    }
+
+    // Since Native MFA is disabled, we do NOT issue AAL2 natively.
+    // Instead we rely entirely on our robust middleware and `mfa_verified` state which blocks access if TOTP is enabled but not verified.
+    
+    await adminClient
+      .from('users')
+      .update({
+        is_mfa_enabled: true,
+        totp_enabled: true,
+      })
+      .eq('id', user.id);
+
+    await logAuditEvent(
+      user.id,
+      userData?.company_id || null,
+      {
+        action: 'TOTP_ENROLLMENT_COMPLETED',
+        resource: 'auth.mfa.totp',
+        details: { method: 'custom' },
+      },
+      req
+    );
 
     const recoveryCodes = generateRecoveryCodes();
-    const { error: updateError } = await supabase.rpc('update_user_mfa', {
-      p_user_id: user.id,
-      p_mfa_enabled: true,
-      p_recovery_codes: JSON.stringify(recoveryCodes),
-    });
-    if (updateError) {
-      // Fallback direct update
-      await supabase.from('users').update({
-        is_mfa_enabled: true,
-      } as any).eq('id', user.id);
-    }
 
     return NextResponse.json({
       success: true,
       recoveryCodes,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('TOTP Verify Setup Error:', err);
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
 }
 
 function generateRecoveryCodes(): string[] {
   const codes: string[] = [];
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   for (let i = 0; i < 8; i++) {
-    const code = Array.from({ length: 10 }, () =>
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.charAt(Math.floor(Math.random() * 32))
-    ).join('');
+    const randomBytes = crypto.randomBytes(10);
+    let code = '';
+    for (let b = 0; b < 10; b++) {
+      code += chars.charAt(randomBytes[b] % chars.length);
+    }
     codes.push(code.match(/.{5}/g)!.join('-'));
   }
   return codes;

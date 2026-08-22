@@ -1,6 +1,6 @@
 import { createClient as createClientJS, type Session } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
-import { createCapacitorAwareFetch, isRunningInCapacitor } from '@/lib/capacitor';
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
@@ -12,18 +12,13 @@ let _client: ReturnType<typeof createClientJS<Database>> | null = null;
 function getClient(): ReturnType<typeof createClientJS<Database>> {
   if (!_client) {
     const existingSession = typeof window !== 'undefined' ? restoreSession() : null;
-    const isCapacitor = typeof window !== 'undefined' ? isRunningInCapacitor() : false;
     _client = createClientJS<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: !isCapacitor,
+        detectSessionInUrl: true,
         storageKey: SESSION_STORAGE_KEY,
         ...(existingSession ? { initialSession: existingSession } : {}),
-        ...(isCapacitor ? { flowType: 'pkce' } : {}),
-      },
-      global: {
-        fetch: createCapacitorAwareFetch(),
       },
     });
   }

@@ -39,7 +39,7 @@ export default function LoginForm() {
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.error || 'Login failed');
+        throw new Error(result.error || 'Sign-in failed. Please check your credentials and try again.');
       }
 
       if (result.requiresMfa || result.requiresBiometric) {
@@ -113,7 +113,7 @@ export default function LoginForm() {
           disabled={isSubmitting}
           className="w-full py-3 btn-cyber flex items-center justify-center"
         >
-          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Authenticate'}
+          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
         </button>
       </form>
     </motion.div>

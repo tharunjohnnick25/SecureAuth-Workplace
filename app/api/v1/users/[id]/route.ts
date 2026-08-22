@@ -1,34 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
 import { ROLES } from '@/lib/roles';
-import { isMockMode, MockEmployees } from '@/lib/mock-employees';
+
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
 
 // PATCH /api/v1/users/:id/role
-async function patchHandler(req: NextRequest, sessionUser: any, { params }: { params: { id: string } }) {
+async function patchHandler(req: NextRequest, sessionUser: any, context: { params: Promise<{ id: string }> }) {
   try {
-    const userId = params.id;
+    const { id } = await context.params;
+    const userId = id;
     const body = await req.json();
     const { role, department, managerId, reason } = body;
-
-    if (isMockMode()) {
-      const user = MockEmployees.getById(userId);
-      if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      
-      const oldRole = user.role || 'employee';
-      
-      MockEmployees.update(userId, {
-        role: role.toLowerCase(),
-        department,
-        manager_id: managerId
-      });
-
-      // Log to console for mock mode audit
-      console.log(`[AUDIT] Mock Mode: Role change for ${user.email} from ${oldRole} to ${role}. Reason: ${reason}`);
-      
-      return NextResponse.json({ success: true });
-    }
 
     const supabase = await createServerSupabaseClient();
     
@@ -71,22 +54,15 @@ async function patchHandler(req: NextRequest, sessionUser: any, { params }: { pa
 }
 
 // DELETE /api/v1/users/:id
-async function deleteHandler(req: NextRequest, sessionUser: any, { params }: { params: { id: string } }) {
+async function deleteHandler(req: NextRequest, sessionUser: any, context: { params: Promise<{ id: string }> }) {
   try {
-    // Only super_admin can delete
-    if (sessionUser.role !== ROLES.SUPER_ADMIN) {
+    // Only admin can delete
+    if (sessionUser.role !== ROLES.ADMIN) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const userId = params.id;
-
-    if (isMockMode()) {
-      MockEmployees.update(userId, {
-        is_deleted: true,
-        deleted_at: new Date().toISOString()
-      });
-      return NextResponse.json({ success: true });
-    }
+    const { id } = await context.params;
+    const userId = id;
 
     const supabase = await createServerSupabaseClient();
     
@@ -109,8 +85,5 @@ async function deleteHandler(req: NextRequest, sessionUser: any, { params }: { p
 }
 
 // Export wrapped handlers
-export const PATCH = (req: NextRequest, { params }: any) => 
-  requireRole([ROLES.SUPER_ADMIN, ROLES.ADMIN], (req, user) => patchHandler(req, user, { params }))(req);
-
-export const DELETE = (req: NextRequest, { params }: any) => 
-  requireRole([ROLES.SUPER_ADMIN], (req, user) => deleteHandler(req, user, { params }))(req);
+export const PATCH = requireRole([ROLES.ADMIN], patchHandler);
+export const DELETE = requireRole([ROLES.ADMIN], deleteHandler);

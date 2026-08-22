@@ -1,6 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { maskPhoneNumber } from '@/lib/security/otp';
+
+/**
+ * GET /api/auth/session
+ * Returns the currently authenticated user profile and session flags.
+ */
+export async function GET() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ user: null, session: null }, { status: 401 });
+    }
+
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const fullUser = {
+      ...user,
+      ...profile,
+      masked_phone: profile?.phone ? maskPhoneNumber(profile.phone) : 'Unset',
+    };
+
+    return NextResponse.json({
+      user: fullUser,
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Internal error' }, { status: 500 });
+  }
+}
 
 /**
  * POST /api/auth/session

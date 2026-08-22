@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, getUserSession } from '@/lib/auth';
 import { ROLES } from '@/lib/roles';
-import { isMockMode, MockEmployees } from '@/lib/mock-employees';
+
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 async function handler(req: NextRequest) {
@@ -11,24 +11,22 @@ async function handler(req: NextRequest) {
   const page = parseInt(url.searchParams.get('page') || '1');
   const limit = parseInt(url.searchParams.get('limit') || '20');
 
-  if (isMockMode()) {
-    let users = MockEmployees.getAll().filter(u => !u.is_deleted);
-    
-    if (roleFilter) {
-      users = users.filter(u => u.role?.toLowerCase() === roleFilter.toLowerCase());
-    }
-    if (deptFilter) {
-      users = users.filter(u => u.department?.toLowerCase() === deptFilter.toLowerCase());
-    }
-
-    const total = users.length;
-    const paginated = users.slice((page - 1) * limit, page * limit);
-
-    return NextResponse.json({ users: paginated, total, page });
+  const supabase = await createServerSupabaseClient();
+  const { user } = await getUserSession();
+  
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = await createServerSupabaseClient();
   let query = supabase.from('users').select('id, email, full_name, role, department, manager_id, last_login, created_at', { count: 'exact' });
+
+  // ENFORCE COMPANY ISOLATION BY EMAIL DOMAIN
+  if (user.email) {
+    const domain = user.email.split('@')[1];
+    if (domain) {
+      query = query.like('email', `%@${domain}`);
+    }
+  }
 
   query = query.eq('is_deleted', false);
 
@@ -59,4 +57,4 @@ async function handler(req: NextRequest) {
   return NextResponse.json({ users, total: count || 0, page });
 }
 
-export const GET = requireRole([ROLES.SUPER_ADMIN, ROLES.ADMIN], handler);
+export const GET = requireRole([ROLES.ADMIN], handler);

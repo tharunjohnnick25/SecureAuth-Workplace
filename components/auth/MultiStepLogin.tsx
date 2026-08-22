@@ -101,7 +101,7 @@ export function MultiStepLogin() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (!res.ok) throw new Error(data.error || 'Sign-in failed. Please check your credentials and try again.');
 
       setStep('analyzing');
 
@@ -127,7 +127,7 @@ export function MultiStepLogin() {
     e.preventDefault();
     const code = otp.join('');
     if (code.length < 6) {
-      toast.error('Please enter the full 6-digit OTP');
+      toast.error('Please enter the full 6-digit OTP.');
       return;
     }
     setIsLoading(true);

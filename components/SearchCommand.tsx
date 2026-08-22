@@ -40,21 +40,21 @@ const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
 const STATIC_PAGES = [
   { group: 'Overview', items: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Attendance & Login', href: '/attendance', icon: Clock },
+    { name: 'Attendance', href: '/attendance', icon: Clock },
     { name: 'Notifications', href: '/notifications', icon: Bell },
     { name: 'Calendar', href: '/calendar', icon: Calendar },
   ]},
   { group: 'Work & Collaboration', items: [
     { name: 'My Tasks', href: '/tasks', icon: FileCheck },
     { name: 'Chat with Colleagues', href: '/chat', icon: MessageSquare },
-    { name: 'Leave Apply', href: '/leaves', icon: Clock },
+    { name: 'Leave Management', href: '/leaves', icon: Clock },
     { name: 'Personal Vault', href: '/vault', icon: FileText },
     { name: 'Company Drive', href: '/workspace', icon: HardDrive },
     { name: 'Video Meetings', href: '/meetings', icon: Video },
     { name: 'Automated Reminders', href: '/reminders', icon: Bell },
   ]},
   { group: 'Security', items: [
-    { name: 'Security Center', href: '/security', icon: Shield },
+    { name: 'Security', href: '/security', icon: Shield },
     { name: 'Threat Intelligence', href: '/threat-intelligence', icon: Target },
     { name: 'AI Risk Monitoring', href: '/dashboard/risk', icon: ShieldAlert },
     { name: 'Device Fingerprinting', href: '/devices', icon: Smartphone },
@@ -66,7 +66,7 @@ const STATIC_PAGES = [
     { name: 'System Overview', href: '/system-management', icon: BarChart3 },
   ]},
   { group: 'Integration', items: [
-    { name: 'Code Compiler', href: '/admin/compiler', icon: Plug },
+
     { name: 'Settings', href: '/settings', icon: Settings },
   ]}
 ];

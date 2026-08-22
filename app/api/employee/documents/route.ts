@@ -1,33 +1,29 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { isMockMode } from '@/lib/mock-employees';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const employeeIdParams = url.searchParams.get('userId');
 
-    if (isMockMode()) {
-      const targetUserId = employeeIdParams || 'mock';
-      const documents = (MockDB.documents || []).filter(
-        (d: any) => d.user_id === targetUserId || d.employee_id === targetUserId
-      );
-      return NextResponse.json({ success: true, data: documents });
-    }
-
     const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    let targetUserId = user.id;
+    let targetUserId = session.user.id;
 
-    if (employeeIdParams && employeeIdParams !== user.id) {
-       const { data: myUser } = await supabase.from('users').select('role').eq('id', user.id).single();
-       if (myUser?.role === 'ADMIN' || myUser?.role === 'super_admin') {
-          targetUserId = employeeIdParams;
+    if (employeeIdParams && employeeIdParams !== session.user.id) {
+       const { data: myUser } = await supabase.from('users').select('role, company_id').eq('id', session.user.id).single();
+       if (myUser?.role === 'ADMIN' || myUser?.role === 'SUPER_ADMIN') {
+           targetUserId = employeeIdParams;
+           if (myUser.company_id) {
+               const { data: targetUser } = await supabase.from('users').select('company_id').eq('id', targetUserId).single();
+               if (targetUser?.company_id !== myUser.company_id) {
+                   return NextResponse.json({ success: false, error: 'Forbidden: Different organization' }, { status: 403 });
+               }
+           }
        } else {
-          return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+           return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
        }
     }
 
@@ -47,9 +43,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     const isFormData = req.headers.get('content-type')?.includes('multipart/form-data');
     let body: any;
-    let userId: string;
     let type: string;
     let name: string;
     let fileUrl: string;
@@ -57,13 +56,11 @@ export async function POST(req: Request) {
     if (isFormData) {
       const formData = await req.formData();
       const file = formData.get('file') as File | null;
-      userId = (formData.get('userId') as string) || 'mock';
       type = (formData.get('type') as string) || 'Other';
       name = file?.name || 'document';
       fileUrl = file ? `mock://${file.name}` : '';
     } else {
       body = await req.json();
-      userId = body.user_id || body.userId || 'mock';
       type = body.type;
       name = body.name;
       fileUrl = body.file_url;
@@ -73,46 +70,10 @@ export async function POST(req: Request) {
        return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (isMockMode()) {
-      const now = new Date().toISOString();
-      const newDoc = {
-        id: `doc-${Date.now()}`,
-        user_id: userId,
-        employee_id: userId,
-        document_type: type,
-        document_name: name,
-        file_url: fileUrl,
-        is_verified: false,
-        created_at: now,
-      };
-      MockDB.documents = MockDB.documents || [];
-      MockDB.documents.push(newDoc as any);
-      saveMockDB();
-
-      MockDB.approvals = MockDB.approvals || [];
-      MockDB.approvals.push({
-        id: `app-${Date.now()}`,
-        type: 'DOCUMENT',
-        requester_id: userId,
-        approver_id: null,
-        data_payload: { documentId: newDoc.id, type, name },
-        status: 'PENDING',
-        comments: '',
-        created_at: now,
-      } as any);
-      saveMockDB();
-
-      return NextResponse.json({ success: true, data: newDoc });
-    }
-
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-
     const { data: newDoc, error: docError } = await supabase
       .from('documents')
       .insert([{
-         user_id: user.id,
+         user_id: session.user.id,
          document_type: type,
          document_name: name,
          file_url: fileUrl,
@@ -124,7 +85,7 @@ export async function POST(req: Request) {
     // Send for approval
     await supabase.from('approvals').insert([{
        type: 'DOCUMENT',
-       requester_id: user.id,
+       requester_id: session.user.id,
        data_payload: { documentId: newDoc.id, type, name },
        status: 'PENDING'
     }]);

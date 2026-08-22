@@ -41,4 +41,4 @@ async function handler(req: NextRequest) {
   return NextResponse.json({ logs: data, total: count || 0, page });
 }
 
-export const GET = requireRole([ROLES.SUPER_ADMIN, ROLES.ADMIN], handler);
+export const GET = requireRole([ROLES.ADMIN], handler);

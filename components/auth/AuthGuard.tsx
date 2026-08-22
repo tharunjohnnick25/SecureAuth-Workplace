@@ -86,21 +86,13 @@ export default function AuthGuard({ children, requireAdmin = false }: AuthGuardP
 
       // Mandatory profile completion for employees & managers (admins are exempt)
       const isAdmin = ADMIN_ROLES.has(userRole);
-      const profileIncomplete = !isAdmin && user.profile_completed !== true;
+      const profileIncomplete = !isAdmin && user.status === 'INVITED';
       if (profileIncomplete && !PROFILE_ROUTES.has(pathname) && !pathname.startsWith('/onboarding/details')) {
         router.replace('/onboarding/details');
         return;
       }
 
-      // Mandatory phishing-resistant MFA (FIDO2/WebAuthn) for admins — the key
-      // must sign a fresh challenge at least once per session.
-      const isPasskeyRoute = PASSKEY_ROUTES.has(pathname) || pathname.startsWith('/mfa-setup/passkey');
-      const passkeyVerified =
-        typeof window !== 'undefined' && sessionStorage.getItem('passkey_verified') === 'true';
-      if (isAdmin && !passkeyVerified && !isPasskeyRoute) {
-        router.replace('/mfa-setup/passkey');
-        return;
-      }
+
     }
   }, [session, isAuthenticated, contextLoading, pathname, requireAdmin, user, router]);
 

@@ -29,14 +29,14 @@ export default function SettingsPage() {
     personal_email: '',
     phone: '',
     dob: '',
-    gender: 'Prefer Not to Say',
-    blood_group: 'O+',
-    marital_status: 'Single',
-    nationality: 'American',
+    gender: '',
+    blood_group: '',
+    marital_status: '',
+    nationality: '',
     address: '',
     city: '',
     state: '',
-    country: 'United States',
+    country: '',
     postal_code: '',
     appearance: {
       theme: 'System',
@@ -82,23 +82,23 @@ export default function SettingsPage() {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/profile?user_id=${user?.id}`);
+      const res = await fetch(`/api/profile?user_id=${user?.id}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
-        const p = data.data;
+        let p = data.data;
         setProfile(p);
         setFormData({
           personal_email: p.personal_email || '',
           phone: p.phone || '',
-          dob: p.dob || '',
-          gender: p.gender || 'Prefer Not to Say',
-          blood_group: p.blood_group || 'O+',
-          marital_status: p.marital_status || 'Single',
-          nationality: p.nationality || 'American',
+          dob: p.date_of_birth || p.dob || '',
+          gender: p.gender || '',
+          blood_group: p.blood_group || '',
+          marital_status: p.marital_status || '',
+          nationality: p.nationality || '',
           address: p.address || '',
           city: p.city || '',
           state: p.state || '',
-          country: p.country || 'United States',
+          country: p.country || '',
           postal_code: p.postal_code || '',
           appearance: p.appearance_preferences || formData.appearance,
           notifications: p.notification_preferences || formData.notifications,
@@ -120,6 +120,7 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       const payload = fieldUpdate || {
+        personal_email: formData.personal_email,
         phone: formData.phone,
         dob: formData.dob,
         gender: formData.gender,
@@ -144,9 +145,28 @@ export default function SettingsPage() {
       const data = await res.json();
       if (data.success) {
         if (showToast) toast.success('Profile settings updated successfully');
-        setProfile(data.data);
+        
+        if (!fieldUpdate) {
+          localStorage.setItem(`cyber_auth_settings_${user?.id}`, JSON.stringify({
+            personal_email: payload.personal_email,
+            marital_status: payload.marital_status,
+            nationality: payload.nationality,
+            city: payload.city,
+            state: payload.state,
+            country: payload.country,
+            postal_code: payload.postal_code,
+            appearance_preferences: payload.appearance_preferences,
+            notification_preferences: payload.notification_preferences,
+            privacy_preferences: payload.privacy_preferences
+          }));
+        }
+        
+        const localData = localStorage.getItem(`cyber_auth_settings_${user?.id}`);
+        const parsedLocal = localData ? JSON.parse(localData) : {};
+        setProfile({ ...data.data, ...parsedLocal });
+        
         if (payload.profile_picture) {
-          setUser({ ...user, profile_picture: payload.profile_picture });
+          setUser({ ...user, profile_picture: payload.profile_picture, avatar_url: payload.profile_picture });
         }
       } else {
         throw new Error(data.error);
@@ -252,38 +272,42 @@ export default function SettingsPage() {
 
       <form onSubmit={(e) => { e.preventDefault(); handleUpdate(); }} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div><label className="text-xs text-gray-400 block mb-1">Full Name (Read Only)</label><input type="text" readOnly value={profile.full_name} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
-          <div><label className="text-xs text-gray-400 block mb-1">Employee ID (Read Only)</label><input type="text" readOnly value={profile.id.toUpperCase()} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
-          <div><label className="text-xs text-gray-400 block mb-1">Company Name (Read Only)</label><input type="text" readOnly value={profile.company_name} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
-          <div><label className="text-xs text-gray-400 block mb-1">Department (Read Only)</label><input type="text" readOnly value={profile.department} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
-          <div><label className="text-xs text-gray-400 block mb-1">Designation (Read Only)</label><input type="text" readOnly value={profile.designation} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
-          <div><label className="text-xs text-gray-400 block mb-1">Official Email (Read Only)</label><input type="text" readOnly value={profile.email} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Full Name (Read Only)</label><input type="text" readOnly value={profile.full_name || ''} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Employee ID (Read Only)</label><input type="text" readOnly value={profile.id?.toUpperCase() || ''} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Company Name (Read Only)</label><input type="text" readOnly value={profile.company_name || ''} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Department (Read Only)</label><input type="text" readOnly value={profile.department || ''} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Designation (Read Only)</label><input type="text" readOnly value={profile.designation || ''} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Official Email (Read Only)</label><input type="text" readOnly value={profile.email || ''} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-gray-400 cursor-not-allowed" /></div>
           
-          <div><label className="text-xs text-gray-400 block mb-1">Personal Email</label><input type="email" value={formData.personal_email} onChange={e => setFormData({...formData, personal_email: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md" /></div>
-          <div><label className="text-xs text-gray-400 block mb-1">Phone Number</label><input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md" /></div>
-          <div><label className="text-xs text-gray-400 block mb-1">Date of Birth</label><input type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Personal Email</label><input type="email" value={formData.personal_email || ''} onChange={e => setFormData({...formData, personal_email: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Phone Number</label><input type="tel" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md" /></div>
+          <div><label className="text-xs text-gray-400 block mb-1">Date of Birth</label><input type="date" value={formData.dob || ''} onChange={e => setFormData({...formData, dob: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md" /></div>
           
           <div>
             <label className="text-xs text-gray-400 block mb-1">Gender</label>
             <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md">
+              <option value="" disabled className="bg-[#0f172a] text-gray-500">Select Gender...</option>
               <option className="bg-[#0f172a] text-white">Male</option><option className="bg-[#0f172a] text-white">Female</option><option className="bg-[#0f172a] text-white">Other</option><option className="bg-[#0f172a] text-white">Prefer Not to Say</option>
             </select>
           </div>
           <div>
             <label className="text-xs text-gray-400 block mb-1">Blood Group</label>
             <select value={formData.blood_group} onChange={e => setFormData({...formData, blood_group: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md">
+              <option value="" disabled className="bg-[#0f172a] text-gray-500">Select Blood Group...</option>
               <option className="bg-[#0f172a] text-white">A+</option><option className="bg-[#0f172a] text-white">A-</option><option className="bg-[#0f172a] text-white">B+</option><option className="bg-[#0f172a] text-white">B-</option><option className="bg-[#0f172a] text-white">O+</option><option className="bg-[#0f172a] text-white">O-</option><option className="bg-[#0f172a] text-white">AB+</option><option className="bg-[#0f172a] text-white">AB-</option>
             </select>
           </div>
           <div>
             <label className="text-xs text-gray-400 block mb-1">Marital Status</label>
             <select value={formData.marital_status} onChange={e => setFormData({...formData, marital_status: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md">
+              <option value="" disabled className="bg-[#0f172a] text-gray-500">Select Marital Status...</option>
               <option className="bg-[#0f172a] text-white">Single</option><option className="bg-[#0f172a] text-white">Married</option><option className="bg-[#0f172a] text-white">Other</option>
             </select>
           </div>
           <div>
             <label className="text-xs text-gray-400 block mb-1">Nationality</label>
             <select value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md">
+              <option value="" disabled className="bg-[#0f172a] text-gray-500">Select Nationality...</option>
               <option className="bg-[#0f172a] text-white">American</option><option className="bg-[#0f172a] text-white">British</option><option className="bg-[#0f172a] text-white">Canadian</option><option className="bg-[#0f172a] text-white">Indian</option><option className="bg-[#0f172a] text-white">Australian</option><option className="bg-[#0f172a] text-white">Other</option>
             </select>
           </div>
@@ -294,6 +318,7 @@ export default function SettingsPage() {
           <div>
             <label className="text-xs text-gray-400 block mb-1">Country</label>
             <select value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:bg-black/40 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300 outline-none backdrop-blur-md">
+              <option value="" disabled className="bg-[#0f172a] text-gray-500">Select Country...</option>
               <option className="bg-[#0f172a] text-white">United States</option><option className="bg-[#0f172a] text-white">United Kingdom</option><option className="bg-[#0f172a] text-white">Canada</option><option className="bg-[#0f172a] text-white">India</option>
             </select>
           </div>
@@ -371,12 +396,6 @@ export default function SettingsPage() {
           </button>
         </div>
         
-        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:border-white/20 transition-colors">
-          <div><p className="font-bold text-white">Face / Biometric Authentication</p><p className="text-sm text-gray-400">Use Windows Hello or FaceID</p></div>
-          <button onClick={handleManageBiometrics} className={`px-4 py-2 rounded-lg text-sm font-bold ${profile.security_info?.face_verified ? 'bg-success/20 text-success' : 'bg-white/10'}`}>
-            {profile.security_info?.face_verified ? 'Active' : 'Configure'}
-          </button>
-        </div>
       </div>
 
       <div className="space-y-4 pt-4">
@@ -750,7 +769,7 @@ export default function SettingsPage() {
               <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                 <Settings className="w-5 h-5" />
               </div>
-              Employee Settings & Profile
+              Settings & Profile
             </h1>
             <p className="text-gray-400 text-sm">Manage your comprehensive workspace settings, security, and preferences.</p>
           </div>

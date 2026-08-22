@@ -11,14 +11,14 @@ import {
 import { useMemo } from 'react';
 
 export function SecurityCenterTab() {
-  const { data: realAlerts } = useRealtimeData('alerts');
+  const { data: realAlerts } = useRealtimeData('security_events');
 
   const alerts = useMemo(() => {
     return realAlerts || [];
   }, [realAlerts]);
 
   const stats = useMemo(() => {
-    const criticalAlerts = alerts?.filter((a: any) => a.severity === 'critical').length || 0;
+    const criticalAlerts = alerts?.filter((a: any) => a.severity?.toLowerCase() === 'critical' || a.severity?.toLowerCase() === 'high').length || 0;
     
     return [
       { title: 'Security Status', value: criticalAlerts === 0 ? 'OPTIMAL' : 'AT RISK', trend: 'Secure', trendUp: criticalAlerts === 0, icon: Shield },
@@ -31,9 +31,9 @@ export function SecurityCenterTab() {
   const recentActivity = useMemo(() => {
     return alerts?.slice(0, 5).map((alert: any) => ({
       id: alert.id,
-      title: (alert.type || 'System Event').replace(/_/g, ' '),
+      title: (alert.event_type || 'System Event').replace(/_/g, ' '),
       time: new Date(alert.created_at).toLocaleTimeString(),
-      status: (alert.severity === 'critical' ? 'danger' : alert.severity === 'warning' ? 'warning' : 'success') as 'success' | 'warning' | 'danger'
+      status: (alert.severity?.toLowerCase() === 'critical' ? 'danger' : alert.severity?.toLowerCase() === 'high' ? 'warning' : 'success') as 'success' | 'warning' | 'danger'
     })) || [];
   }, [alerts]);
 
@@ -45,7 +45,7 @@ export function SecurityCenterTab() {
     }, {});
     return [
       { name: 'Critical', value: bySeverity.critical || 0 },
-      { name: 'Warning', value: bySeverity.warning || 0 },
+      { name: 'Warning', value: (bySeverity.high || 0) + (bySeverity.medium || 0) + (bySeverity.warning || 0) },
       { name: 'Info', value: bySeverity.info || 0 },
     ];
   }, [alerts]);

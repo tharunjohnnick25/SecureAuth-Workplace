@@ -7,6 +7,7 @@ import { RiskDashboard } from '@/components/pages/RiskDashboard';
 import { DeviceFingerprintingTab } from '@/components/security/DeviceFingerprintingTab';
 import { ThreatIntelTab } from '@/components/security/ThreatIntelTab';
 import { SecurityCenterTab } from '@/components/security/SecurityCenterTab';
+import { SecurityVisualsTab } from '@/components/security/SecurityVisualsTab';
 import { GlobalSearch } from '@/components/SearchCommand';
 
 export default function UnifiedSecurityDashboard() {
@@ -28,6 +29,10 @@ export default function UnifiedSecurityDashboard() {
               <GlobalSearch />
             </div>
           </div>
+
+          <section id="live-overview">
+             <SecurityVisualsTab />
+          </section>
 
           <section id="security-center">
              <SecurityCenterTab />

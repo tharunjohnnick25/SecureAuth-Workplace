@@ -12,8 +12,9 @@ export async function GET() {
 
     const { data: sessions, error } = await supabase
       .from('sessions')
-      .select('*')
+      .select('*, device:devices(*)')
       .eq('user_id', session.user.id)
+      .eq('is_active', true)
       .order('last_active', { ascending: false });
 
     if (error) throw error;
@@ -29,12 +30,35 @@ export async function DELETE(request: Request) {
     const { sessionId } = await request.json();
     const supabase = await createServerSupabaseClient();
     
+    // Verify ownership
+    const { data: sessionData, error: fetchError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+      
+    if (fetchError || !sessionData || sessionData.user_id !== (await supabase.auth.getUser()).data.user?.id) {
+       return NextResponse.json({ error: 'Unauthorized or session not found' }, { status: 403 });
+    }
+
     const { error } = await supabase
       .from('sessions')
-      .delete()
+      .update({ is_active: false })
       .eq('id', sessionId);
 
     if (error) throw error;
+
+    // Audit log
+    const { createClient } = await import('@supabase/supabase-js');
+    const adminClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    
+    await adminClient.from('audit_logs').insert({
+        actor_id: sessionData.user_id,
+        action: 'SESSION_REVOKED',
+        entity_type: 'session',
+        entity_id: sessionId,
+        metadata: { device_id: sessionData.device_id }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

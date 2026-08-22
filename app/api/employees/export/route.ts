@@ -1,7 +1,9 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
+import { requireCompanyAccess } from '@/lib/auth';
+
+export const GET = requireCompanyAccess(async (req: NextRequest, user, companyId) => {
   try {
     const supabase = await createServerSupabaseClient();
     const { searchParams } = new URL(req.url);
@@ -10,7 +12,15 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status') || '';
     const department = searchParams.get('department') || '';
 
-    let query = supabase.from('users').select('*');
+    let query = supabase.from('users').select('*').eq('company_id', companyId);
+
+    // Enforce Domain Isolation
+    if (user?.email) {
+      const userDomain = user.email.split('@')[1];
+      if (userDomain) {
+        query = query.ilike('email', `%@${userDomain}`);
+      }
+    }
     if (ids) {
       const idArray = ids.split(',');
       query = query.in('id', idArray);
@@ -45,4 +55,4 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Export failed', success: false }, { status: 500 });
   }
-}
+});

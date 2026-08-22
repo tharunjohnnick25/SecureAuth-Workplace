@@ -27,6 +27,17 @@ export async function syncUserProfile(
 ): Promise<NormalizedUser> {
   const { id: userId, email = '', user_metadata } = authUser;
 
+  if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+    return {
+      id: userId,
+      email,
+      role: (authUser as any).role || user_metadata?.role || 'EMPLOYEE',
+      first_name: email.split('@')[0],
+      last_name: '',
+      full_name: email.split('@')[0],
+    };
+  }
+
   try {
     const { data: existing } = await client
       .from('users')

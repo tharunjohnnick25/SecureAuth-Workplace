@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = new Set([
   '/verify-otp',
   '/verify-identity',
   '/verify-mfa',
+  '/mfa-setup',
   '/demo',
   '/pricing',
   '/unauthorized',
@@ -26,6 +27,7 @@ export function AuthGuardWrapper({ children }: { children: React.ReactNode }) {
     PUBLIC_ROUTES.has(pathname) ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/auth') ||
+    pathname.startsWith('/mfa-setup') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/favicon.ico');

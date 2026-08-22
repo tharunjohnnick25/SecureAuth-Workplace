@@ -18,31 +18,39 @@ type RiskLog = {
   top_factors: any;
   evaluated_at: string;
 };
-
-// Mock data generation for charting since we don't have historical DB data populated yet
-const generateMockData = () => {
-  const data = [];
-  let score = 95;
-  for (let i = 30; i >= 0; i--) {
-    const date = format(subDays(new Date(), i), 'MMM dd');
-    score = score + (Math.random() * 10 - 4); // Random walk
-    score = Math.max(20, Math.min(100, score)); // Clamp
-    data.push({
-      date,
-      score: Math.round(score),
-    });
-  }
-  // Inject a sudden drop for anomaly visualization
-  data[25].score = 45;
-  data[26].score = 55;
-  return data;
-};
-
-export default function AIRiskDashboard() {
+export default function RiskDashboard() {
   const [chartData, setChartData] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<any>({
+    averageScore: 100,
+    highRiskUsers: 0,
+    anomaliesBlocked: 0,
+    aiModelStatus: 'Active',
+    recentInterventions: []
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setChartData(generateMockData());
+    const fetchRiskData = async () => {
+      try {
+        const res = await fetch('/api/admin/risk-dashboard');
+        const json = await res.json();
+        if (json.success) {
+          setChartData(json.data.chartData);
+          setMetrics({
+            averageScore: json.data.averageScore,
+            highRiskUsers: json.data.highRiskUsers,
+            anomaliesBlocked: json.data.anomaliesBlocked,
+            aiModelStatus: json.data.aiModelStatus,
+            recentInterventions: json.data.recentInterventions || []
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRiskData();
   }, []);
 
   return (
@@ -69,7 +77,7 @@ export default function AIRiskDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-slate-400">Average Company Risk</p>
-                <h3 className="text-3xl font-bold text-emerald-400 mt-2">88 / 100</h3>
+                <h3 className="text-3xl font-bold text-emerald-400 mt-2">{loading ? '...' : `${metrics.averageScore} / 100`}</h3>
               </div>
               <div className="p-3 bg-emerald-500/10 rounded-xl">
                 <ShieldAlert className="w-5 h-5 text-emerald-500" />
@@ -82,7 +90,7 @@ export default function AIRiskDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-slate-400">High Risk Users</p>
-                <h3 className="text-3xl font-bold text-amber-500 mt-2">3</h3>
+                <h3 className="text-3xl font-bold text-amber-500 mt-2">{loading ? '...' : metrics.highRiskUsers}</h3>
               </div>
               <div className="p-3 bg-amber-500/10 rounded-xl">
                 <Users className="w-5 h-5 text-amber-500" />
@@ -95,7 +103,7 @@ export default function AIRiskDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-slate-400">Anomalies Blocked</p>
-                <h3 className="text-3xl font-bold text-red-500 mt-2">12</h3>
+                <h3 className="text-3xl font-bold text-red-500 mt-2">{loading ? '...' : metrics.anomaliesBlocked}</h3>
               </div>
               <div className="p-3 bg-red-500/10 rounded-xl">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -108,7 +116,7 @@ export default function AIRiskDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-slate-400">AI Model Status</p>
-                <h3 className="text-xl font-bold text-blue-400 mt-2">IsolationForest Active</h3>
+                <h3 className="text-xl font-bold text-blue-400 mt-2">{loading ? '...' : metrics.aiModelStatus}</h3>
               </div>
               <div className="p-3 bg-blue-500/10 rounded-xl">
                 <Activity className="w-5 h-5 text-blue-500" />
@@ -159,29 +167,30 @@ export default function AIRiskDashboard() {
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-y-auto max-h-[350px]">
             <div className="divide-y divide-slate-800">
-              
-              <div className="p-4 hover:bg-slate-800/30 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-semibold text-slate-200">EMP-8402</span>
-                  <Badge variant="outline" className="text-red-500 border-red-500 bg-red-500/10">BLOCKED</Badge>
-                </div>
-                <div className="text-sm text-slate-400 space-y-1">
-                  <p><span className="text-slate-500">Score Drop:</span> 92 → 35</p>
-                  <p><span className="text-slate-500">AI Explanation:</span> Anomalous typing speed detected (-15), Impossible travel from Russia (-40).</p>
-                </div>
-              </div>
-
-              <div className="p-4 hover:bg-slate-800/30 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-semibold text-slate-200">EMP-2199</span>
-                  <Badge variant="outline" className="text-amber-500 border-amber-500 bg-amber-500/10">MFA REQUIRED</Badge>
-                </div>
-                <div className="text-sm text-slate-400 space-y-1">
-                  <p><span className="text-slate-500">Score Drop:</span> 88 → 65</p>
-                  <p><span className="text-slate-500">AI Explanation:</span> Unrecognized device fingerprint (-20). Mouse activity density abnormal.</p>
-                </div>
-              </div>
-
+              {loading ? (
+                <div className="p-4 text-slate-400 text-sm text-center">Loading interventions...</div>
+              ) : metrics.recentInterventions.length === 0 ? (
+                <div className="p-4 text-slate-400 text-sm text-center">No recent AI interventions.</div>
+              ) : (
+                metrics.recentInterventions.map((intervention: any) => (
+                  <div key={intervention.id} className="p-4 hover:bg-slate-800/30 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-semibold text-slate-200">{intervention.employee_id}</span>
+                      <Badge variant="outline" className={`border ${
+                        intervention.status === 'BLOCKED' ? 'text-red-500 border-red-500 bg-red-500/10' : 
+                        intervention.status === 'FAILED' ? 'text-amber-500 border-amber-500 bg-amber-500/10' : 
+                        'text-blue-500 border-blue-500 bg-blue-500/10'
+                      }`}>
+                        {intervention.status}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-slate-400 space-y-1">
+                      <p><span className="text-slate-500">Alert:</span> {intervention.scoreDrop}</p>
+                      <p><span className="text-slate-500">AI Explanation:</span> {intervention.explanation}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

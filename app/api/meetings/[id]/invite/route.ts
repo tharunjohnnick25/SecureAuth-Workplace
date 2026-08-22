@@ -1,47 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { sendNotification } from '@/lib/notify';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const { user_id } = body;
 
-    if (!user_id) {
-      return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
+    // 1. Verify meeting and company isolation
+    const { id } = await context.params;
+    const { data: meeting } = await supabase.from('meetings').select('title, company_id').eq('id', id).single();
+    if (!meeting) return NextResponse.json({ success: false, error: 'Meeting not found' }, { status: 404 });
+
+    const { data: targetUser } = await supabase.from('users').select('company_id').eq('id', user_id).single();
+    if (targetUser?.company_id !== meeting.company_id) {
+        return NextResponse.json({ success: false, error: 'Forbidden: Cannot invite outside company' }, { status: 403 });
     }
 
-    const meeting = MockDB.meetings.find((m: any) => m.id === id);
-    if (!meeting) {
-      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
-    }
+    // 2. Insert participant
+    const { error } = await supabase
+      .from('meeting_participants')
+      .upsert({ meeting_id: id, user_id, role: 'PARTICIPANT', status: 'INVITED' }, { onConflict: 'meeting_id,user_id' });
 
-    const exists = MockDB.meeting_participants.some(
-      (p: any) => p.meeting_id === id && p.user_id === user_id
-    );
-    if (!exists) {
-      MockDB.meeting_participants.push({
-        meeting_id: id,
+    if (error) throw error;
+
+    // 3. Notify user
+    await sendNotification(supabase, {
         user_id,
-        status: 'INVITED',
-      } as any);
+        title: 'Meeting Invitation',
+        message: `You have been invited to join: ${meeting.title}`,
+        type: 'INFO'
+    });
 
-      MockDB.notifications.push({
-        id: `notif-${Date.now()}-${Math.random()}`,
-        user_id,
-        type: 'MEETING_INVITE',
-        title: 'New Meeting Invitation',
-        message: `You have been invited to: ${meeting.title} on ${meeting.date} at ${meeting.start_time}`,
-        is_read: false,
-        action_url: `/meetings/${id}/pre-join`,
-        created_at: new Date().toISOString(),
-      } as any);
-
-      saveMockDB();
-    }
-
-    return NextResponse.json({ data: { invited: true }, success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

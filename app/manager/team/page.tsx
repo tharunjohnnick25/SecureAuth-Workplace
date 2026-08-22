@@ -12,7 +12,6 @@ import { Navbar } from '@/components/Navbar';
 import { LeaveApprovalsTab } from '@/components/admin/LeaveApprovalsTab';
 import { AccessRequestsTab } from '@/components/admin/AccessRequestsTab';
 import { TeamAnalyticsTab } from '@/components/manager/TeamAnalyticsTab';
-import { OneOnOnesTab } from '@/components/manager/OneOnOnesTab';
 import { ShiftScheduleTab } from '@/components/manager/ShiftScheduleTab';
 
 export default function MyTeamPage() {
@@ -20,7 +19,7 @@ export default function MyTeamPage() {
   const router = useRouter();
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'directory' | 'leaves' | 'access' | 'analytics' | '1on1s' | 'schedule'>('directory');
+  const [activeTab, setActiveTab] = useState<'directory' | 'leaves' | 'access' | 'analytics' | 'schedule'>('directory');
 
   // Add existing employee state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,10 +80,11 @@ export default function MyTeamPage() {
         fetchTeam();
         setIsModalOpen(false);
       } else {
-        toast.error('Failed to add team member');
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'Failed to add team member');
       }
-    } catch (err) {
-      toast.error('Failed to add team member');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add team member');
     } finally {
       setSaving(false);
     }
@@ -124,7 +124,10 @@ export default function MyTeamPage() {
       key: 'status',
       label: 'Status',
       render: (val: string) => (
-        <Badge variant={val === 'Active' ? 'success' : val === 'On Leave' ? 'warning' : 'default'}>
+        <Badge 
+          variant="default"
+          className={val === 'Active' ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : val === 'On Leave' ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' : ''}
+        >
           {val || 'Active'}
         </Badge>
       )
@@ -216,17 +219,6 @@ export default function MyTeamPage() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('1on1s')}
-              className={`pb-4 px-2 text-sm font-medium transition-colors relative ${
-                activeTab === '1on1s' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              1-on-1s & Goals
-              {activeTab === '1on1s' && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500 rounded-t-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-              )}
-            </button>
-            <button
               onClick={() => setActiveTab('schedule')}
               className={`pb-4 px-2 text-sm font-medium transition-colors relative ${
                 activeTab === 'schedule' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'
@@ -243,7 +235,6 @@ export default function MyTeamPage() {
             <DataGridPage
               title=""
               description=""
-              icon={undefined}
               data={employees}
               columns={columns}
               loading={loading}
@@ -271,10 +262,6 @@ export default function MyTeamPage() {
 
           {activeTab === 'analytics' && (
             <TeamAnalyticsTab employees={employees} />
-          )}
-
-          {activeTab === '1on1s' && (
-            <OneOnOnesTab employees={employees} />
           )}
 
           {activeTab === 'schedule' && (

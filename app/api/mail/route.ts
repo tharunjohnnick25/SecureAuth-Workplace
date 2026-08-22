@@ -1,98 +1,145 @@
-import { NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
-import { MockEmployees } from '@/lib/mock-employees';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { sendNotification } from '@/lib/notify';
 
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const url = new URL(request.url);
-    const userId = request.headers.get('x-user-id');
-    const folder = url.searchParams.get('folder') || 'inbox'; // inbox, sent, trash, starred
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { searchParams } = new URL(req.url);
+    const folder = searchParams.get('folder') || 'inbox'; // inbox, sent, trash, starred
 
-    let emails = MockDB.emails.filter(e => e.owner_id === userId);
+    // Starred is a flag, not a folder — query by is_starred instead
+    const isStarred = folder === 'starred';
 
-    if (folder === 'starred') {
-      emails = emails.filter(e => e.is_starred && e.folder !== 'trash');
+    let query = supabase
+      .from('internal_emails')
+      .select(`
+        *,
+        sender:sender_id(id, full_name, email, avatar_url),
+        recipient:recipient_id(id, full_name, email, avatar_url)
+      `)
+      .eq('owner_id', session.user.id);
+
+    if (isStarred) {
+      query = query.eq('is_starred', true).neq('folder', 'trash');
     } else {
-      emails = emails.filter(e => e.folder === folder);
+      query = query.eq('folder', folder);
     }
 
-    // Sort by newest first
-    emails.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const { data: emails, error } = await query.order('created_at', { ascending: false });
 
-    // Populate sender and recipient info
-    const populatedEmails = emails.map(email => {
-      const sender = MockEmployees.getAll().find(e => e.id === email.sender_id);
-      const recipient = MockEmployees.getAll().find(e => e.id === email.recipient_id);
-      return {
-        ...email,
-        sender: sender ? { id: sender.id, name: sender.full_name, email: sender.email, avatar: sender.profile_picture } : null,
-        recipient: recipient ? { id: recipient.id, name: recipient.full_name, email: recipient.email, avatar: recipient.profile_picture } : null
-      };
-    });
+    if (error) {
+      if (error.code === '42P01') {
+        // Table doesn't exist yet, return empty array to prevent crashing UI before migration
+        return NextResponse.json({ success: true, data: [] });
+      }
+      throw error;
+    }
 
-    return NextResponse.json({ data: populatedEmails });
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // Format response to match frontend expectations
+    const formatted = (emails || []).map(e => ({
+      ...e,
+      sender: e.sender ? { id: e.sender.id, name: e.sender.full_name, email: e.sender.email, avatar: e.sender.avatar_url } : null,
+      recipient: e.recipient ? { id: e.recipient.id, name: e.recipient.full_name, email: e.recipient.email, avatar: e.recipient.avatar_url } : null
+    }));
+
+    return NextResponse.json({ success: true, data: formatted });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+    const body = await req.json();
+    const { recipient_id, subject, body: emailBody } = body;
+
+    if (!recipient_id || !subject) {
+      return NextResponse.json({ success: false, error: 'Recipient and subject are required' }, { status: 400 });
     }
 
-    const { recipient_id, subject, body } = await request.json();
-    if (!recipient_id || !subject || !body) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // 1. Fetch sender's company_id
+    const { data: senderUser, error: senderError } = await supabase
+      .from('users')
+      .select('company_id')
+      .eq('id', session.user.id)
+      .single();
+    
+    if (senderError || !senderUser?.company_id) {
+      return NextResponse.json({ success: false, error: 'Sender company not found' }, { status: 400 });
     }
 
-    const recipient = MockEmployees.getAll().find(e => e.id === recipient_id);
-    if (!recipient) {
-      return NextResponse.json({ error: 'Recipient not found' }, { status: 404 });
+    // 2. Fetch recipient and validate they belong to the EXACT same company
+    const { data: recipientUser, error: recipientError } = await supabase
+      .from('users')
+      .select('company_id, full_name')
+      .eq('id', recipient_id)
+      .single();
+
+    if (recipientError || !recipientUser) {
+      return NextResponse.json({ success: false, error: 'Recipient not found' }, { status: 404 });
     }
 
-    const now = new Date().toISOString();
-    const emailId = `email-${Date.now()}`;
+    if (recipientUser.company_id !== senderUser.company_id) {
+      return NextResponse.json({ success: false, error: 'Forbidden: Cannot send mail outside your company' }, { status: 403 });
+    }
 
-    // Create copy for sender (in sent folder)
-    const senderCopy = {
-      id: `${emailId}-sent`,
-      owner_id: userId,
-      sender_id: userId,
-      recipient_id,
-      subject,
-      body,
-      folder: 'sent',
-      is_read: true,
-      is_starred: false,
-      created_at: now
-    };
+    // Dynamic import to avoid edge runtime issues
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
-    // Create copy for recipient (in inbox)
-    const recipientCopy = {
-      id: `${emailId}-inbox`,
-      owner_id: recipient_id,
-      sender_id: userId,
-      recipient_id,
-      subject,
-      body,
-      folder: 'inbox',
-      is_read: false,
-      is_starred: false,
-      created_at: now
-    };
+    // 3. Insert dual ownership records (one for sender's Sent folder, one for recipient's Inbox)
+    const { data: newEmails, error: insertError } = await (supabaseAdmin as any)
+      .from('internal_emails')
+      .insert([
+        {
+          owner_id: session.user.id,
+          company_id: senderUser.company_id,
+          sender_id: session.user.id,
+          recipient_id: recipient_id,
+          subject,
+          body: emailBody || '',
+          folder: 'sent',
+          is_read: true, // sender already read it
+        },
+        {
+          owner_id: recipient_id,
+          company_id: senderUser.company_id,
+          sender_id: session.user.id,
+          recipient_id: recipient_id,
+          subject,
+          body: emailBody || '',
+          folder: 'inbox',
+          is_read: false,
+        }
+      ])
+      .select();
 
-    MockDB.emails.push(senderCopy, recipientCopy);
-    saveMockDB();
+    if (insertError) {
+      if (insertError.code === '42P01') {
+        return NextResponse.json({ success: false, error: 'Database migration required' }, { status: 500 });
+      }
+      throw insertError;
+    }
 
-    return NextResponse.json({ data: senderCopy }, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // 4. Send Notification to recipient
+    await sendNotification(supabase, {
+      user_id: recipient_id,
+      title: 'New Internal Email',
+      message: `You have a new email: ${subject}`,
+      type: 'INFO'
+    });
+
+    // Return the sender's copy
+    const sentCopy = newEmails?.find(e => e.owner_id === session.user.id);
+    return NextResponse.json({ success: true, data: sentCopy }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

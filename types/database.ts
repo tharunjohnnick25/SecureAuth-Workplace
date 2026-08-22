@@ -36,8 +36,17 @@ export interface Database {
           id: string;
           email: string;
           full_name?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
           role?: string;
           status?: string;
+          department?: string | null;
+          designation?: string | null;
+          employment_type?: string | null;
+          phone?: string | null;
+          company_id?: string | null;
+          org_id?: string | null;
+          employee_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -52,6 +61,9 @@ export interface Database {
           role?: string;
           employee_id?: string | null;
           department?: string | null;
+          designation?: string | null;
+          employment_type?: string | null;
+          company_id?: string | null;
           status?: string;
           is_mfa_enabled?: boolean;
           biometric_enabled?: boolean;
@@ -510,6 +522,23 @@ export interface Database {
           reason: string | null;
           created_at: string;
         };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          requester_id?: string;
+          company_id?: string;
+          module?: string;
+          resource?: string;
+          status?: string;
+          reason?: string | null;
+          duration_hours?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: string;
+          reason?: string | null;
+          approved_by?: string;
+        };
       };
       reports: {
         Row: {
@@ -575,6 +604,128 @@ export interface Database {
           subject: string;
           message: string;
           status: string;
+          created_at: string;
+        };
+      };
+      meetings: {
+        Row: {
+          id: string;
+          host_id: string;
+          company_id: string | null;
+          title: string;
+          status: string;
+          started_at: string | null;
+          ended_at: string | null;
+          created_at: string;
+        };
+      };
+      meeting_participants: {
+        Row: {
+          meeting_id: string;
+          user_id: string;
+          role: string;
+          status: string;
+          joined_at: string | null;
+          left_at: string | null;
+        };
+      };
+      internal_emails: {
+        Row: {
+          id: string;
+          owner_id: string;
+          company_id: string | null;
+          sender_id: string;
+          recipient_id: string | null;
+          subject: string;
+          body: string;
+          folder: string;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          company_id?: string | null;
+          sender_id: string;
+          recipient_id?: string | null;
+          subject: string;
+          body: string;
+          folder?: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          owner_id?: string;
+          company_id?: string | null;
+          sender_id?: string;
+          recipient_id?: string | null;
+          subject?: string;
+          body?: string;
+          folder?: string;
+          is_read?: boolean;
+        };
+      };
+      resource_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          resource_id: string;
+          status: string;
+          processed_by: string | null;
+          updated_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          resource_id: string;
+          status?: string;
+          processed_by?: string | null;
+          updated_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: string;
+          processed_by?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      calendar_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          start_time: string;
+          end_time: string;
+          description: string | null;
+          created_at: string;
+        };
+      };
+      passkeys: {
+        Row: {
+          id: string;
+          user_id: string;
+          credential_id: string;
+          public_key: string;
+          counter: number;
+          device_type: string | null;
+          backed_up: boolean | null;
+          transports: string[] | null;
+          last_used_at: string | null;
+          created_at: string;
+        };
+        Update: {
+          counter?: number;
+          last_used_at?: string | null;
+        };
+      };
+      webauthn_challenges: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          challenge: string;
+          type: string;
+          expires_at: string;
           created_at: string;
         };
       };

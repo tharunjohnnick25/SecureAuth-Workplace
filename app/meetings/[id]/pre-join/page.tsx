@@ -49,6 +49,7 @@ export default function PreJoinPage() {
   }, [cameraOn]);
 
   const loadMeeting = async () => {
+    if (!id || id === 'undefined') return;
     try {
       const res = await fetch(`/api/meetings/${id}`);
       const data = await res.json();
@@ -117,7 +118,7 @@ export default function PreJoinPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      if (data.data.status === 'WAITING') {
+      if (data.data?.status === 'WAITING') {
         toast.info('You are in the waiting room');
         router.push(`/meetings/${id}?status=waiting`);
       } else {

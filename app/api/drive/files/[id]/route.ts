@@ -1,106 +1,100 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
 
-// Update file metadata (rename, move)
-export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await context.params;
-    const body = await req.json();
-    const { user_id, role, name, folder } = body;
+import fs from 'fs';
 
-    if (!user_id) {
-      return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
-    }
-
-    const fileIdx = MockDB.drive_files_metadata.findIndex((f: any) => f.id === id);
-    if (fileIdx === -1) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 });
-    }
-
-    const file = MockDB.drive_files_metadata[fileIdx];
-
-    // RBAC: Only admin or owner can rename/move
-    if (role !== 'ADMIN' && file.owner_id !== user_id) {
-      return NextResponse.json({ error: 'Access Denied: You do not have permission to modify this file' }, { status: 403 });
-    }
-
-    if (name) file.name = name;
-    if (folder) file.folder = folder;
-    file.updated_at = new Date().toISOString();
-
-    // Audit Log
-    MockDB.drive_audit_logs.push({
-      id: `audit-${Date.now()}`,
-      user_id,
-      file_id: id,
-      action: 'EDIT',
-      file_name: file.name,
-      timestamp: new Date().toISOString(),
-      ip_address: '192.168.1.1',
-      risk_score: 12
-    } as any);
-
-    saveMockDB();
-
-    return NextResponse.json({ data: file, success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-// Delete file
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params;
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('user_id');
-    const role = searchParams.get('role');
+    const paramsResolved = await context.params;
+    const fileId = paramsResolved.id;
+    fs.appendFileSync('delete_log.txt', `\n--- DELETE REQUEST for ${fileId} ---\n`);
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
+    const isMock = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+    const supabase = await createServerSupabaseClient();
+    const adminClient = await createAdminClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session && !isMock) {
+      fs.appendFileSync('delete_log.txt', `Unauthorized\n`);
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const fileIdx = MockDB.drive_files_metadata.findIndex((f: any) => f.id === id);
-    if (fileIdx === -1) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 });
+    if (isMock) {
+      fs.appendFileSync('delete_log.txt', `Mock auth, returning success\n`);
+      return NextResponse.json({ success: true });
     }
 
-    const file = MockDB.drive_files_metadata[fileIdx];
+    // 1. Fetch file metadata
+    const { data: file, error: fileError } = await adminClient
+      .from('documents')
+      .select('*')
+      .eq('id', fileId)
+      .single();
 
-    if (role !== 'ADMIN' && file.owner_id !== userId) {
-      // Audit log the failed attempt
-      MockDB.drive_audit_logs.push({
-        id: `audit-${Date.now()}`,
-        user_id: userId,
-        file_id: id,
-        action: 'DELETE_DENIED',
-        file_name: file.name,
-        timestamp: new Date().toISOString(),
-        ip_address: '192.168.1.1',
-        risk_score: 85
-      } as any);
-      saveMockDB();
-      return NextResponse.json({ error: 'Access Denied: You cannot delete this file' }, { status: 403 });
+    if (fileError || !file) {
+      return NextResponse.json({ success: false, error: 'File not found' }, { status: 404 });
     }
 
-    // In a real app, delete from Google Drive via API here
-    MockDB.drive_files_metadata.splice(fileIdx, 1);
+    // 2. Enforce RBAC
+    let hasAccess = false;
+    
+    if (file.user_id === session!.user.id) {
+      hasAccess = true;
+    } else {
+      const { data: currentUser } = await adminClient.from('users').select('role, company_id').eq('id', session!.user.id).single();
+      const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+      
+      if (isAdmin) {
+        if (currentUser.company_id) {
+          const { data: fileOwner } = await adminClient.from('users').select('company_id').eq('id', file.user_id).single();
+          if (fileOwner?.company_id === currentUser.company_id) hasAccess = true;
+        } else {
+          hasAccess = true;
+        }
+      }
+    }
 
-    MockDB.drive_audit_logs.push({
-      id: `audit-${Date.now()}`,
-      user_id: userId,
-      file_id: id,
-      action: 'DELETE',
-      file_name: file.name,
-      timestamp: new Date().toISOString(),
-      ip_address: '192.168.1.1',
-      risk_score: 12
-    } as any);
+    if (!hasAccess) {
+      fs.appendFileSync('delete_log.txt', `Forbidden access for user ${session!.user.id}\n`);
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
 
-    saveMockDB();
+    // 3. Delete from Database
+    const { data: deletedRows, error: dbError } = await adminClient
+      .from('documents')
+      .delete()
+      .eq('id', fileId)
+      .select();
 
+    if (dbError) {
+      fs.appendFileSync('delete_log.txt', `DB error: ${JSON.stringify(dbError)}\n`);
+      throw dbError;
+    }
+    
+    if (!deletedRows || deletedRows.length === 0) {
+      fs.appendFileSync('delete_log.txt', `DeletedRows is empty. Returning success anyway.\n`);
+    } else {
+      fs.appendFileSync('delete_log.txt', `Deleted ${deletedRows.length} rows successfully\n`);
+    }
+
+    // 4. Delete from Storage
+    if (file.file_url && file.file_url !== 'mock_url') {
+      const { error: storageError } = await adminClient.storage
+        .from('employee-documents')
+        .remove([file.file_url]);
+        
+      if (storageError) {
+        fs.appendFileSync('delete_log.txt', `Storage error: ${JSON.stringify(storageError)}\n`);
+      } else {
+        fs.appendFileSync('delete_log.txt', `Storage remove successful for ${file.file_url}\n`);
+      }
+    }
+
+    fs.appendFileSync('delete_log.txt', `Returning SUCCESS.\n`);
     return NextResponse.json({ success: true });
+
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    fs.appendFileSync('delete_log.txt', `Catch block error: ${error.message}\n`);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

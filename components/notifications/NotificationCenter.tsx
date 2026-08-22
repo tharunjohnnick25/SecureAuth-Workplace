@@ -9,33 +9,14 @@ import { useLanguage } from "@/context/LanguageContext";
 type NotificationItem = {
   id: string | number;
   title: string;
-  description: string;
+  message: string;
   created_at?: string;
   is_read?: boolean;
   user_id?: string;
 };
 
-export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { t } = useLanguage();
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const client = createClient();
-    client.auth.getSession().then(({ data }) => {
-      if (data?.session?.user?.id) {
-        setUserId(data.session.user.id);
-      }
-    });
-  }, []);
-
-  const { data: notifications, loading } = useRealtimeData<NotificationItem>(
-    'notifications',
-    (query) =>
-      userId
-        ? query.select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20)
-        : query.select('*').limit(0),
-    [userId]
-  );
+export function NotificationCenter({ isOpen, onClose, notifications, loading }: { isOpen: boolean; onClose: () => void; notifications: NotificationItem[]; loading: boolean; }) {
+  const { t } = useLanguage();
 
   return (
     <AnimatePresence>
@@ -54,16 +35,16 @@ export function NotificationCenter({ isOpen, onClose }: { isOpen: boolean; onClo
           </div>
           <div className="max-h-60 overflow-y-auto">
             {loading ? (
-              <p className="p-4 text-sm text-gray-400">{'Loadingnotifica'}</p>
+              <p className="p-4 text-sm text-gray-400">{'Loading notifications...'}</p>
             ) : notifications.length === 0 ? (
-              <p className="p-4 text-sm text-gray-400">{'Nonewnotificati'}</p>
+              <p className="p-4 text-sm text-gray-400">{'No new notifications.'}</p>
             ) : (
               notifications.map((n) => (
                 <div key={n.id} className="px-4 py-3 border-b border-white/5 hover:bg-white/5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-medium text-white">{n.title}</p>
-                      <p className="text-xs text-gray-400">{n.description}</p>
+                      <p className="text-xs text-gray-400">{n.message}</p>
                     </div>
                     <span className="text-xs text-gray-500 whitespace-nowrap">
                       {n.created_at ? new Date(n.created_at).toLocaleString() : 'Just now'}

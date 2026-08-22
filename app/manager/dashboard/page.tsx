@@ -37,7 +37,7 @@ export default function ManagerDashboardPage() {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch(`/api/workspace/tasks?assignee=${user?.id}`); // Force HMR update
+      const res = await fetch(`/api/workspace/tasks?assigned_by=${user?.id}`); // Fetch tasks created by the manager
       const json = await res.json();
       setTasks(json.tasks || []);
     } catch (e) {
@@ -73,10 +73,11 @@ export default function ManagerDashboardPage() {
         setNewTask({ title: '', description: '', assigned_to: '' });
         fetchTasks();
       } else {
-        toast.error('Failed to assign task');
+        const errorData = await res.json();
+        toast.error(`Failed: ${errorData.error || 'Unknown error'}`);
       }
-    } catch (err) {
-      toast.error('An error occurred');
+    } catch (err: any) {
+      toast.error(`An error occurred: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }

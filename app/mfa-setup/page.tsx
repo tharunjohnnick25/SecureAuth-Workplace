@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { toast } from 'sonner';
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuthStore } from '@/store/useAuthStore';
 
 type SetupStep = 'choose' | 'totp' | 'recovery' | 'complete';
 
@@ -18,6 +19,7 @@ export default function MfaSetupPage() {
   const [secret, setSecret] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const { user } = useAuthStore();
 
   const enableTotp = async () => {
     setLoading(true);
@@ -68,10 +70,15 @@ export default function MfaSetupPage() {
     toast.success('Recovery codes copied to clipboard');
   };
 
-  const finishSetup = () => {
+  const finishTotpSetup = () => {
     setStep('complete');
     setTimeout(() => {
-      window.location.href = '/settings';
+        const pendingAuth = sessionStorage.getItem('pendingAuthUser');
+        if (pendingAuth) {
+           window.location.href = '/verify-mfa';
+        } else {
+           window.location.href = '/settings/security';
+        }
     }, 2000);
   };
 
@@ -87,9 +94,9 @@ export default function MfaSetupPage() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/30">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">{'Set up mfa'}</h1>
+          <h1 className="text-3xl font-semibold mb-2">Set up MFA</h1>
           <p className="text-gray-400 text-center text-sm">
-            {'Enhanceyouracco'}</p>
+            Enhance your account security</p>
         </div>
 
         {step === 'choose' && (
@@ -103,21 +110,21 @@ export default function MfaSetupPage() {
                 <Smartphone className="w-6 h-6 text-cyan-400" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-white">{'Authenticator ap'}</p>
-                <p className="text-xs text-gray-400">{'Use google authen'}</p>
+                <p className="font-semibold text-white">Authenticator App</p>
+                <p className="text-xs text-gray-400">Use Google Authenticator, Authy, or similar apps</p>
               </div>
             </button>
 
             <button
-              disabled
-              className="w-full p-4 rounded-xl border border-white/5 bg-white/5 opacity-50 cursor-not-allowed flex items-center gap-4"
+              onClick={() => window.location.href = '/mfa-setup/passkey'}
+              className="w-full p-4 rounded-xl border border-white/10 hover:border-purple-500/50 bg-white/5 hover:bg-purple-500/5 transition-all flex items-center gap-4"
             >
               <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
                 <KeyRound className="w-6 h-6 text-purple-400" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-white">{'Security key'}</p>
-                <p className="text-xs text-gray-400">{'Usbnfchardwarek'}</p>
+                <p className="font-semibold text-white">Security Key (Passkey)</p>
+                <p className="text-xs text-gray-400">Use device biometrics or a hardware key</p>
               </div>
             </button>
           </div>
@@ -185,12 +192,13 @@ export default function MfaSetupPage() {
 
             <div className="flex gap-3">
               <Button onClick={copyCodes} variant="outline" className="flex-1">
-                {'Copy codes'}</Button>
-              <Button onClick={finishSetup} className="flex-1">
-                {'Done'}</Button>
+                Copy codes</Button>
+              <Button onClick={finishTotpSetup} className="flex-1">
+                Complete Setup</Button>
             </div>
           </div>
         )}
+
 
         {step === 'complete' && (
           <div className="text-center space-y-4">

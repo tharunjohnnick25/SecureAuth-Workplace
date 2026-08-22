@@ -1,55 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
-import { MockEmployees } from '@/lib/mock-employees';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params;
-    
-    const meeting = MockDB.meetings.find((m: any) => m.id === id);
-    if (!meeting) {
-      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+    if (!id || id === 'undefined') {
+      return NextResponse.json({ success: false, error: 'Invalid meeting ID' }, { status: 400 });
     }
 
-    const participants = MockDB.meeting_participants
-      .filter((p: any) => p.meeting_id === id)
-      .map((p: any) => {
-        const emp = MockEmployees.getById(p.user_id);
-        return {
-          ...p,
-          user_name: emp?.full_name || p.user_id,
-          role: emp?.role || 'Member',
-        };
-      });
+    const { data: meeting, error } = await supabase
+      .from('meetings')
+      .select(`
+        *,
+        host:host_id(full_name),
+        participants:meeting_participants(user_id, role, status)
+      `)
+      .eq('id', id)
+      .single();
 
-    const host = MockEmployees.getById(meeting.host_id);
+    if (error) throw error;
 
-    return NextResponse.json({ data: { ...meeting, host_name: host?.full_name || meeting.host_id, participants }, success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await context.params;
-    const body = await req.json();
-    
-    const meetingIdx = MockDB.meetings.findIndex((m: any) => m.id === id);
-    if (meetingIdx === -1) {
-      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
+    // Validate access (must be same company)
+    const { data: currentUser } = await supabase.from('users').select('company_id').eq('id', session.user.id).single();
+    if (currentUser?.company_id !== meeting.company_id) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
-    // Merge updates
-    MockDB.meetings[meetingIdx] = {
-      ...MockDB.meetings[meetingIdx],
-      ...body
-    };
-
-    saveMockDB();
-
-    return NextResponse.json({ data: MockDB.meetings[meetingIdx], success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      success: true, 
+      data: {
+        ...meeting,
+        host_name: meeting.host?.full_name || 'Unknown'
+      }
+    });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

@@ -7,6 +7,7 @@ import { ClipboardList, Download, Loader2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
+import { AuditLogsTab } from '@/components/system-management/AuditLogsTab';
 
 
 interface AuditLog {
@@ -94,9 +95,9 @@ export default function AdminAuditPage() {
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <ClipboardList className="w-6 h-6 text-cyan-400" />
-              Role Audit Logs
+              Enterprise Audit Logs
             </h1>
-            <p className="text-sm text-gray-400 mt-1">Immutable record of all RBAC assignments and changes.</p>
+            <p className="text-sm text-gray-400 mt-1">Immutable record of all RBAC assignments and system events.</p>
           </div>
           <Button onClick={handleExport} className="bg-white/10 hover:bg-white/20 text-white border border-white/10 flex items-center gap-2">
             <Download className="w-4 h-4" /> Export CSV
@@ -176,6 +177,10 @@ export default function AdminAuditPage() {
             </table>
           </div>
         </Card>
+
+        <div className="pt-8 border-t border-white/10">
+          <AuditLogsTab hideLayout={true} />
+        </div>
 
       </div>
         </main>

@@ -10,7 +10,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const isAdmin = session.user.user_metadata?.role === 'admin' || false;
+    const adminClient = await createServerSupabaseClient();
+    const { data: profile } = await adminClient.from('users').select('role').eq('id', session.user.id).single();
+    
+    const isAdmin = profile && ['admin', 'super_admin'].includes(profile.role);
     const query = supabase.from('users').select('*');
 
     if (!isAdmin) {

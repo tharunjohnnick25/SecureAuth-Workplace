@@ -31,6 +31,9 @@ export interface User {
   profile_picture?: string;
   risk_score?: number;
   mfa_enabled?: boolean;
+  status?: string;
+  manager_id?: string;
+  manager_name?: string;
 }
 
 export interface AuthState {

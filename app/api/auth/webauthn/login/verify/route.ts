@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import { issueStepUpToken } from '@/lib/auth/step-up';
+import { registerDeviceAndSession } from '@/lib/security/device';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { isMockMode } from '@/lib/mock-mode';
 import { PasskeyService } from '@/lib/services/passkeyService';
@@ -156,18 +159,6 @@ export async function POST(req: NextRequest) {
       // Clean up challenges
       await supabase.from('webauthn_challenges').delete().eq('type', 'login').or(`user_id.eq.${passkey.user_id},user_id.is.null`);
 
-      // We need to establish a session for the user!
-      // In Supabase, server-side session generation for a verified user (bypassing password) requires admin rights.
-      // We will use the supabase service_role key to generate a magic link or directly create a session.
-      // Wait, standard supabase doesn't let you just "set session" without a password or OTP.
-      // However, we can use Supabase admin API `admin.generateLink({ type: 'magiclink', email: user.email })` to get a token, but we don't want to email them.
-      // Better: In a custom auth setup, we can use JWTs or we can use `supabase.auth.admin.getUserById` and then mint our own JWT if we rely on nextjs session.
-      // Wait, we are using Supabase Auth. We MUST get a valid Supabase Session. 
-      // How to log someone in via custom auth? We can't directly mint Supabase session tokens without custom claims or JWT integrations.
-      // But we CAN use a workaround: create a custom route that handles OTP or we just return a custom JWT that the frontend stores.
-      // Actually, since we need full Supabase session, this is a known limitation. A common workaround is a hidden temporary password or custom OTP.
-      // Let's assume we return success and the frontend redirects. For a real production app, you'd use a Supabase Custom Auth endpoint or edge function to mint the JWT.
-      
       // Fetch full user record
       const { data: userRecord } = await supabase
         .from('users')
@@ -175,7 +166,37 @@ export async function POST(req: NextRequest) {
         .eq('id', passkey.user_id)
         .single();
       
-      return NextResponse.json({ 
+      // Issue step-up token to satisfy AAL2 / Strong Factor requirements
+      await issueStepUpToken(passkey.user_id, 'webauthn');
+
+      // Success! Generate Supabase magic link session to grant full access token.
+      const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '', { auth: { persistSession: false } });
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+         type: 'magiclink',
+         email: userRecord?.email,
+      });
+      
+      let access_token = `passkey-${crypto.randomUUID()}`;
+      let refresh_token = `passkey-r-${crypto.randomUUID()}`;
+
+      if (!linkError && linkData?.properties?.action_link) {
+          try {
+             const fetchRes = await fetch(linkData.properties.action_link, { redirect: 'manual' });
+             const loc = fetchRes.headers.get('location');
+             if (loc && loc.includes('access_token=')) {
+                const params = new URLSearchParams(loc.split('#')[1]);
+                if (params.get('access_token')) access_token = params.get('access_token') as string;
+                if (params.get('refresh_token')) refresh_token = params.get('refresh_token') as string;
+             }
+          } catch(e) {
+             console.error('Failed to parse magic link redirect', e);
+          }
+      }
+
+      // 5. Device Identification & Session Management
+      const { deviceId, isNewDevice, sessionToken } = await registerDeviceAndSession(req, passkey.user_id, access_token, 0, 'low');
+
+      const response = NextResponse.json({ 
         verified: true,
         user: {
           id: passkey.user_id,
@@ -185,8 +206,32 @@ export async function POST(req: NextRequest) {
           last_name: userRecord?.last_name || 'User',
           employee_id: userRecord?.employee_id || 'PASSKEY-EMP',
         },
+        session: {
+          access_token,
+          refresh_token,
+        },
         message: "Passkey verified successfully."
       });
+
+      if (isNewDevice) {
+         response.cookies.set('secureauth_device_id', deviceId, {
+             httpOnly: true,
+             secure: process.env.NODE_ENV === 'production',
+             sameSite: 'lax',
+             maxAge: 365 * 24 * 60 * 60, // 1 year
+             path: '/'
+         });
+      }
+  
+      response.cookies.set('secureauth_session_id', sessionToken, {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === 'production',
+         sameSite: 'lax',
+         maxAge: 7 * 24 * 60 * 60, // 7 days
+         path: '/'
+      });
+  
+      return response;
     }
 
     return NextResponse.json({ error: 'Verification failed' }, { status: 400 });

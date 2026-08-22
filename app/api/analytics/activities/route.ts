@@ -13,7 +13,7 @@ export async function GET() {
       return NextResponse.json({
         data: [
           { id: '1', user: 'admin@enterprise.com', action: 'Login successful', timestamp: new Date().toISOString(), status: 'success', ip: '192.168.1.1' },
-          { id: '2', user: 'employee@enterprise.com', action: 'Login failed', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'danger', ip: '10.0.0.5' },
+          { id: '2', user: 'employee@enterprise.com', action: 'Sign-in failed. Please check your credentials and try again.', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'danger', ip: '10.0.0.5' },
           { id: '3', user: 'guest@company.com', action: 'Login successful', timestamp: new Date(Date.now() - 7200000).toISOString(), status: 'success', ip: '172.16.0.4' },
         ],
         success: true 
@@ -31,7 +31,7 @@ export async function GET() {
     const formattedData = (data || []).map((log: any) => ({
       id: log.id,
       user: log.users?.email || 'Unknown',
-      action: log.status === 'SUCCESS' || log.status === 'success' ? 'Login successful' : 'Login failed',
+      action: log.status === 'SUCCESS' || log.status === 'success' ? 'Login successful' : 'Sign-in failed. Please check your credentials and try again.',
       timestamp: log.created_at,
       status: log.status === 'SUCCESS' || log.status === 'success' ? 'success' : 'danger',
       ip: log.ip_address,

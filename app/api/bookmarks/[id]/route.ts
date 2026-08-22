@@ -1,31 +1,17 @@
 import { NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
 
-export async function DELETE(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await context.params;
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('user_id');
+export async function GET() {
+  return NextResponse.json({ success: true, data: [] });
+}
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-    }
+export async function POST() {
+  return NextResponse.json({ success: true, data: null });
+}
 
-    if (!MockDB.bookmarks) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+export async function PUT() {
+  return NextResponse.json({ success: true, data: null });
+}
 
-    const index = MockDB.bookmarks.findIndex((b: any) => b.id === id && b.user_id === userId);
-    if (index === -1) {
-      return NextResponse.json({ error: 'Bookmark not found or unauthorized' }, { status: 404 });
-    }
-
-    MockDB.bookmarks.splice(index, 1);
-    saveMockDB();
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+export async function DELETE() {
+  return NextResponse.json({ success: true });
 }

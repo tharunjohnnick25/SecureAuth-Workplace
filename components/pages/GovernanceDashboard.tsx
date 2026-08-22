@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { Loader2, FileText, FileSpreadsheet, ShieldAlert, Users, LayoutDashboard, ShieldCheck, Activity, Presentation } from 'lucide-react';
+import { Loader2, FileText, FileSpreadsheet, ShieldAlert, Users, LayoutDashboard, ShieldCheck, Activity, Presentation, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import jsPDF from 'jspdf';
@@ -183,7 +183,7 @@ export function GovernanceDashboard() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button onClick={fetchReport} variant="outline" className="border-white/10 w-10 h-10 p-0 flex items-center justify-center" disabled={loading} title="Refresh Data">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               </Button>
               <Button onClick={exportPPTX} disabled={!reportData || loading} className="bg-orange-600 hover:bg-orange-500 text-white">
                 <Presentation className="w-4 h-4 mr-2" /> {'Export PPTX'}</Button>
@@ -201,7 +201,7 @@ export function GovernanceDashboard() {
           ) : !reportData ? (
             <div className="text-center py-20 text-muted-foreground">
               <ShieldAlert className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>{'Unable to load governance report'}</p>
+              <p>{'Unable to load governance report.'}</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -242,32 +242,36 @@ export function GovernanceDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-orange-500/10 border-orange-500/20">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-orange-400 font-medium">{'Pending Requests'}</p>
-                        <h3 className="text-3xl font-bold text-white mt-2">{reportData.access_requests.pending}</h3>
+                {user?.role !== 'EMPLOYEE' && (
+                  <Card className="bg-orange-500/10 border-orange-500/20">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-orange-400 font-medium">{'Pending Requests'}</p>
+                          <h3 className="text-3xl font-bold text-white mt-2">{reportData.access_requests.pending}</h3>
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                          <LayoutDashboard className="w-6 h-6 text-orange-400" />
+                        </div>
                       </div>
-                      <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
-                        <LayoutDashboard className="w-6 h-6 text-orange-400" />
+                    </CardContent>
+                  </Card>
+                )}
+                {user?.role !== 'EMPLOYEE' && (
+                  <Card className="bg-red-500/10 border-red-500/20">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-red-400 font-medium">{'High Risk Logins'}</p>
+                          <h3 className="text-3xl font-bold text-white mt-2">{reportData.logins.high_risk}</h3>
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                          <ShieldAlert className="w-6 h-6 text-red-400" />
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-red-500/10 border-red-500/20">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-red-400 font-medium">{'High Risk Logins'}</p>
-                        <h3 className="text-3xl font-bold text-white mt-2">{reportData.logins.high_risk}</h3>
-                      </div>
-                      <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-                        <ShieldAlert className="w-6 h-6 text-red-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Detailed Grids */}
@@ -282,12 +286,7 @@ export function GovernanceDashboard() {
                     {(() => {
                       let rolesData = Object.entries(reportData.roles || {}).map(([name, value]) => ({ name, value }));
                       if (rolesData.length === 0) {
-                        rolesData = [
-                          { name: 'System Admin', value: 2 },
-                          { name: 'Security Analyst', value: 4 },
-                          { name: 'Employee', value: 45 },
-                          { name: 'Manager', value: 8 },
-                        ];
+                        return <div className="flex items-center justify-center h-full text-gray-500 text-sm">No data available</div>;
                       }
                       return (
                         <ResponsiveContainer width="100%" height="100%">
@@ -312,12 +311,7 @@ export function GovernanceDashboard() {
                     {(() => {
                       let deptData = Object.entries(reportData.departments.distribution || {}).map(([name, value]) => ({ name, value }));
                       if (deptData.length === 0) {
-                        deptData = [
-                          { name: 'Engineering', value: 25 },
-                          { name: 'Sales', value: 15 },
-                          { name: 'HR', value: 5 },
-                          { name: 'Operations', value: 14 },
-                        ];
+                        return <div className="flex items-center justify-center h-full text-gray-500 text-sm">No data available</div>;
                       }
                       return (
                         <ResponsiveContainer width="100%" height="100%">
@@ -336,49 +330,53 @@ export function GovernanceDashboard() {
                 </>
                 )}
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{'Device Security'}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col gap-4">
-                      <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
-                        <span>{'Total Registered'}</span>
-                        <span className="font-bold text-xl">{reportData.devices.total}</span>
+                {user?.role !== 'EMPLOYEE' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{'Device Security'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                          <span>{'Total Registered'}</span>
+                          <span className="font-bold text-xl">{reportData.devices.total}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
+                          <span>{'Trusted Devices'}</span>
+                          <span className="font-bold text-xl">{reportData.devices.trusted}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400">
+                          <span>{'Untrusted New Devices'}</span>
+                          <span className="font-bold text-xl">{reportData.devices.untrusted}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
-                        <span>{'Trusted Devices'}</span>
-                        <span className="font-bold text-xl">{reportData.devices.trusted}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400">
-                        <span>{'Untrusted New Devices'}</span>
-                        <span className="font-bold text-xl">{reportData.devices.untrusted}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{'Authentication Overview'}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col gap-4">
-                      <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
-                        <span>{'Total Login Attempts'}</span>
-                        <span className="font-bold text-xl">{reportData.logins.total}</span>
+                {user?.role !== 'EMPLOYEE' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{'Authentication Overview'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                          <span>{'Total Login Attempts'}</span>
+                          <span className="font-bold text-xl">{reportData.logins.total}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
+                          <span>{'Failed Logins'}</span>
+                          <span className="font-bold text-xl">{reportData.logins.failed}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-cyan-500/100/10 border border-blue-500/20 rounded-lg text-blue-400">
+                          <span>{'Access Requests Approved'}</span>
+                          <span className="font-bold text-xl">{reportData.access_requests.approved}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
-                        <span>{'Failed Logins'}</span>
-                        <span className="font-bold text-xl">{reportData.logins.failed}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-4 bg-cyan-500/100/10 border border-blue-500/20 rounded-lg text-blue-400">
-                        <span>{'Access Requests Approved'}</span>
-                        <span className="font-bold text-xl">{reportData.access_requests.approved}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
                 <Card>
                   <CardHeader>
                     <CardTitle>{'Attendance & Leave'}</CardTitle>

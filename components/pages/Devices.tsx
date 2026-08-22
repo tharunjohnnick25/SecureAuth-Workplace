@@ -60,11 +60,18 @@ export function Devices() {
 
   const toggleTrust = async (deviceId: string, currentTrust: boolean) => {
     try {
-      const { error } = await (supabase.from('devices') as any)
-        .update({ is_trusted: !currentTrust })
-        .eq('id', deviceId);
-      if (error) throw error;
-      toast.success(`Device ${currentTrust ? 'untrusted' : 'trusted'}`);
+      let res;
+      if (currentTrust) {
+        // Untrust/revoke
+        res = await fetch(`/api/devices/${deviceId}/revoke`, { method: 'POST' });
+      } else {
+        // Trust
+        res = await fetch(`/api/devices/${deviceId}/trust`, { method: 'POST' });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update device');
+      
+      toast.success(data.message || `Device ${currentTrust ? 'untrusted' : 'trusted'}`);
       refetch();
     } catch (err: any) {
       toast.error(err.message);
@@ -73,12 +80,10 @@ export function Devices() {
 
   const removeDevice = async (deviceId: string) => {
     try {
-      const { error } = await supabase
-        .from('devices')
-        .delete()
-        .eq('id', deviceId);
-      if (error) throw error;
-      toast.success('Device removed');
+      const res = await fetch(`/api/devices/${deviceId}/revoke`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to remove device');
+      toast.success('Device revoked and removed');
       refetch();
     } catch (err: any) {
       toast.error(err.message);

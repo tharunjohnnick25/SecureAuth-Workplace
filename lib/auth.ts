@@ -6,9 +6,7 @@
  */
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { isMockMode, MockEmployees } from '@/lib/mock-employees';
 
 // ── Role definitions ──────────────────────────────────────────────────────
 
@@ -106,36 +104,13 @@ export interface SessionUser {
   role: string;
   department?: string;
   managerId?: string;
+  company_id?: string;
 }
 
 /**
- * Retrieves the current user session (compatible with Mock Mode).
+ * Retrieves the current user session securely from Supabase.
  */
 export async function getUserSession(): Promise<{ user: SessionUser | null }> {
-  if (isMockMode()) {
-    const cookieStore = await cookies();
-    const mockCookie = cookieStore.get('mock_session')?.value;
-    if (!mockCookie) return { user: null };
-    
-    try {
-      const parsed = JSON.parse(mockCookie);
-      const user = MockEmployees.getById(parsed.id);
-      if (!user || user.is_deleted) return { user: null };
-      
-      return { 
-        user: { 
-          id: user.id, 
-          email: user.email, 
-          role: user.role ? user.role.toLowerCase() : 'employee',
-          department: user.department,
-          managerId: (user.manager_id as string) || undefined
-        } 
-      };
-    } catch {
-      return { user: null };
-    }
-  }
-
   const supabase = await createServerSupabaseClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   
@@ -143,7 +118,7 @@ export async function getUserSession(): Promise<{ user: SessionUser | null }> {
   
   const { data: profile } = await supabase
     .from('users')
-    .select('role, department, manager_id, is_deleted')
+    .select('role, department, manager_id, company_id, is_deleted')
     .eq('id', user.id)
     .single();
 
@@ -155,16 +130,32 @@ export async function getUserSession(): Promise<{ user: SessionUser | null }> {
       email: user.email || '',
       role: profile.role ? profile.role.toLowerCase() : 'employee',
       department: profile.department,
-      managerId: profile.manager_id
+      managerId: profile.manager_id,
+      company_id: profile.company_id
     }
+  };
+}
+
+/**
+ * HOF for Next.js Route Handlers to enforce authentication.
+ */
+export function requireAuth(handler: (req: NextRequest, user: SessionUser, context: any) => Promise<NextResponse>) {
+  return async (req: NextRequest, context: any) => {
+    const { user } = await getUserSession();
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    return handler(req, user, context);
   };
 }
 
 /**
  * HOF for Next.js Route Handlers to enforce RBAC.
  */
-export function requireRole(allowedRoles: string[], handler: (req: NextRequest, user: SessionUser) => Promise<NextResponse>) {
-  return async (req: NextRequest) => {
+export function requireRole(allowedRoles: string[], handler: (req: NextRequest, user: SessionUser, context: any) => Promise<NextResponse>) {
+  return async (req: NextRequest, context: any) => {
     const { user } = await getUserSession();
     
     if (!user) {
@@ -175,6 +166,36 @@ export function requireRole(allowedRoles: string[], handler: (req: NextRequest, 
       return NextResponse.json({ error: 'Forbidden: Insufficient role' }, { status: 403 });
     }
     
-    return handler(req, user);
+    return handler(req, user, context);
+  };
+}
+
+/**
+ * HOF for Next.js Route Handlers to enforce company isolation.
+ * Automatically blocks cross-company requests.
+ */
+export function requireCompanyAccess(
+  handler: (req: NextRequest, user: SessionUser, companyId: string, ...args: any[]) => Promise<NextResponse>
+) {
+  return async (req: NextRequest, ...args: any[]) => {
+    const { user } = await getUserSession();
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    if (!user.company_id) {
+      return NextResponse.json({ error: 'Forbidden: No company association' }, { status: 403 });
+    }
+
+    // Verify if the client is explicitly requesting a company_id in the URL that they don't own
+    const url = new URL(req.url);
+    const requestedCompanyId = url.searchParams.get('company_id');
+    if (requestedCompanyId && requestedCompanyId !== user.company_id) {
+        // Admin overrides could be implemented here, but strict isolation dictates:
+        return NextResponse.json({ error: 'Forbidden: Cross-company access denied' }, { status: 403 });
+    }
+    
+    return handler(req, user, user.company_id, ...args);
   };
 }

@@ -8,15 +8,15 @@ import {
   LayoutDashboard,
   Shield,
   Smartphone,
-  Bell,
+  HardDrive,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const mobileNavItems = [
   { id: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Workspace', href: '/workspace', icon: HardDrive },
   { name: 'Security', href: '/security', icon: Shield },
-  { name: 'Devices', href: '/devices', icon: Smartphone },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -27,8 +27,8 @@ export function MobileNav() {
   const userRole = (user?.role || 'EMPLOYEE').toUpperCase();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#020617]/90 backdrop-blur-xl border-t border-white/10 safe-bottom">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#020617]/90 backdrop-blur-xl border-t border-white/10 pb-safe">
+      <div className="flex items-center justify-around h-16 px-2 mb-safe">
         {mobileNavItems.map((item) => {
           const href = item.id === 'dashboard' && userRole === 'ADMIN' ? '/admin/dashboard' : item.href;
           const isActive = pathname === href || pathname.startsWith(href + '/');

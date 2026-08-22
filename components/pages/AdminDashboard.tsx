@@ -36,34 +36,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { useLanguage } from "@/context/LanguageContext";
 import { useRealtimeData } from '@/hooks/useRealtimeData';
 
-// Mock data for admin dashboard
-const mockUsers = [
-  { name: 'Sarah Chen', email: 'sarah.c@enterprise.com', role: 'Security Admin', status: 'Active', risk: 92, last: '2m ago' },
-  { name: 'Marcus Thorne', email: 'm.thorne@enterprise.com', role: 'Cloud Architect', status: 'Active', risk: 85, last: '15m ago' },
-  { name: 'Unknown User', email: 'ip_102.32.11', role: 'Guest', status: 'Blocked', risk: 12, last: '1h ago' },
-  { name: 'Elena Rodriguez', email: 'elena.r@enterprise.com', role: 'DevOps Lead', status: 'Active', risk: 98, last: '4h ago' },
-  { name: 'John Doe', email: 'j.doe@enterprise.com', role: 'Developer', status: 'Active', risk: 75, last: '12h ago' },
-  { name: 'Alex Johnson', email: 'alex.j@enterprise.com', role: 'Engineer', status: 'Active', risk: 60, last: '1d ago' },
-  { name: 'Emily Davis', email: 'emily.d@enterprise.com', role: 'Manager', status: 'Active', risk: 80, last: '2d ago' },
-  { name: 'Michael Brown', email: 'm.brown@enterprise.com', role: 'Guest', status: 'Blocked', risk: 15, last: '3d ago' },
-  { name: 'Chris Lee', email: 'c.lee@enterprise.com', role: 'Developer', status: 'Active', risk: 82, last: '5m ago' },
-  { name: 'Katie Smith', email: 'k.smith@enterprise.com', role: 'Security Admin', status: 'Active', risk: 95, last: '10m ago' },
-];
-
-const userStats = [
-  { name: 'Active', value: 840, color: '#10b981' },
-  { name: 'Blocked', value: 42, color: '#ef4444' },
-  { name: 'MFA Enabled', value: 650, color: '#3b82f6' },
-];
-
 const threatTrend = [
-  { day: 'Mon', threats: 12, blocked: 12 },
-  { day: 'Tue', threats: 18, blocked: 17 },
-  { day: 'Wed', threats: 45, blocked: 45 },
-  { day: 'Thu', threats: 32, blocked: 32 },
-  { day: 'Fri', threats: 28, blocked: 28 },
-  { day: 'Sat', threats: 15, blocked: 15 },
-  { day: 'Sun', threats: 10, blocked: 10 },
+  { day: 'Mon', threats: 0, blocked: 0 },
+  { day: 'Tue', threats: 0, blocked: 0 },
+  { day: 'Wed', threats: 0, blocked: 0 },
+  { day: 'Thu', threats: 0, blocked: 0 },
+  { day: 'Fri', threats: 0, blocked: 0 },
+  { day: 'Sat', threats: 0, blocked: 0 },
+  { day: 'Sun', threats: 0, blocked: 0 },
 ];
 
 export function AdminDashboard() {
@@ -76,7 +56,7 @@ export function AdminDashboard() {
   const { data: realUsers } = useRealtimeData('users');
 
   const identities = useMemo(() => {
-    if (!realUsers || realUsers.length === 0) return mockUsers;
+    if (!realUsers || realUsers.length === 0) return [];
     return realUsers.map((u: any, i: number) => ({
       name: u.full_name || 'Unknown User',
       email: u.email || '',
@@ -114,7 +94,7 @@ export function AdminDashboard() {
             </div>
 
             <div className="flex items-center gap-4">
-               <button onClick={() => router.push('/reports/governance')} className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-all">
+               <button onClick={() => router.push('/reports-dashboard')} className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-all">
                  <Download className="w-4 h-4" /> {'Export report'}</button>
                <button onClick={() => router.push('/security-policy')} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all">
                  {'New security poli'}</button>
@@ -124,10 +104,10 @@ export function AdminDashboard() {
           {/* High Level Analytics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
              {[
-               { label: 'Total Identities', value: '1,204', icon: Users, color: 'text-blue-400', sub: '+12 this week' },
-               { label: 'Threats Mitigated', value: '142', icon: ShieldCheck, color: 'text-green-400', sub: '100% success rate' },
-               { label: 'Avg Risk Score', value: '24.2', icon: AlertTriangle, color: 'text-yellow-400', sub: 'Low risk environment' },
-               { label: 'Fleet Devices', value: '3,842', icon: Smartphone, color: 'text-purple-400', sub: 'Across 12 regions' },
+               { label: 'Total Identities', value: realUsers?.length || 0, icon: Users, color: 'text-blue-400', sub: 'Currently tracking' },
+               { label: 'Threats Mitigated', value: 0, icon: ShieldCheck, color: 'text-green-400', sub: 'Zero threats detected' },
+               { label: 'Avg Risk Score', value: 0, icon: AlertTriangle, color: 'text-yellow-400', sub: 'Low risk environment' },
+               { label: 'Fleet Devices', value: 0, icon: Smartphone, color: 'text-purple-400', sub: 'Across 0 regions' },
              ].map((stat, i) => (
                <Card key={i} className="glass-panel p-6">
                  <div className="flex justify-between items-start mb-4">
@@ -202,7 +182,7 @@ export function AdminDashboard() {
                   </div>
                </div>
 
-               <button onClick={() => router.push('/reports/governance')} className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-500/20">
+               <button onClick={() => router.push('/reports-dashboard')} className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-500/20">
                   {'Generate governa'}</button>
             </Card>
           </div>

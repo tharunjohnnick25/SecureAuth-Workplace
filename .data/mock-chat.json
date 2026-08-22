@@ -144,8 +144,8 @@
         }
       ],
       "created_at": "2026-08-15T13:27:15.550Z",
-      "last_message_at": "2026-08-15T13:27:21.182Z",
-      "last_message_preview": "Got it, looking into this now."
+      "last_message_at": "2026-08-20T07:49:37.956Z",
+      "last_message_preview": "I'll update you by EOD."
     },
     {
       "id": "conv-1786801319225-r4mpmp",
@@ -225,6 +225,27 @@
       "last_message_preview": "Group 'Cybersecurity & SOC Team' created",
       "is_group": true,
       "group_name": "Cybersecurity & SOC Team"
+    },
+    {
+      "id": "conv-1786912278641-lvuiem",
+      "key": "EMP123::MAN111",
+      "participants": [
+        {
+          "id": "3c07081b-d363-486f-8099-3cc5fddcb52f",
+          "employee_id": "MAN111",
+          "full_name": "hella@infosys.com",
+          "role": "manager"
+        },
+        {
+          "id": "fc49aadc-e7c2-42b1-a636-31a949c28b86",
+          "employee_id": "EMP123",
+          "full_name": "Rajesh",
+          "role": "Employee"
+        }
+      ],
+      "created_at": "2026-08-16T20:31:18.641Z",
+      "last_message_at": "2026-08-16T20:31:23.584Z",
+      "last_message_preview": "hi"
     }
   ],
   "messages": [
@@ -315,6 +336,22 @@
       "sender_name": "Hella User",
       "content": "Can we schedule a quick meeting?",
       "created_at": "2026-08-15T14:40:58.819Z"
+    },
+    {
+      "id": "msg-1786912283584-sbdm7b",
+      "conversation_id": "conv-1786912278641-lvuiem",
+      "sender_employee_id": "MAN111",
+      "sender_name": "hella@infosys.com",
+      "content": "hi",
+      "created_at": "2026-08-16T20:31:23.584Z"
+    },
+    {
+      "id": "msg-1787212177956-7wf0it",
+      "conversation_id": "conv-1786800435550-r8oai4",
+      "sender_employee_id": "EMP-THARUN01",
+      "sender_name": "tharun@infosys.com",
+      "content": "I'll update you by EOD.",
+      "created_at": "2026-08-20T07:49:37.956Z"
     }
   ]
 }

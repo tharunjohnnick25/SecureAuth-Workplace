@@ -154,11 +154,17 @@ function MeetingRoomInner() {
   const leaveRoom = useCallback(async (endForAll: boolean) => {
     cleanupConnection();
     try {
-      await fetch(`/api/meetings/${id}/leave`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user?.id, end_meeting: endForAll }),
-      });
+      if (endForAll) {
+        await fetch(`/api/meetings/${id}/end`, {
+          method: 'POST'
+        });
+      } else {
+        await fetch(`/api/meetings/${id}/leave`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user?.id })
+        });
+      }
     } catch { /* noop */ }
     router.push('/meetings');
   }, [cleanupConnection, id, router, user?.id]);
@@ -172,6 +178,7 @@ function MeetingRoomInner() {
         router.push('/login');
         return;
       }
+      if (!id || id === 'undefined') return;
       try {
         const res = await fetch(`/api/meetings/${id}`);
         const data = await res.json();
@@ -499,6 +506,13 @@ function MeetingRoomInner() {
       setScreenShareActive(false);
       return;
     }
+
+    // Check if we are running in the React Native Expo App Wrapper
+    if (typeof window !== 'undefined' && (window as any).requestNativeScreenshare) {
+       (window as any).requestNativeScreenshare();
+       return;
+    }
+
     try {
       const display = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
       screenStreamRef.current = display;
@@ -640,9 +654,17 @@ function MeetingRoomInner() {
     }
   };
 
-  const removeParticipant = (peer: RemotePeerInfo) => {
+  const removeParticipant = async (peer: RemotePeerInfo) => {
     if (window.confirm(`Remove ${peer.user.name} from the meeting?`)) {
       clientRef.current?.kick(peer.peerId);
+      // Persist to backend
+      try {
+        await fetch(`/api/meetings/${id}/kick`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: peer.user.id }),
+        });
+      } catch { /* noop */ }
     }
   };
 
@@ -766,7 +788,15 @@ function MeetingRoomInner() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
           <div className="w-full max-w-md aspect-video bg-[#1a1a1a] rounded-2xl overflow-hidden border border-white/10 relative flex items-center justify-center">
             {cameraOn && localStream ? (
-              <video ref={(el) => { if (el) el.srcObject = localStream; }} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
+              <video 
+                ref={(el) => { 
+                  if (el && el.srcObject !== localStream) {
+                    el.srcObject = localStream;
+                    el.play().catch(() => {});
+                  }
+                }} 
+                autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" 
+              />
             ) : (
               <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-3xl font-bold">
                 {initials(user?.full_name)}
@@ -1218,7 +1248,12 @@ function VideoTile({
     <div className={`relative bg-[#202020] rounded-xl overflow-hidden border ${speaking ? 'border-blue-500' : 'border-white/5'} ${small ? 'aspect-video' : 'aspect-video'} ${className}`}>
       {showVideo ? (
         <video
-          ref={(el) => { if (el && el.srcObject !== stream) el.srcObject = stream ?? null; }}
+          ref={(el) => { 
+            if (el && el.srcObject !== stream) {
+              el.srcObject = stream ?? null; 
+              if (stream) el.play().catch(() => {});
+            } 
+          }}
           autoPlay
           playsInline
           muted={isSelf}

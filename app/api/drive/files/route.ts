@@ -1,98 +1,109 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
 
-// List files, enforcing RBAC
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const adminClient = await createAdminClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('user_id');
-    const role = searchParams.get('role'); // e.g. ADMIN or USER
+    const targetUserId = searchParams.get('user_id') || session.user.id;
+    console.log('GET /api/drive/files -> targetUserId:', targetUserId, 'session.user.id:', session.user.id);
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
+    // RBAC logic
+    if (targetUserId !== session.user.id) {
+       const { data: currentUser } = await adminClient.from('users').select('role, company_id').eq('id', session.user.id).single();
+       if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
+           return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+       }
+       if (currentUser.company_id) {
+           const { data: targetUser } = await adminClient.from('users').select('company_id').eq('id', targetUserId).single();
+           if (targetUser?.company_id !== currentUser.company_id) {
+               return NextResponse.json({ success: false, error: 'Forbidden: Different organization' }, { status: 403 });
+           }
+       }
     }
 
-    let files = MockDB.drive_files_metadata;
+    const { data: files, error } = await adminClient
+      .from('documents')
+      .select('*')
+      .eq('user_id', targetUserId);
 
-    // RBAC Logic: Admins see everything. Employees only see non-confidential,
-    // unless they have an approved access request.
-    if (role !== 'ADMIN') {
-      // Find all approved requests for this user
-      const approvedRequests = MockDB.file_access_requests.filter(
-        (r: any) => r.user_id === userId && r.status === 'APPROVED'
-      );
-      const approvedFileIds = new Set(approvedRequests.map((r: any) => r.file_id));
+    if (error) throw error;
 
-      files = files.filter((f: any) => {
-        if (!f.is_confidential) return true;
-        if (f.owner_id === userId) return true;
-        if (approvedFileIds.has(f.id)) return true;
-        return false;
-      });
-    }
+    const mappedFiles = (files || []).map(f => ({
+      ...f,
+      owner_id: f.user_id,
+      size: f.file_size,
+      folder: 'General', // default folder for UI mapping
+      is_confidential: false
+    }));
 
-    return NextResponse.json({ data: files, success: true });
+    return NextResponse.json({ data: mappedFiles, success: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-// Upload a new file
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const userId = formData.get('user_id') as string;
-    const folder = formData.get('folder') as string || 'General';
-    const isConfidential = formData.get('is_confidential') === 'true';
-
-    if (!file || !userId) {
-      return NextResponse.json({ error: 'Missing file or user_id' }, { status: 400 });
+    const supabase = await createServerSupabaseClient();
+    const adminClient = await createAdminClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // Check mock auth bypass
+    const isMock = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+    if (!session && !isMock) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check application storage limits (1 GB)
-    const totalUsed = MockDB.drive_files_metadata.reduce((acc: number, f: any) => acc + (f.size || 0), 0);
-    const maxStorage = 1024 * 1024 * 1024; // 1 GB
-    if (totalUsed + file.size > maxStorage) {
-      return NextResponse.json({ error: 'Storage limit exceeded (1 GB)' }, { status: 403 });
+    const body = await req.json();
+    const { fileName, fileSize, mimeType, fileUrl, isConfidential } = body;
+    let userId = body.user_id;
+
+    if (!isMock) userId = session!.user.id;
+
+    if (!fileName || !fileUrl) {
+      return NextResponse.json({ success: false, error: 'Missing required file data' }, { status: 400 });
     }
 
-    // In a real app, this streams the file buffer to Google Drive API
-    // const drive = google.drive({ version: 'v3', auth: oauth2Client });
-    // const driveFile = await drive.files.create({...});
-    const mockDriveFileId = `goog-mock-${Date.now()}`;
+    if (!isMock) {
+      // Save metadata to Postgres (Upload was handled directly by the frontend)
+      const { data: newFile, error: dbError } = await adminClient
+        .from('documents')
+        .insert({
+           user_id: userId,
+           document_name: fileName,
+           name: fileName,
+           file_size: fileSize,
+           mime_type: mimeType || 'application/octet-stream',
+           file_url: fileUrl
+        })
+        .select()
+        .single();
 
-    const newFile = {
-      id: `file-${Date.now()}`,
-      drive_file_id: mockDriveFileId,
-      name: file.name,
-      mime_type: file.type || 'application/octet-stream',
-      size: file.size,
-      owner_id: userId,
-      folder,
-      is_confidential: isConfidential,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+      if (dbError) throw dbError;
 
-    MockDB.drive_files_metadata.push(newFile as any);
-
-    // Create Audit Log
-    MockDB.drive_audit_logs.push({
-      id: `audit-${Date.now()}`,
-      user_id: userId,
-      file_id: newFile.id,
-      action: 'UPLOAD',
-      file_name: file.name,
-      timestamp: new Date().toISOString(),
-      ip_address: '192.168.1.1',
-      risk_score: 12
-    } as any);
-
-    saveMockDB();
-
-    return NextResponse.json({ data: newFile, success: true }, { status: 201 });
+      return NextResponse.json({ data: { ...newFile, owner_id: newFile.user_id, folder: 'General', is_confidential: isConfidential }, success: true }, { status: 201 });
+    } else {
+      // Mock Auth Fallback
+      const newFile = {
+        id: `doc_${Date.now()}`,
+        user_id: userId,
+        name: fileName,
+        size: fileSize,
+        mime_type: mimeType,
+        owner_id: userId,
+        folder: 'General',
+        is_confidential: isConfidential
+      };
+      return NextResponse.json({ data: newFile, success: true }, { status: 201 });
+    }
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

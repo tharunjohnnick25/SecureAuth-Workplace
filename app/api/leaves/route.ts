@@ -1,116 +1,73 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { MockEmployees } from '@/lib/mock-employees';
-import { resolveCompanyKey } from '@/lib/companies';
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server';
+import {
+  createLeave,
+  fetchLeaveRequests,
+  fetchProfile,
+  LeaveServiceError,
+} from '@/lib/leave-service';
 
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const admin = await createAdminClient();
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
+    }
+
+    const caller = await fetchProfile(admin, session.user.id);
+    if (!caller) {
+      return NextResponse.json({ error: 'User profile not found', success: false }, { status: 404 });
+    }
+
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('user_id');
-    const adminId = searchParams.get('admin_id');
-    const managerId = searchParams.get('manager_id');
-    let adminCompany = searchParams.get('company_name') || '';
 
-    let data = MockDB.leave_requests;
-
-    if (userId) {
-      data = data.filter((l) => l.user_id === userId);
-    }
-
-    if (managerId) {
-      data = data.filter((l) => {
-        let mockEmp = MockEmployees.getById(l.user_id) as any;
-        if (!mockEmp) mockEmp = MockDB.employees.find(e => e.id === l.user_id);
-        return mockEmp?.manager_id === managerId;
-      });
-    }
-
-    if (adminId) {
-      // Resolve the admin's canonical company key from the query param, the
-      // admin record, and (as a last resort) the Supabase user row.
-      let mockAdmin = MockEmployees.getById(adminId) as any;
-      if (!mockAdmin) mockAdmin = MockDB.employees.find(e => e.id === adminId);
-
-      let adminCompanyName = adminCompany || mockAdmin?.company_name || '';
-      if (!adminCompanyName) {
-        const supabase = await createServerSupabaseClient();
-        const { data: userData } = await supabase.from('users').select('company_name').eq('id', adminId).single();
-        if (userData?.company_name) adminCompanyName = userData.company_name;
-      }
-
-      const adminKey = resolveCompanyKey({
-        email: mockAdmin?.email || '',
-        company_name: adminCompanyName,
-      });
-
-      if (adminKey) {
-        // Fetch all Supabase users to resolve their company names
-        const supabase = await createServerSupabaseClient();
-        const { data: allSupabaseUsers } = await supabase.from('users').select('id, company_name');
-
-        data = data.filter(l => {
-          let mockEmp = MockEmployees.getById(l.user_id) as any;
-          if (!mockEmp) mockEmp = MockDB.employees.find(e => e.id === l.user_id);
-
-          const empEmail = mockEmp?.email || (l as any).email || '';
-          const sbUser = allSupabaseUsers?.find(u => u.id === l.user_id);
-          const reqKey = resolveCompanyKey({
-            email: empEmail,
-            company_name: mockEmp?.company_name || sbUser?.company_name || '',
-          });
-
-          if (reqKey === adminKey) {
-            // Attach identity for admin visibility
-            (l as any).email = empEmail;
-            if (mockEmp?.full_name && l.user_name === 'JOHN User') {
-               l.user_name = mockEmp.full_name;
-            }
-            return true;
-          }
-          return false;
-        });
-      } else {
-        // Fail closed if we cannot determine the admin's company
-        data = [];
-      }
-    }
-
-    // Sort descending by created_at
-    data = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const data = await fetchLeaveRequests(admin, caller, { userId });
 
     return NextResponse.json({ data, success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to fetch leaves', success: false }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof LeaveServiceError) {
+      return NextResponse.json({ error: err.message, code: err.code, success: false }, { status: err.status });
+    }
+    console.error('Leaves list error:', err);
+    return NextResponse.json({ error: 'Failed to fetch leaves', success: false }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { user_id, user_name, type, start_date, end_date, reason } = body;
+    const supabase = await createServerSupabaseClient();
+    const admin = await createAdminClient();
 
-    if (!user_id || !start_date || !end_date) {
-      return NextResponse.json({ error: 'Missing required fields', success: false }, { status: 400 });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized', success: false }, { status: 401 });
     }
 
-    const newRequest = {
-      id: `lr-${Date.now()}`,
-      user_id,
-      user_name: user_name || 'Unknown Employee',
-      type: type || 'Annual Leave',
-      start_date,
-      end_date,
-      reason: reason || '',
-      status: 'Pending',
-      created_at: new Date().toISOString()
+    const caller = await fetchProfile(admin, session.user.id);
+    if (!caller) {
+      return NextResponse.json({ error: 'User profile not found', success: false }, { status: 404 });
+    }
+
+    const body = await req.json();
+    const input = {
+      leave_type: body.type || body.leave_type,
+      start_date: body.start_date,
+      end_date: body.end_date,
+      reason: body.reason,
+      document_url: body.document_url,
     };
+    const data = await createLeave(admin, caller, input, req);
 
-    MockDB.leave_requests.push(newRequest);
-    saveMockDB();
-
-    return NextResponse.json({ data: newRequest, success: true }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to create leave request', success: false }, { status: 500 });
+    return NextResponse.json({ data, success: true }, { status: 201 });
+  } catch (err: unknown) {
+    if (err instanceof LeaveServiceError) {
+      return NextResponse.json({ error: err.message, code: err.code, success: false }, { status: err.status });
+    }
+    console.error('Leaves create error:', err);
+    return NextResponse.json({ error: 'Failed to create leave request', success: false }, { status: 500 });
   }
 }

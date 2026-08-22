@@ -1,54 +1,72 @@
-import { NextResponse } from 'next/server';
-import { MockDB, saveMockDB } from '@/lib/mock-db';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const params = await props.params;
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    const { is_read, is_starred, folder } = await request.json();
+    const { id } = await context.params;
+    const { data: email, error } = await supabase
+      .from('internal_emails')
+      .select('*')
+      .eq('id', id)
+      .eq('owner_id', session.user.id)
+      .single();
 
-    const emailIndex = MockDB.emails.findIndex(e => e.id === params.id && e.owner_id === userId);
-    if (emailIndex === -1) {
-      return NextResponse.json({ error: 'Email not found' }, { status: 404 });
-    }
-
-    const email = MockDB.emails[emailIndex];
-
-    if (is_read !== undefined) email.is_read = is_read;
-    if (is_starred !== undefined) email.is_starred = is_starred;
-    if (folder !== undefined) email.folder = folder;
-
-    saveMockDB();
-
-    return NextResponse.json({ data: email });
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    if (error) throw error;
+    return NextResponse.json({ success: true, data: email });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const params = await props.params;
-    const userId = request.headers.get('x-user-id');
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    const emailIndex = MockDB.emails.findIndex(e => e.id === params.id && e.owner_id === userId);
-    if (emailIndex === -1) {
-      return NextResponse.json({ error: 'Email not found' }, { status: 404 });
-    }
+    const body = await req.json();
+    const updateData: any = {};
+    if (body.is_read !== undefined) updateData.is_read = body.is_read;
+    if (body.is_starred !== undefined) updateData.is_starred = body.is_starred;
+    if (body.folder !== undefined) updateData.folder = body.folder;
 
-    // Permanently remove
-    MockDB.emails.splice(emailIndex, 1);
-    saveMockDB();
+    const { id } = await context.params;
+    const { data: updated, error } = await supabase
+      .from('internal_emails')
+      .update(updateData)
+      .eq('id', id)
+      .eq('owner_id', session.user.id)
+      .select()
+      .single();
 
+    if (error) throw error;
+    return NextResponse.json({ success: true, data: updated });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+    const { id } = await context.params;
+    // Permanent delete only affects the specific user's copy (owner_id)
+    const { error } = await supabase
+      .from('internal_emails')
+      .delete()
+      .eq('id', id)
+      .eq('owner_id', session.user.id);
+
+    if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

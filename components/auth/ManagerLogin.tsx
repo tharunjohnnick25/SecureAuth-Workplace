@@ -81,14 +81,14 @@ export function ManagerLogin() {
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.error || 'Login failed');
+        throw new Error(result.error || 'Sign-in failed. Please check your credentials and try again.');
       }
 
       // Adaptive MFA: route to the ceremony the risk policy demands.
       if (result.risk) {
         const role = String(result.user?.role || '').toUpperCase();
         const isAdmin = ADMIN_ROLES.has(role);
-        const needsDetails = !isAdmin && result.user?.profile_completed !== true;
+        const needsDetails = !isAdmin && result.user?.status === 'INVITED';
         const defaultRoute = needsDetails ? '/onboarding/details' : '/dashboard';
 
         const flow = resolveRiskRoute(result, defaultRoute);
@@ -120,7 +120,7 @@ export function ManagerLogin() {
         setUser(result.user);
         const role = String(result.user?.role || '').toUpperCase();
         const isAdmin = ADMIN_ROLES.has(role);
-        const needsDetails = !isAdmin && result.user?.profile_completed !== true;
+        const needsDetails = !isAdmin && result.user?.status === 'INVITED';
         router.push(needsDetails ? '/onboarding/details' : '/manager/dashboard');
       }
     } catch (err: any) {
@@ -185,14 +185,14 @@ export function ManagerLogin() {
                   <option value="" className="bg-[#0f0f23]">{t('selectRegisteredCompany')}</option>
                   {REGISTERED_COMPANIES.map((c) => (
                     <option key={c.id} value={c.id} className="bg-[#0f0f23]">
-                      {c.name} â€” {c.country} ({c.domain})
+                      {c.name} — {c.country} ({c.domain})
                     </option>
                   ))}
                 </select>
               </div>
               {selectedCompany && (
                 <p className="mt-1 text-xs text-emerald-400">
-                  {t('companyDetected')}: {selectedCompany.name} Â· {selectedCompany.industry} Â· {selectedCompany.country}
+                  {t('companyDetected')}: {selectedCompany.name} · {selectedCompany.industry} · {selectedCompany.country}
                 </p>
               )}
             </div>
@@ -203,7 +203,7 @@ export function ManagerLogin() {
                 <Input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   icon={<Lock className="w-4 h-4" />}
                   onKeyDown={handleKeyDown}
                   onKeyUp={handleKeyUp}
@@ -219,19 +219,6 @@ export function ManagerLogin() {
               {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
             </div>
 
-            {/* Risk Simulator (Dev/Demo Mode) */}
-            <div>
-              <label className="block mb-2 text-sm text-gray-300">Risk Scenario (Adaptive MFA Demo)</label>
-              <select
-                value={simulatedRisk}
-                onChange={(e) => setSimulatedRisk(e.target.value as any)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none cursor-pointer"
-              >
-                <option value="low" className="bg-[#0f0f23]">Low Risk (Passkey / Bypass MFA)</option>
-                <option value="medium" className="bg-[#0f0f23]">Medium Risk (Require TOTP)</option>
-                <option value="high" className="bg-[#0f0f23]">High Risk (Block Login)</option>
-              </select>
-            </div>
 
             {/* Location Status */}
             <div className="flex items-center gap-2 text-xs text-gray-400 bg-white/5 p-2.5 rounded-lg border border-white/5">
@@ -239,7 +226,7 @@ export function ManagerLogin() {
               <span>
                 {locationLoading ? 'Detecting location...' :
                  location ? `Location: ${location.city || 'Detected'}, ${location.country || ''}` :
-                 'Please allow location access for enhanced security'}
+                 'Please allow location access for enhanced security.'}
               </span>
             </div>
 
@@ -273,7 +260,7 @@ export function ManagerLogin() {
         <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-center gap-6 text-xs text-gray-500">
           <div className="flex items-center gap-1.5">
             <img src="/new-logo.png" className="w-4 h-4 object-contain" alt="Enterprise Security" />
-            <span>{'Enterprise secur'}</span>
+            <span>{'Enterprise Security'}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <MapPin className={`w-4 h-4 ${location ? 'text-emerald-400' : 'text-amber-400'}`} />

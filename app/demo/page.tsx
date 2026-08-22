@@ -274,7 +274,7 @@ export default function DemoPage() {
           <p className="text-xl text-gray-400 mb-10">
             {'Join leading enterprises'}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/pricing">
+            <Link href="/#pricing">
               <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 font-bold px-8">
                 {'Start free trial'}</Button>
             </Link>

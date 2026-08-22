@@ -24,8 +24,9 @@ interface CalendarEvent {
   id: string;
   title: string;
   description?: string;
-  date: string;
-  owner: string;
+  start_time: string;
+  end_time?: string;
+  type?: string;
   color?: string;
   created_at: string;
 }
@@ -38,7 +39,6 @@ export default function CalendarPage() {
   const { user } = useAuthStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,44 +47,47 @@ export default function CalendarPage() {
   const [newEventColor, setNewEventColor] = useState(EVENT_COLORS[0]);
 
   useEffect(() => {
-    if (user?.id) fetchEvents();
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/workspace/calendar?owner=${user.id}`);
+        const data = await res.json();
+        if (!cancelled && data.events) setEvents(data.events);
+      } catch {
+        if (!cancelled) toast.error('Failed to load events');
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user]);
-
-  const fetchEvents = async () => {
-    try {
-      const res = await fetch(`/api/workspace/calendar?owner=${user?.id}`);
-      const data = await res.json();
-      if (data.events) setEvents(data.events);
-    } catch (err) {
-      toast.error('Failed to load events');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle.trim()) return;
 
     try {
+      const day = format(selectedDate, 'yyyy-MM-dd');
       const res = await fetch('/api/workspace/calendar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newEventTitle,
-          date: format(selectedDate, 'yyyy-MM-dd'),
-          owner: user?.id,
+          start: new Date(`${day}T09:00:00`).toISOString(),
+          end: new Date(`${day}T17:00:00`).toISOString(),
+          type: 'EVENT',
           color: newEventColor,
         }),
       });
       const data = await res.json();
-      if (data.event) {
-        setEvents([...events, data.event]);
-        setIsModalOpen(false);
-        setNewEventTitle('');
-        toast.success('Event added');
+      if (!res.ok || !data.event) {
+        toast.error(data.error || 'Error adding event');
+        return;
       }
-    } catch (err) {
+      setEvents([...events, data.event]);
+      setIsModalOpen(false);
+      setNewEventTitle('');
+      toast.success('Event added');
+    } catch {
       toast.error('Error adding event');
     }
   };
@@ -96,7 +99,7 @@ export default function CalendarPage() {
       await fetch(`/api/workspace/calendar?id=${id}`, { method: 'DELETE' });
       setEvents(events.filter(ev => ev.id !== id));
       toast.success('Event deleted');
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete event');
     }
   };
@@ -163,11 +166,11 @@ export default function CalendarPage() {
 
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 bg-slate-800 gap-[1px]">
-              {days.map((day, i) => {
+              {days.map(day => {
                 const isCurrentMonth = isSameMonth(day, monthStart);
                 const isToday = isSameDay(day, new Date());
                 const dayString = format(day, 'yyyy-MM-dd');
-                const dayEvents = events.filter(e => e.date === dayString);
+                const dayEvents = events.filter(e => format(new Date(e.start_time), 'yyyy-MM-dd') === dayString);
 
                 return (
                   <div
@@ -230,7 +233,7 @@ export default function CalendarPage() {
                   placeholder="E.g. Team Standup"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Event Color</label>
                 <div className="flex gap-2">

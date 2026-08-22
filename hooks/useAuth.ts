@@ -19,7 +19,7 @@ export function useAuth() {
   const isLoading = sessionLoading && !session && !isAuthenticated;
   const role = (user?.role || 'employee').toUpperCase();
 
-  const isAdmin = ['SUPER_ADMIN', 'ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN'].includes(role);
+  const isAdmin = ['ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ADMIN'].includes(role);
   const isSecurityAnalyst = role === 'SECURITY_ANALYST';
   const isEmployee = role === 'EMPLOYEE';
 

@@ -1,33 +1,37 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { randomUUID } from 'crypto';
 
 export async function POST(req: Request) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     const body = await req.json();
     const { action_type } = body;
 
     const { data, error } = await supabase
-      .from('quorum_requests')
+      .from('approval_requests')
       .insert({
+        id: randomUUID(),
+        type: 'QUORUM',
         requester_id: session.user.id,
-        action_type: action_type || 'HIGH_RISK_SESSION',
+        data_payload: { action_type: action_type || 'HIGH_RISK_SESSION' },
         status: 'PENDING'
       })
       .select()
       .single();
 
     if (error) throw error;
-    
+
     return NextResponse.json({ data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -35,7 +39,7 @@ export async function GET(req: Request) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -43,30 +47,29 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
-    // If ID is provided, fetch specific request status (used for polling by requester)
     if (id) {
       const { data, error } = await supabase
-        .from('quorum_requests')
+        .from('approval_requests')
         .select('*')
         .eq('id', id)
         .single();
-        
+
       if (error) throw error;
       return NextResponse.json({ data });
     }
-    
-    // Otherwise fetch all pending requests for the admin dashboard
-    // In a real app, you would verify if the user is an admin here
+
     const { data, error } = await supabase
-      .from('quorum_requests')
-      .select('*, users!quorum_requests_requester_id_fkey(full_name, email)')
+      .from('approval_requests')
+      .select('*, users!approval_requests_requester_id_fkey(full_name, email)')
+      .eq('type', 'QUORUM')
       .eq('status', 'PENDING')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     return NextResponse.json({ data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -74,7 +77,7 @@ export async function PATCH(req: Request) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -87,7 +90,7 @@ export async function PATCH(req: Request) {
     }
 
     const { data, error } = await supabase
-      .from('quorum_requests')
+      .from('approval_requests')
       .update({
         status,
         approver_id: session.user.id
@@ -98,7 +101,8 @@ export async function PATCH(req: Request) {
 
     if (error) throw error;
     return NextResponse.json({ data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

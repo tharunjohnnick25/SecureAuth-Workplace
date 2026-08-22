@@ -1,32 +1,29 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { requireCompanyAccess, requireRole } from '@/lib/auth';
 
-export async function GET() {
+export const GET = requireRole(['admin', 'super_admin', 'manager'], requireCompanyAccess(async (req: NextRequest, user, companyId) => {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = await createAdminClient();
+    const url = new URL(req.url);
     
-    // Auth Check
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const isAdmin = session.user.user_metadata?.role === 'admin';
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    // Pagination parameters
+    const limit = parseInt(url.searchParams.get('limit') || '50', 10);
+    const offset = parseInt(url.searchParams.get('offset') || '0', 10);
+    const maxLimit = Math.min(limit, 1000); // hard cap
 
     const { data, error } = await supabase
       .from('audit_logs')
       .select('*, users(email)')
+      .eq('company_id', companyId) // Explicit check even though RLS is active
       .order('created_at', { ascending: false })
-      .limit(50);
+      .range(offset, offset + maxLimit - 1);
 
     if (error) throw error;
 
     return NextResponse.json({ data: data || [], success: true });
   } catch (error: any) {
-    console.error('Error fetching audit logs:', error);
-    return NextResponse.json({ error: error.message || 'Server error', success: false }, { status: 500 });
+    console.error('[Admin API] Error fetching audit logs:', error);
+    return NextResponse.json({ error: 'Server error', success: false }, { status: 500 });
   }
-}
+}));

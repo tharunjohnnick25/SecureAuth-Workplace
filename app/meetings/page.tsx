@@ -91,16 +91,19 @@ export default function MeetingsDashboard() {
     e.preventDefault();
     setCreating(true);
     try {
+      const startDateTime = new Date(`${date}T${startTime}`);
+      const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // Default to 1 hour later
+
       const res = await fetch('/api/meetings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           host_id: user?.id,
           title,
-          date,
-          start_time: startTime,
-          end_time: '',
-          type,
+          start_time: startDateTime.toISOString(),
+          end_time: endDateTime.toISOString(),
+          type: 'SCHEDULED',
+          access_level: type, // Preserved for future use
           password,
           face_auth_required: requireFaceAuth,
           waiting_room: true,
@@ -123,16 +126,17 @@ export default function MeetingsDashboard() {
     setCreating(true);
     try {
       const now = new Date();
+      const endDateTime = new Date(now.getTime() + 60 * 60 * 1000);
+
       const res = await fetch('/api/meetings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           host_id: user?.id,
           title: 'Instant Meeting',
-          date: now.toISOString().slice(0, 10),
-          start_time: now.toTimeString().slice(0, 5),
-          end_time: '',
-          type: 'Public',
+          start_time: now.toISOString(),
+          end_time: endDateTime.toISOString(),
+          type: 'INSTANT',
           password: '',
           face_auth_required: false,
           waiting_room: true,
@@ -142,7 +146,9 @@ export default function MeetingsDashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      router.push(`/meetings/${data.data.id}/pre-join`);
+      const meetingId = data.data?.id || (Array.isArray(data.data) && data.data[0]?.id);
+      if (!meetingId) throw new Error('Meeting created but no ID was returned from server.');
+      router.push(`/meetings/${meetingId}/pre-join`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to start meeting');
     } finally {

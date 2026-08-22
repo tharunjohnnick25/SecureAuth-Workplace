@@ -63,15 +63,7 @@ const integrations = [
     lastSync: null,
     color: 'muted'
   },
-  {
-    name: 'SendGrid',
-    icon: Mail,
-    description: 'Send email notifications for security events',
-    status: 'Available',
-    category: 'Email',
-    lastSync: null,
-    color: 'muted'
-  },
+
 ];
 
 const categories = [
@@ -80,7 +72,7 @@ const categories = [
   { name: 'Development', count: 1 },
   { name: 'Cloud', count: 1 },
   { name: 'SIEM', count: 1 },
-  { name: 'Email', count: 1 },
+
 ];
 
 const recentActivity = [

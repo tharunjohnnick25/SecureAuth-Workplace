@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     full_name VARCHAR(255),
     avatar_url TEXT,
     phone VARCHAR(20),
-    role VARCHAR(50) DEFAULT 'EMPLOYEE',
+    role VARCHAR(50) DEFAULT 'employee',
     role_id UUID REFERENCES public.roles(id) ON DELETE SET NULL,
     department VARCHAR(255),
     designation VARCHAR(100),

@@ -27,7 +27,7 @@ export default function NewEmployeePage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [activeEmployees, setActiveEmployees] = useState<{ id: string; full_name: string }[]>([]);
+  const [activeEmployees, setActiveEmployees] = useState<{ id: string; full_name: string; department?: string; role?: string }[]>([]);
   const [form, setForm] = useState<EmployeeFormData>({
     employee_id: '',
     full_name: '',
@@ -47,7 +47,7 @@ export default function NewEmployeePage() {
 
   useEffect(() => {
     DepartmentService.getDepartments().then(setDepartments).catch(() => {});
-    EmployeeService.getActiveEmployees().then(emps => setActiveEmployees(emps.map(e => ({ id: e.id, full_name: e.full_name || '' })))).catch(() => {});
+    EmployeeService.getActiveEmployees().then(emps => setActiveEmployees(emps.map(e => ({ id: e.id, full_name: e.full_name || '', department: e.department, role: e.role })))).catch(() => {});
   }, []);
 
   const validate = (): boolean => {
@@ -202,7 +202,9 @@ export default function NewEmployeePage() {
                         <select value={form.manager_id || ''} onChange={(e) => updateField('manager_id', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
                           <option value="">{'No manager'}</option>
-                          {activeEmployees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                          {activeEmployees
+                            .filter(e => e.role === 'MANAGER' && (!form.department || e.department === form.department))
+                            .map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
                         </select>
                       </div>
                       <div>
